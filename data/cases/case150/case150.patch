@@ -1,0 +1,11 @@
+@@
+- const oldNot = req.body.oldNot;
+- const newNot = req.body.newNot;
++ const { oldNot, newNot } = req.body;
++ if (!mongoose.Types.ObjectId.isValid(oldNot._id)) {
++   return res.status(400).send("Invalid notification ID format");
++ }
++ if (typeof newNot.message !== 'string') {
++   return res.status(400).send("Invalid notification message format");
++ }
+await Notification.findOneAndUpdate({ _id: oldNot._id, to: user }, newNot).exec()

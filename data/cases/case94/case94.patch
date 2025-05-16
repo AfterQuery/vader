@@ -1,0 +1,57 @@
+--- server.js
++++ server.js
+@@
+ const express = require("express");
+ const cors = require("cors");
+ const path = require("path");
+ const morgan = require("morgan");
++const csrf = require("csurf"); // Added for CSRF protection
+ const productRoutes = require("./routes/Product_rotues");
+ const adminRoutes = require('./routes/Admin_routes');
+ const staffRoutes = require("./routes/Staff_routes");
+@@
+ const app = express();
+ const port = 3002;
+
+ // Enable CORS
+ app.use(cors({
+   origin: '*',
+   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+   allowedHeaders: 'Content-Type, Authorization',
+   credentials: true
+ }));
+
+ app.use((req, res, next) => {
+   res.header('Access-Control-Allow-Origin', '*');
+   res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+   next();
+ });
+
+ // Built-in body parsing middleware
+ app.use(express.json());
+ app.use(express.urlencoded({ extended: true }));
+
+ // Logger middleware
+ app.use(morgan("dev"));
+
+ // Serve static files
+ app.use(express.static(path.join(__dirname, "/dist")));
+
++// Setup CSRF protection
++const csrfProtection = csrf({ cookie: true });
++app.use(csrfProtection);
++
++// Make CSRF token available to views or APIs
++app.use((req, res, next) => {
++  res.locals.csrfToken = req.csrfToken();
++  next();
++});
+
+ app.get("*", (req, res) => {
+   res.sendFile(path.join(__dirname, "dist/index.html"));
+ });
+@@
+ app.listen(port, '0.0.0.0', () => {
+   console.log(`Server running successfully on port ${port}`);
+ });

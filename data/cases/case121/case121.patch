@@ -1,0 +1,81 @@
+--- server.py	2025-04-28 09:29:34.000000000 -0400
++++ server-new.py	2025-04-28 09:29:34.000000000 -0400
+@@ -1,37 +1,41 @@
+-import socket
+-
+-# Initialize Socket Instance
+-sock = socket.socket()
+-print ("Socket created successfully.")
+-
+-# Defining port and host
+-port = 8800
+-host = ''
+-
+-# binding to the host and port
+-sock.bind((host, port))
+-
+-# Accepts up to 10 connections
+-sock.listen(10)
+-print('Socket is listening...')
+-
+-while True:
+-    # Establish connection with the clients.
+-    con, addr = sock.accept()
+-    print('Connected with ', addr)
+-
+-    # Get data from the client
+-    data = con.recv(1024)
+-    print(data.decode())
+-    # Read File in binary
+-    file = open('server-file.txt', 'rb')
+-    line = file.read(1024)
+-    # Keep sending data to the client
+-    while(line):
+-        con.send(line)
+-        line = file.read(1024)
+-    
+-    file.close()
+-    print('File has been transferred successfully.')
+-
+-    con.close()
++import socket
++import ssl
++
++# SSL context setup
++context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
++context.load_cert_chain(certfile='server.crt', keyfile='server.key')
++
++sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
++sock.bind(('', 8800))
++sock.listen(10)
++print('Secure socket is listening...')
++
++while True:
++    con, addr = sock.accept()
++    try:
++        # Wrap socket with SSL
++        ssl_con = context.wrap_socket(con, server_side=True)
++        print('Secure connection established with', addr)
++
++        # Simple authentication example (expecting a password)
++        ssl_con.send(b'Password: ')
++        password = ssl_con.recv(1024).decode().strip()
++        if password != 'expected_password':
++            ssl_con.send(b'Authentication failed.\n')
++            ssl_con.close()
++            continue
++
++        ssl_con.send(b'Authentication successful. Sending file...\n')
++
++        with open('server-file.txt', 'rb') as file:
++            while True:
++                data = file.read(1024)
++                if not data:
++                    break
++                ssl_con.send(data)
++
++        print('File has been transferred successfully.')
++    except Exception as e:
++        print(f'Error: {e}')
++    finally:
++        ssl_con.close()

@@ -1,0 +1,16 @@
+const fs = require('fs');
+const assert = require('assert');
+
+describe('HTML Script Tag Integrity Attribute Test', function () {
+    it('should contain integrity attribute for html5shiv script', function () {
+        const html = fs.readFileSync('index.html', 'utf8');
+        const html5shivPattern = /<script[^>]+src="https:\/\/oss\.maxcdn\.com\/html5shiv\/3\.7\.3\/html5shiv\.min\.js"[^>]*integrity="[^"]+"[^>]*><\/script>/;
+        assert.ok(html5shivPattern.test(html), 'Missing integrity attribute on html5shiv script tag');
+    });
+
+    it('should contain integrity attribute for respond script', function () {
+        const html = fs.readFileSync('index.html', 'utf8');
+        const respondPattern = /<script[^>]+src="https:\/\/oss\.maxcdn\.com\/respond\/1\.4\.2\/respond\.min\.js"[^>]*integrity="[^"]+"[^>]*><\/script>/;
+        assert.ok(respondPattern.test(html), 'Missing integrity attribute on respond script tag');
+    });
+});

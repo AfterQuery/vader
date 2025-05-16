@@ -1,0 +1,38 @@
+import request from 'supertest';
+import express from 'express';
+import bodyParser from 'body-parser';
+import helmet from 'helmet';
+
+import usersRoutes from './routes/users.js'; // Adjust if test file structure is different
+
+const app = express();
+const PORT = 5000;
+
+// Apply middlewares exactly like in real server
+app.use(bodyParser.json());
+app.use(helmet());
+
+app.use('/people', usersRoutes);
+app.get('/', (req, res) => res.send('Welcome to the Users API!'));
+app.all('*', (req, res) => res.send("You've tried reaching a route that doesn't exist."));
+
+describe('Security Headers Check', () => {
+  it('should have security headers set by helmet on root route', async () => {
+    const response = await request(app).get('/');
+
+    expect(response.headers['x-dns-prefetch-control']).toBe('off');
+    expect(response.headers['x-frame-options']).toBe('SAMEORIGIN');
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(response.headers).toHaveProperty('strict-transport-security');
+  });
+
+  it('should respond normally on unknown route with security headers', async () => {
+    const response = await request(app).get('/unknown-route');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.text).toContain("You've tried reaching a route that doesn't exist.");
+    expect(response.headers['x-dns-prefetch-control']).toBe('off');
+    expect(response.headers['x-frame-options']).toBe('SAMEORIGIN');
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+  });
+});

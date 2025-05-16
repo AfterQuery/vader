@@ -1,0 +1,87 @@
+From f7af0a67b78e7894335a6cad510566a25e06ae41 Mon Sep 17 00:00:00 2001
+From: Sebastian Hildebrandt <hildebrandt@plus-innovations.com>
+Date: Mon, 9 Dec 2024 09:54:15 +0100
+Subject: [PATCH] networkInterfaces() sanitizing SSID names (windows)
+
+---
+ CHANGELOG.md      |  1 +
+ docs/history.html |  5 +++++
+ docs/index.html   |  2 +-
+ lib/network.js    | 16 +++++++++++++---
+ 4 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d72c45c0..3038d269 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -90,6 +90,7 @@ For major (breaking) changes - **version 4, 3 and 2** - see end of page.
+ 
+ | Version | Date       | Comment                                                                                             |
+ | ------- | ---------- | --------------------------------------------------------------------------------------------------- |
++| 5.23.7  | 2024-12-09 | `networkInterfaces()` sanitizing SSID names (windows)                                               |
+ | 5.23.6  | 2024-12-08 | `system()` added Raspberry CM5 detection                                                            |
+ | 5.23.5  | 2024-08-21 | `processLoad()` fixed * process list (linux)                                                        |
+ | 5.23.4  | 2024-08-06 | `baseboard()` `chassis()` cleaned defaults (linux)                                                  |
+diff --git a/docs/history.html b/docs/history.html
+index 48e4ad40..929c6e99 100644
+--- a/docs/history.html
++++ b/docs/history.html
+@@ -57,6 +57,11 @@ <h3>Full version history</h3>
+                     </tr>
+                   </thead>
+                   <tbody>
++                    <tr>
++                      <th scope="row">5.23.7</th>
++                      <td>2024-12-09</td>
++                      <td><span class="code">networkInterfaces()</span> sanitizing SSID names (windows)</td>
++                    </tr>
+                     <tr>
+                       <th scope="row">5.23.6</th>
+                       <td>2024-12-08</td>
+diff --git a/docs/index.html b/docs/index.html
+index ef2acd13..d29acd24 100644
+--- a/docs/index.html
++++ b/docs/index.html
+@@ -170,7 +170,7 @@
+       <img class="logo" src="assets/logo.png" alt="logo">
+       <div class="title">systeminformation</div>
+       <div class="subtitle"><span id="typed"></span>&nbsp;</div>
+-      <div class="version">New Version: <span id="version">5.23.6</span></div>
++      <div class="version">New Version: <span id="version">5.23.7</span></div>
+       <button class="btn btn-light" onclick="location.href='https://github.com/sebhildebrandt/systeminformation'">View on Github <i class=" fab fa-github"></i></button>
+     </div>
+     <div class="down">
+diff --git a/lib/network.js b/lib/network.js
+index 86c45131..4071aef1 100644
+--- a/lib/network.js
++++ b/lib/network.js
+@@ -348,7 +348,7 @@ function getWindowsWirelessIfaceSSID(interfaceName) {
+   try {
+     const result = execSync(`netsh wlan show  interface name="${interfaceName}" | findstr "SSID"`, util.execOptsWin);
+     const SSID = result.split('\r\n').shift();
+-    const parseSSID = SSID.split(':').pop();
++    const parseSSID = SSID.split(':').pop().trim();
+     return parseSSID;
+   } catch (error) {
+     return 'Unknown';
+@@ -400,8 +400,18 @@ function getWindowsIEEE8021x(connectionType, iface, ifaces) {
+     try {
+       const SSID = getWindowsWirelessIfaceSSID(iface);
+       if (SSID !== 'Unknown') {
+-        i8021xState = execSync(`netsh wlan show profiles "${SSID}" | findstr "802.1X"`, util.execOptsWin);
+-        i8021xProtocol = execSync(`netsh wlan show profiles "${SSID}" | findstr "EAP"`, util.execOptsWin);
++
++        let ifaceSanitized = '';
++        const s = util.isPrototypePolluted() ? '---' : util.sanitizeShellString(SSID);
++        const l = util.mathMin(s.length, 2000);
++
++        for (let i = 0; i <= l; i++) {
++          if (s[i] !== undefined) {
++            ifaceSanitized = ifaceSanitized + s[i];
++          }
++        }
++        i8021xState = execSync(`netsh wlan show profiles "${ifaceSanitized}" | findstr "802.1X"`, util.execOptsWin);
++        i8021xProtocol = execSync(`netsh wlan show profiles "${ifaceSanitized}" | findstr "EAP"`, util.execOptsWin);
+       }
+ 
+       if (i8021xState.includes(':') && i8021xProtocol.includes(':')) {

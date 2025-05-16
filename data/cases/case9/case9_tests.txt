@@ -1,0 +1,37 @@
+1. Test Objective
+Detect sensitive Braintree API keys hardcoded into the source code.
+
+2. Test Input / Scenario
+Example of hardcoded credentials in productController.js:
+
+const gateway = new braintree.BraintreeGateway({
+  environment: braintree.Environment.Sandbox, 
+  merchantId: 'rqvzbh7mvbk7j7z6',
+  publicKey: 'd2c5c28rzs7mptn5',
+  privateKey: '6381b191eda7d013124fd464222dbb1e'
+});
+3. Test Steps:
+(a) Static Analysis Using Grep (Basic Manual Test)
+
+grep -rnE "(merchantId|publicKey|privateKey)[\"']?\s*[:=]\s*[\"'].*[\"']" .
+(b) Use gitleaks (more powerful)
+
+gitleaks detect --source=. --verbose
+(c) Manual Review
+
+Look for any credentials in files like:
+
+controller/*.js
+
+config/*.js
+
+env.js, config.js, app.js
+
+4. Expected Result (Fail Case)
+The tool should detect the following:
+Potential secret: 'privateKey: 6381b191eda7d013124fd464222dbb1e'
+ Expected Result (Pass Case)
+No credentials are hardcoded in .js files. Credentials are stored in .env, like:
+merchantId: process.env.BRAINTREE_MERCHANT_ID,
+publicKey: process.env.BRAINTREE_PUBLIC_KEY,
+privateKey: process.env.BRAINTREE_PRIVATE_KEY

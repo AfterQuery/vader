@@ -1,0 +1,27 @@
+--- filesearch.py       2025-04-29 18:54:52.807315542 +0530
++++ filesearch-new.py   2025-04-29 18:54:35.737318241 +0530
+@@ -17,6 +17,15 @@
+
+ from pathlib import Path
+ import os, os.path
++from pathlib import Path
++
++def sanitize_path(user_input: str) -> Path:
++    base_path = Path.home()
++    full_path = (base_path / user_input).resolve()
++
++    if not full_path.is_relative_to(base_path):
++        raise ValueError("Path traversal attempt detected")
++    return full_path
+
+ # establish the default path which is the current directory
+ default_path = Path.cwd()
+@@ -41,7 +50,7 @@
+         elif answer == 'Y':
+             while True:
+                 home_dir = Path.cwd().home()
+-                path = default_path.home().joinpath(input(f'\nEnter the path after the home directory {home_dir}/'))
++                path = santize_path(default_path.home().joinpath(input(f'\nEnter the path after the home directory {home_dir}/')))
+                 print(path)
+                 if path.exists():
+                     break

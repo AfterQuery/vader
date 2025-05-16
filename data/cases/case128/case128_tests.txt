@@ -1,0 +1,32 @@
+# tests/test_html_integrity_check.py
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import pytest
+
+def test_external_resources_have_integrity():
+    # Set up browser driver (assumes ChromeDriver is installed)
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    driver = webdriver.Chrome(options=options)
+
+    try:
+        # Load the local HTML file (adjust path if needed)
+        driver.get("file:///path/to/your/index.html")  # <-- replace with actual file path
+
+        # Find all script and link tags
+        scripts = driver.find_elements(By.TAG_NAME, "script")
+        links = driver.find_elements(By.TAG_NAME, "link")
+
+        for tag in scripts + links:
+            src_or_href = tag.get_attribute('src') or tag.get_attribute('href')
+            if src_or_href and ('http' in src_or_href):
+                # Only check external resources
+                integrity = tag.get_attribute('integrity')
+                crossorigin = tag.get_attribute('crossorigin')
+
+                assert integrity is not None and integrity != "", f"Missing integrity for {src_or_href}"
+                assert crossorigin == "anonymous", f"Missing crossorigin=anonymous for {src_or_href}"
+
+    finally:
+        driver.quit()

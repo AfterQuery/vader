@@ -1,0 +1,114 @@
+import { ScrollTargetComponent } from './ScrollTargetComponent';
+import { jsdom } from 'jsdom';
+import { tryGetComponentByElement } from '../componentManagement';
+
+describe('ScrollTargetComponent XSS Protection', () => {
+  let component: ScrollTargetComponent;
+  let mockElement: HTMLElement;
+  let originalLocation: Location;
+
+  beforeAll(() => {
+    // Setup JSDOM
+    const { window } = new jsdom.JSDOM();
+    global.document = window.document;
+    
+    // Mock window.location
+    delete (global as any).window;
+    global.window = window as any;
+    originalLocation = window.location;
+  });
+
+  beforeEach(() => {
+    component = new ScrollTargetComponent();
+    mockElement = document.createElement('div');
+    component.element = mockElement;
+  });
+
+  afterAll(() => {
+    // Restore original location
+    global.window.location = originalLocation;
+  });
+
+  test('sanitizes ID attribute from URL hash', () => {
+    // Test with dangerous payload
+    const dangerousId = '"><img src=x onerror=alert(1)>';
+    Object.defineProperty(window, 'location', {
+      value: new URL(`http://example.com/#${dangerousId}`),
+      writable: true
+    });
+
+    // Simulate component update
+    component.updateElement(
+      {
+        id: dangerousId,
+        content: null,
+        copy_button_content: null,
+        copy_button_text: 'Copy',
+        copy_button_spacing: 0
+      },
+      new Set()
+    );
+
+    // Verify ID is sanitized
+    expect(mockElement.id).not.toContain('<');
+    expect(mockElement.id).not.toContain('>');
+    expect(mockElement.id).not.toContain('"');
+    expect(mockElement.id).toEqual(encodeURIComponent(dangerousId));
+  });
+
+  test('encodes special characters in clipboard URL', () => {
+    const testPayload = "javascript:alert('XSS')";
+    component.setState({
+      id: testPayload,
+      content: null,
+      copy_button_content: null,
+      copy_button_text: 'Copy',
+      copy_button_spacing: 0
+    });
+
+    const mockSetClipboard = jest.fn();
+    (component as any)._onUrlCopyButtonClick = mockSetClipboard;
+    
+    component.element.click();
+    
+    const expectedUrl = `http://example.com/#${encodeURIComponent(testPayload)}`;
+    expect(mockSetClipboard).toHaveBeenCalledWith(expectedUrl);
+  });
+
+  test('prevents HTML injection in dynamic ID updates', () => {
+    const maliciousUpdate = {
+      id: '<script>alert("xss")</script>',
+      content: null,
+      copy_button_content: null,
+      copy_button_text: null,
+      copy_button_spacing: 0
+    };
+
+    component.updateElement(maliciousUpdate, new Set());
+    
+    // Verify element ID is sanitized
+    expect(component.element.id).toEqual(
+      encodeURIComponent(maliciousUpdate.id)
+    );
+    
+    // Verify no script tags in DOM
+    expect(component.element.outerHTML).not.toContain('<script>');
+  });
+
+  test('handles URL encoding properly', () => {
+    const testCases = [
+      { input: 'normal-id', expected: 'normal-id' },
+      { input: 'space id', expected: 'space%20id' },
+      { input: 'quote"id', expected: 'quote%22id' },
+      { input: '<>&id', expected: '%3C%3E%26id' }
+    ];
+
+    testCases.forEach(({ input, expected }) => {
+      component.updateElement({ id: input }, new Set());
+      expect(component.element.id).toBe(expected);
+      
+      const url = new URL(component.element.querySelector('a')!.href);
+      expect(url.hash.slice(1)).toBe(expected);
+    });
+  });
+});

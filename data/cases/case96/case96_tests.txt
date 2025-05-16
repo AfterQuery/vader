@@ -1,0 +1,21 @@
+Test Case 1: Verify SHA-256 Usage in Form Hash Generation
+Steps:
+1. Create a form instance without specifying 'handle_submit_unique_name'.
+2. Access the 'handle_submit_unique_name' attribute.
+3. Check that the length of the hex digest is 64 characters (SHA-256).
+4. Confirm the hash algorithm isn't MD5 (length 32).
+
+Expected Results:
+- handle_submit_unique_name should be a 64-character hexadecimal string.
+- No MD5 hash (32-char) should be present in the output.
+
+Test Case 2: Unique Hash Generation
+Steps:
+1. Create two identical form instances.
+2. Generate their 'handle_submit_unique_name' values.
+3. Ensure both hashes are identical (same input produces same hash).
+4. Modify one form's properties and check hashes differ.
+
+Expected Results:
+- Identical forms produce identical hashes.
+- Different forms produce different hashes, confirming proper hash function usage.

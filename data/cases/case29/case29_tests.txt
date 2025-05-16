@@ -1,0 +1,22 @@
+{
+  "users": { ... }, "messages": { ... }
+}
+,
+{
+  "test": "hacked"
+}
+Firebase storage write access
+// JavaScript test
+firebase.storage().ref('test/malicious.txt').put(new Blob(["you've been pwned"]))
+
+Data Enumeration
+{
+  "users": true,
+  "admin": true,
+  "messages": true
+}
+
+Authentication exploitation
+firebase.auth().signInAnonymously()
+Vulnerable if:
+Anonymous users can read/write without restrictions.

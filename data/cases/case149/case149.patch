@@ -1,0 +1,135 @@
+--- database.py	2025-04-29 04:05:24.000000000 -0400
++++ database-new.py	2025-04-29 04:05:24.000000000 -0400
+@@ -6,68 +6,74 @@
+ DB_FILE = ROOT_DIR / DB_NAME
+ TABLE_NAME = "informacao_clientes"
+ 
+-def restart_database():
+-    connection = sqlite3.connect(DB_FILE)
+-    cursor = connection.cursor()
+-    cursor.execute(f"UPDATE sqlite_sequence SET seq=1 WHERE {TABLE_NAME}")
++def validate_table_name(name: str) -> None:
++    """Validate table names to prevent SQL injection"""
++    if not name.replace("_", "").isalnum():
++        raise ValueError(f"Invalid table name: {name}")
+ 
++def restart_database():
++    validate_table_name(TABLE_NAME)
++    with sqlite3.connect(DB_FILE) as connection:
++        cursor = connection.cursor()
++        cursor.execute("UPDATE sqlite_sequence SET seq=1 WHERE name=?", (TABLE_NAME,))
+ 
+-def create(NEW_TABLE_NAME):
++def create(new_table_name: str):
+     global TABLE_NAME
+-    TABLE_NAME = f"{NEW_TABLE_NAME}"
+-    connection = sqlite3.connect(DB_FILE)
+-    cursor = connection.cursor()
+-    cursor.execute(f"CREATE TABLE IF NOT EXISTS {NEW_TABLE_NAME} (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, sobrenome TEXT)")
+-    connection.commit()
+-    connection.close()
+-
+-def insert(value,value2):
+-    connection = sqlite3.connect(DB_FILE)
+-    cursor = connection.cursor()
+-    cursor.execute(f"INSERT INTO {TABLE_NAME} (nome, sobrenome) VALUES (?,?)", (value,value2))
+-    connection.commit()
+-    connection.close()
++    validate_table_name(new_table_name)
++    TABLE_NAME = new_table_name
++    
++    with sqlite3.connect(DB_FILE) as connection:
++        cursor = connection.cursor()
++        cursor.execute(
++            "CREATE TABLE IF NOT EXISTS ? (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, sobrenome TEXT)",
++            (new_table_name,)
++        )
++        connection.commit()
++
++def insert(nome: str, sobrenome: str):
++    validate_table_name(TABLE_NAME)
++    with sqlite3.connect(DB_FILE) as connection:
++        cursor = connection.cursor()
++        cursor.execute(
++            f"INSERT INTO {TABLE_NAME} (nome, sobrenome) VALUES (?,?)",
++            (nome, sobrenome)
++        )
++        connection.commit()
+ 
+ def fetch_data():
+-    connection = sqlite3.connect(DB_FILE)
+-    cursor = connection.cursor()
+-    data = cursor.execute(f"SELECT * FROM {TABLE_NAME}")
+-    values = data.fetchall()
+-    connection.commit()
+-    connection.close()
+-    return values
++    validate_table_name(TABLE_NAME)
++    with sqlite3.connect(DB_FILE) as connection:
++        cursor = connection.cursor()
++        cursor.execute(f"SELECT * FROM {TABLE_NAME}")
++        return cursor.fetchall()
+ 
+ def fetch_last_id():
+-    connection = sqlite3.connect(DB_FILE)
+-    cursor = connection.cursor()
+-    id = cursor.execute(f"SELECT id FROM {TABLE_NAME} ORDER BY id DESC ")
+-    last_id = id.fetchone()[0]
+-    connection.commit()
+-    connection.close()
+-    return last_id
+-
+-
+-def update_value(user_id,new_name,new_surname):
+-    print(user_id)
+-    print(new_name)
+-    print(new_surname)
+-    connection = sqlite3.connect(DB_FILE)
+-    cursor = connection.cursor()
+-    cursor.execute(f"UPDATE {TABLE_NAME} set nome='{new_name}', sobrenome='{new_surname}' WHERE id={user_id}")
+-    connection.commit()
+-    connection.close()
+-
+-def delete_value(user_id, user_name):
+-    print(f"Id: {user_id}\nNome: {user_name}")
+-
+-    connection = sqlite3.connect(DB_FILE)
+-    cursor = connection.cursor()
+-    cursor.execute(f"DELETE FROM {TABLE_NAME} WHERE id={user_id}")
+-    connection.commit()
+-    connection.close()
+-
+-
+-
++    validate_table_name(TABLE_NAME)
++    with sqlite3.connect(DB_FILE) as connection:
++        cursor = connection.cursor()
++        cursor.execute(f"SELECT id FROM {TABLE_NAME} ORDER BY id DESC")
++        result = cursor.fetchone()
++        return result[0] if result else None
++
++def update_value(user_id: int, new_name: str, new_surname: str):
++    validate_table_name(TABLE_NAME)
++    with sqlite3.connect(DB_FILE) as connection:
++        cursor = connection.cursor()
++        cursor.execute(
++            f"UPDATE {TABLE_NAME} SET nome=?, sobrenome=? WHERE id=?",
++            (new_name, new_surname, user_id)
++        )
++        connection.commit()
++
++def delete_value(user_id: int, user_name: str):
++    validate_table_name(TABLE_NAME)
++    with sqlite3.connect(DB_FILE) as connection:
++        cursor = connection.cursor()
++        cursor.execute(
++            f"DELETE FROM {TABLE_NAME} WHERE id=?",
++            (user_id,)
++        )
++        connection.commit()
+ 
+-if __name__ == "__database__":
+-    restart_database()
+\ No newline at end of file
++if __name__ == "__main__":
++    restart_database()

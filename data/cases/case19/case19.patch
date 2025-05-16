@@ -1,0 +1,61 @@
+diff --git a/middleware.ts b/middleware.ts
+index abc1234..def5678 100644
+--- a/middleware.ts
++++ b/middleware.ts
+@@
+ import { NextResponse, type NextRequest } from "next/server";
+ import NextAuth from "next-auth";
+ import { authConfig } from "./auth.config";
+ import { getBackendAddress } from "@/lib/get-backend-address";
++
++function isSafeUrl(url: string): boolean {
++    try {
++        const parsed = new URL(url);
++        const disallowedHosts = ["localhost", "127.0.0.1", "169.254.169.254"];
++        if (disallowedHosts.includes(parsed.hostname)) return false;
++        return true;
++    } catch {
++        return false;
++    }
++}
+
+ const { auth } = NextAuth(authConfig);
+
+ export default auth(async (request: NextRequest) => {
+     const requestHeaders = request.headers;
+-    const backend = getBackendAddress(requestHeaders);
++    const backend = getBackendAddress(requestHeaders);
++
++    if (!isSafeUrl(`${backend}/verify-domain`)) {
++        return Response.json({ success: false, error: "Unsafe backend URL" }, { status: 400 });
++    }
+
+     if (request.nextUrl.pathname === "/healthy") {
+         return Response.json({ success: true });
+     }
+
+     try {
+         const response = await fetch(`${backend}/verify-domain`);
+
+         if (!response.ok) {
+             throw new Error();
+         }
+
+         const resp = await response.json();
+
+         requestHeaders.set("domain", resp.domain);
+
+         if (request.nextUrl.pathname === "/favicon.ico") {
+             try {
+-                if (resp.logo) {
+-                    const response = await fetch(resp.logo);
+-                    if (response.ok) {
+-                        const blob = await response.blob();
+-                        return new NextResponse(blob, {
+-                            headers: {
+-                                "content-type": "image/webp",
+-                            },
+-                        });
+-                    } else {
+-                        return NextResponse.rewrite(
+-                            new URL(`/default-f

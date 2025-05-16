@@ -1,0 +1,41 @@
+diff --git a/src/components/scrollTargetComponent.ts b/src/components/scrollTargetComponent.ts
+--- a/src/components/scrollTargetComponent.ts
++++ b/src/components/scrollTargetComponent.ts
+@@ -35,6 +35,17 @@
+         return element;
+     }
+ 
++    private sanitizeId(id: string): string {
++        // Allow only safe characters for HTML ID and URL fragment
++        if (!/^[a-zA-Z0-9\-_:.]+$/.test(id)) {
++            console.error('Invalid characters in ScrollTarget ID:', id);
++            throw new Error(
++                'ScrollTarget ID can only contain letters, numbers, hyphens, underscores, colons, and periods'
++            );
++        }
++        return id;
++    }
++
+     updateElement(
+         deltaState: DeltaState<ScrollTargetState>,
+         latentComponents: Set<ComponentBase>
+     ): void {
+@@ -46,7 +57,7 @@
+         );
+ 
+         if (deltaState.id !== undefined) {
+-            this.element.id = deltaState.id;
++            this.element.id = this.sanitizeId(deltaState.id);
+         }
+ 
+         if (
+@@ -88,7 +99,8 @@
+ 
+     private _onUrlCopyButtonClick(): void {
+         let url = new URL(window.location.href);
+-        url.hash = this.state.id;
++        // URL-encode the ID to prevent XSS through malformed fragments
++        url.hash = encodeURIComponent(this.sanitizeId(this.state.id));
+ 
+         setClipboard(url.toString());
+     }

@@ -1,0 +1,20 @@
+--- a/server.py
++++ b/server.py
+@@ def create_app(run_mode: str = None):
+-    if OPEN_CROSS_DOMAIN:
+-        app.add_middleware(
+-            CORSMiddleware,
+-            allow_origins=["*"],
+-            allow_credentials=True,
+-            allow_methods=["*"],
+-            allow_headers=["*"],
+-        )
++    if OPEN_CROSS_DOMAIN:
++        allowed_origins = ["https://yourdomain.com", "https://trusted.example.com"]
++        app.add_middleware(
++            CORSMiddleware,
++            allow_origins=allowed_origins,
++            allow_credentials=True,
++            allow_methods=["GET", "POST", "OPTIONS"],
++            allow_headers=["Content-Type", "Authorization"],
++        )

@@ -1,0 +1,21 @@
+diff --git a/example.js b/example.js
+index abcdef1..1234567 100644
+--- a/example.js
++++ b/example.js
+@@
+-const lib = ffi.Library(null, {
+-    'atoi': ['int', ['string']]
+-});
++const ref = require('ref-napi');
++const ffi = require('ffi-napi');
++
++global.gc && global.gc(); // force GC before test
++
++const lib = ffi.Library(null, {
++    'atoi': ['int', ['string']]
++});
++
++setInterval(() => {
++    lib.atoi("42");
++    global.gc && global.gc(); // explicit cleanup
++}, 100);

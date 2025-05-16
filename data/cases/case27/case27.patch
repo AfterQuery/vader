@@ -1,0 +1,26 @@
+diff --git a/src/controllers/uploads.js b/src/controllers/uploads.js
+index e11d72b..b21aa43 100644
+--- a/src/controllers/uploads.js
++++ b/src/controllers/uploads.js
+@@ const isImage = uploadedFile.type.match(/image./);
++ const fileType = await FileType.fromFile(uploadedFile.path);
++ const allowedMimeTypes = [
++   'image/jpeg',
++   'image/png',
++   'image/gif',
++   'image/webp',
++ ];
++
++ if (!fileType || !allowedMimeTypes.includes(fileType.mime)) {
++   throw new Error('[[error:invalid-mime-type]]');
++ }
+
+@@ if (allowed.length > 0 && (!extension || extension === '.' || !allowed.includes(extension))) {
+-	throw new Error(`[[error:invalid-file-type, ${allowed.join('&#44; ')}]]`);
++	throw new Error('[[error:invalid-file-type]]');
+ }
+
+@@ const isSVG = uploadedFile.type === 'image/svg+xml';
++ if (fileType.mime === 'image/svg+xml') {
++   throw new Error('[[error:svg-upload-not-allowed]]');
++ }

@@ -1,0 +1,20 @@
+
+// Simulated test for log sanitization
+#include <assert.h>
+#include <string.h>
+
+void sanitize_for_log(const char *input, char *output, size_t size) {
+    size_t j = 0;
+    for (size_t i = 0; i < strlen(input) && j < size - 1; ++i) {
+        if (input[i] != '\n' && input[i] != '\r') {
+            output[j++] = input[i];
+        }
+    }
+    output[j] = '\0';
+}
+
+void test_sanitize_log() {
+    char sanitized[1024];
+    sanitize_for_log("test\nmalicious", sanitized, sizeof(sanitized));
+    assert(strstr(sanitized, "\n") == NULL);
+}

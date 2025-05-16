@@ -1,0 +1,14 @@
+--- Company.php	2025-04-27
++++ Company_fixed.php	2025-04-27
+@@
++ $safe_base_dir = '/var/www/uploads/logos'; // Define a secure base directory
+
+ $logo_path = $logo_file;
+-$result = unlink($logo_path);
++ $real_path = realpath($logo_path);
++ if ($real_path === false || strpos($real_path, $safe_base_dir) !== 0) {
++     // Invalid file path detected, abort
++     error_log('Blocked unlink attempt on invalid path: ' . $logo_path);
++ } else {
++     $result = unlink($real_path);
++ }

@@ -1,0 +1,34 @@
+diff --git a/src/routes/PrivateRoutes.jsx b/src/routes/PrivateRoutes.jsx
+index 1234567..89abcde 100644
+--- a/src/routes/PrivateRoutes.jsx
++++ b/src/routes/PrivateRoutes.jsx
+@@ -1,8 +1,27 @@
+-import { useSelector } from "react-redux";
+-import { Navigate } from "react-router-dom";
++import { onAuthStateChanged } from "firebase/auth";
++import { auth } from "../firebase/firebase";
++import { useEffect, useState } from "react";
++import { Navigate } from "react-router-dom";
+
+ const PrivateRoutes = ({ children }) => {
+-  const isLogged = useSelector((state) => state.isLogged);
+-  return isLogged ? children : <Navigate to="/auth" />;
++  const [user, setUser] = useState(null);
++  const [loading, setLoading] = useState(true);
++
++  useEffect(() => {
++    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
++      setUser(currentUser);
++      setLoading(false);
++    });
++    return () => unsubscribe();
++  }, []);
++
++  if (loading) {
++    return <div>Loading...</div>;
++  }
++
++  return user ? children : <Navigate to="/auth" />;
+ };
+ 
+ export default PrivateRoutes;

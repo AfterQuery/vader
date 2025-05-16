@@ -1,0 +1,8 @@
+diff --git a/buffer_test.cpp b/buffer_test.cpp
+index abcdef1..1234567 100644
+--- a/buffer_test.cpp
++++ b/buffer_test.cpp
+@@ void writeToBuffer(const char* input, int len) {
+-        memcpy(buffer, input, len);
++        int safe_len = len > 16 ? 16 : len;
++        memcpy(buffer, input, safe_len);

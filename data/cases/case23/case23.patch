@@ -1,0 +1,19 @@
+--- old.py      2025-04-24 19:31:18.247783995 +0530
++++ new.py      2025-04-24 19:31:32.267787221 +0530
+@@ -13,6 +13,7 @@
+ import os
+ import shutil
+ import send2trash
++import subprocess
+
+ print('Welcome to the python-file-manager\n')
+
+@@ -78,7 +79,7 @@
+
+             if res in os.listdir(os.getcwd()):
+                 if os.path.isfile(res):
+-                    os.system('"' + res + '"')
++                    subprocess.run(['open', filename], shell=True)
+                 else:
+                     os.chdir(res)
+

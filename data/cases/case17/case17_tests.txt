@@ -1,0 +1,17 @@
+import { render, screen } from "@testing-library/react";
+import Recipe from "../Pages/Recipe";
+import DOMPurify from "dompurify";
+
+test("sanitizes HTML content in summary", () => {
+  const dirtyHTML = '<img src="x" onerror="alert(1)">Safe text';
+  const cleanHTML = DOMPurify.sanitize(dirtyHTML);
+  
+  expect(cleanHTML).toContain("Safe text");
+  expect(cleanHTML).not.toContain("onerror");
+});
+
+test("renders sanitized HTML safely", async () => {
+  // simulate rendering
+  render(<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize('<h1>Hello</h1>') }} />);
+  expect(screen.getByText('Hello')).toBeInTheDocument();
+});

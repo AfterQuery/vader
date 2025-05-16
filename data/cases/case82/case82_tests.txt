@@ -1,0 +1,76 @@
+Test Case 1: Valid Path – Normal File Access
+Objective: Ensure that valid paths within the safe directory are still accessible.
+•	Precondition: The server is running, and a valid file is placed inside the SAFE_BASE_DIRECTORY (e.g., /var/www/uploads/document1/code1/field1/file1.txt).
+•	Test Steps:
+1.	Make a GET request to the API with a valid path:
+2.	GET /file/document1/code1/field1/file1.txt
+3.	The server should process the request and serve the file successfully.
+•	Expected Result: The file file1.txt is returned with status code 200.
+
+Test Case 2: Path Traversal Attempt with '../../../' Pattern
+Objective: Ensure that the system blocks path traversal attempts.
+•	Precondition: The server is running, and SAFE_BASE_DIRECTORY is defined as /var/www/uploads.
+•	Test Steps:
+1.	Make a GET request with a path that contains ../../../:
+2.	GET /file/../../../etc/passwd
+3.	The server should detect the invalid path and block access.
+•	Expected Result: The response should have a status code 400, and the body should contain an error message like:
+•	{ "error": "Invalid file path" }
+
+Test Case 3: Path Traversal with Multiple Levels of '../../'
+Objective: Ensure that deeper path traversal attempts are blocked.
+•	Precondition: The server is running, and SAFE_BASE_DIRECTORY is defined as /var/www/uploads.
+•	Test Steps:
+1.	Make a GET request with a path containing multiple levels of directory traversal:
+2.	GET /file/../../../../../../etc/passwd
+3.	The server should block this request, similar to the previous test case.
+•	Expected Result: The response should have a status code 400, with an error message like:
+•	{ "error": "Invalid file path" }
+
+Test Case 4: Valid Path with Nested Directory Structure
+Objective: Ensure that valid nested paths inside the safe directory work correctly.
+•	Precondition: A nested file is placed inside the SAFE_BASE_DIRECTORY (e.g., /var/www/uploads/dir1/dir2/file.txt).
+•	Test Steps:
+1.	Make a GET request with a valid nested path:
+2.	GET /file/dir1/dir2/file.txt
+3.	The server should return the requested file.
+•	Expected Result: The response should return file.txt with status code 200.
+
+Test Case 5: Invalid Path – File Outside the Safe Directory
+Objective: Ensure that the system does not allow files outside the safe directory.
+•	Precondition: The server is running, and SAFE_BASE_DIRECTORY is set to /var/www/uploads.
+•	Test Steps:
+1.	Make a GET request with a path outside the SAFE_BASE_DIRECTORY:
+2.	GET /file/../otherdir/file.txt
+3.	The server should block the request and return an error response.
+•	Expected Result: The response should have status code 400, and the message should be:
+•	{ "error": "Invalid file path" }
+
+Test Case 6: Path with URL Encoded Characters
+Objective: Test the system's handling of URL-encoded characters in the path, ensuring the fix is robust against encoding.
+•	Precondition: The server is running and configured with the safe directory.
+•	Test Steps:
+1.	Make a GET request with a URL-encoded path that attempts directory traversal, for example:
+2.	GET /file/%2E%2E%2F%2E%2E%2Fetc/passwd
+3.	The server should still block the path traversal attempt.
+•	Expected Result: The response should have status code 400, with the message:
+•	{ "error": "Invalid file path" }
+
+Test Case 7: Request with Legacy URL Pattern
+Objective: Ensure that the legacy URL pattern still works as expected after the fix.
+•	Precondition: A valid file is present in the safe directory, and the server is running.
+•	Test Steps:
+1.	Make a GET request using the legacy URL pattern:
+2.	GET /file/legacyPath/code1/field1/file1.txt
+3.	The server should process the request and return the file successfully.
+•	Expected Result: The server should return file1.txt from the safe directory with status code 200.
+
+Test Case 8: Blocked Path Traversal with Legacy URL Pattern
+Objective: Ensure that path traversal attempts with the legacy URL pattern are also blocked.
+•	Precondition: The server is running, and SAFE_BASE_DIRECTORY is defined as /var/www/uploads.
+•	Test Steps:
+1.	Make a GET request with a legacy URL pattern that contains path traversal:
+2.	GET /file/../../etc/passwd
+3.	The server should block the request and return an error response.
+•	Expected Result: The response should have status code 400, and the body should contain an error message like:
+•	{ "error": "Invalid file path" }

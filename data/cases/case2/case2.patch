@@ -1,0 +1,12 @@
+--- Users.py    2025-04-22 21:02:20.999514889 +0530
++++ Users-patch.py      2025-04-22 21:02:39.889504715 +0530
+@@ -43,7 +43,8 @@
+     while True:
+         print()
+         UserID=input(" Enter UserID whose details to be deleted : ")
+-        mycursor.execute("DELETE from UserRecord where UserID = {0} ".format("\'"+UserID+"\'"))
++        query = "DELETE FROM UserRecord WHERE UserID = %s"
++        mycursor.execute(query, (UserID,))
+         mydb.commit()
+         ch=input("Do you wish to delete more Users?[Yes/No] : ")
+         if ch=="no" or ch=="No" or ch=="NO":

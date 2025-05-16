@@ -1,0 +1,12 @@
+--- cmd/git_hook.go
++++ cmd/git_hook.go
+@@ func runGitCommand(args []string) error {
+-    cmd := exec.Command("git", args...)
++    for _, arg := range args {
++        if containsIllegalChars(arg) {
++            return fmt.Errorf("Illegal character in argument: %s", arg)
++        }
++    }
++    cmd := exec.Command("git", args...)
+     return cmd.Run()
+}

@@ -1,0 +1,52 @@
+TEST CASES
+Test Case 1: Normal Input (Baseline)
+Test Case 2: Book Name Overflow (Buffer Overflow)
+Test Case 3: Author Name Overflow
+Input:
+Book No: B001
+Book Name: Introduction to C++
+Author: Bjarne
+Expected Output:
+Book record created successfully
+No crash or memory issue
+Purpose: Validate that normal use does not fail.
+Input:
+Book No: B001
+Book Name: A repeated 100 times
+Author: Test
+Expected Output:
+Application crashes or corrupts adjacent memory (e.g., shows garbage or segfaults)
+May overwrite aname or even cause illegal instruction in some setups
+Purpose: Trigger overflow in bname[50]
+Input:
+Book No: B002
+Book Name: C++ Basics
+Author: B repeated 60 times
+Expected Output:
+Overwrites memory beyond aname[20]
+Application may crash or behave unexpectedly
+Test Case 4: Book Number Overflow
+Test Case 5: Chained Overflow
+Test Case 6: Input Sanitization Fix
+(Only after code is patched to use cin.getline() or std::string )
+Input:
+Book No: 1234567890
+Book Name: Test
+Author: Test
+Expected Output:
+bno[6] overflow; may overwrite bname or internal flags
+Potential unexpected output or crash
+Input:
+Book No: OVERFLOW
+Book Name: A x 100
+Author: B x 100
+Expected Output:
+Overflows multiple fields
+May cause crash or execute unintended instructions (especially with -fno-stackprotector )
+Input:
+Book No: B003
+Book Name: A x 60
+Author: B x 30
+Expected Output:
+Excess characters are truncated or ignored
+No crash or overflow occurs

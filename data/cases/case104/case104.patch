@@ -1,0 +1,288 @@
+diff --git a/LMSCode.cpp b/LMSCode.cpp
+--- a/LMSCode.cpp
++++ b/LMSCode.cpp
+@@ -4,6 +4,8 @@
+ #include<stdlib.h> 
+ #include<string.h>
+ #include<stdio.h>
+ #include<fstream.h>
++#include <limits>  // For input validation
+
+ class book
+ {
+@@ -11,6 +13,8 @@
+    char bname[50];//bookname
+    char aname[20];//authorname
++    int copies;    // Track available copies
++    bool issued;   // Track issuance status
+ public:
+    void createbook()
+    {
+@@ -19,9 +23,14 @@
+        cin>>bno;
+        cout<<"\nENTER BOOK NAME";
+        gets(bname);//enables enter with space
+        cout<<"\nENTER AUTHOR NAME";
+        gets(aname);
++        issued = false;
++        cout<<"\nENTER NUMBER OF COPIES: ";
++        cin>>copies;
++        cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Clear input buffer
+        cout<<"\n\n\nBook Created..";
+    }
++    
+    void showbook()
+    {
+        cout<<"\nBook Number: "<<bno;
+@@ -38,6 +47,12 @@
+        gets(aname);
+        
+    }
++    
++    // New methods for copy management
++    int getCopies() { return copies; }
++    bool isIssued() { return issued; }
++    void setIssued(bool status) { issued = status; }
++    void decrementCopies() { if(copies > 0) copies--; }
++    void incrementCopies() { copies++; }
+
+    char* retbno()//string return
+    {
+@@ -163,6 +178,7 @@
+        token=1;
+    }
+    void resettoken()
+-   { 
+-   token=0;
++   {
++       token=0;
++       stbno[0] = '\0';  // Clear book number
+    }
+    void getstbno(char t[])
+@@ -358,42 +374,62 @@
+ void bookissue()
+ {
+-   char sn[6],bn[6];
+-   int found=0,flag=0;
++   char sn[6], bn[6];
++   int found = 0, flag = 0;
+    clrscr();
+    cout<<"\n\nBOOK ISSUE...";
+    cout<<"\n\n\tEnter Admission no.";
+    cin>>sn;
+-   fp.open("student.dat",ios::in|ios::out);
+-   fp1.open("book.dat",ios::in|ios::out);
+-   while(fp.read((char*)&st,sizeof(student))&& found==0)
++   fp.open("student.dat", ios::in|ios::out);
++   fp1.open("book.dat", ios::in|ios::out);
++
++   while(fp.read((char*)&st, sizeof(student)) && found == 0)
+    {
+-       if(strcmpi(st.retadmno(),sn)==0)//compare admsn no.
++       if(strcmpi(st.retadmno(), sn) == 0)
+        {
+-           found=1;
+-           if(st.rettoken()==0)//if book not issued
++           found = 1;
++           if(st.rettoken() == 0)
+            {
+                cout<<"\n\n\tEnter The Book No.";
+-               cin>>bn;
+-               while(fp1.read((char*)&bk,sizeof(book))&& flag==0)
++               cin >> bn;
++               cin.ignore(numeric_limits<streamsize>::max(), '\n');
++
++               while(fp1.read((char*)&bk, sizeof(book)) && flag == 0)
+                {
+-                   if(strcmpi(bk.retbno(),bn)==0)//compare book no.
+-                   {
+-                       flag=1;
+-                       st.addtoken();
+-                       st.getstbno(bk.retbno());//pass book no.
+-                       int pos=-1*sizeof(st);
+-                       fp.seekg(pos,ios::cur);
+-                       fp.write((char*)&st,sizeof(student));
+-                       cout<<"\n\n\tBook Issued Successfully\n\n Please Note The Book Issue Date On Backside Of Your Book And Return Book Within 15 Days, Otherwise Fine Of 15 Rs Per Day";
+-                       
+-                    
+-               }
+-           }
+-           if(flag==0)
+-           {
+-               cout<<"Book No. Does Not Exists";
++                   if(strcmpi(bk.retbno(), bn) == 0)
++                   {
++                       flag = 1;
++                       if(bk.getCopies() > 0 && !bk.isIssued())
++                       {
++                           bk.decrementCopies();
++                           bk.setIssued(true);
++                           
++                           // Update book record
++                           int bpos = -1 * sizeof(bk);
++                           fp1.seekp(bpos, ios::cur);
++                           fp1.write((char*)&bk, sizeof(book));
++
++                           // Update student record
++                           st.addtoken();
++                           st.getstbno(bk.retbno());
++                           int spos = -1 * sizeof(st);
++                           fp.seekg(spos, ios::cur);
++                           fp.write((char*)&st, sizeof(student));
++                           
++                           cout<<"\n\n\tBook Issued Successfully!\n";
++                           cout<<"Remaining copies: "<<bk.getCopies()<<endl;
++                       }
++                       else
++                       {
++                           cout<<"\n\n\tBook not available!";
++                           if(bk.getCopies() <= 0) cout<<" (No copies left)";
++                           if(bk.isIssued()) cout<<" (Already issued)";
++                       }
++                   }
++               }
++               if(flag == 0)
++               {
++                   cout<<"\nBook No. Does Not Exist";
++               }
+            }
+-           
+        }
+-       
+        else
+        {
+-           
+            cout<<"You Have Not Returned The Last Book";
+-           
+        }
+-       
+-   }
+-   
+ }
+ if(found==0)
+ {
+-   cout<<"Student Record Not Exists...";
+-   
++   cout<<"Student Record Not Found";
+ }
+ getch();
+ fp.close();
+ fp1.close();
+ }
+
+ void bookdeposit()
+ {
+-   char sn[6],bn[6];
+-   int found=0,flag=0,day,fine;
++   char sn[6];
++   int found = 0, flag = 0, day, fine;
+    clrscr();
+    cout<<"\n\nBOOK DEPOSIT...";
+    cout<<"\n\n\tEnter Admission no. Of Student";
+    cin>>sn;
+-   fp.open("student.dat",ios::in|ios::out);
+-   fp1.open("book.dat",ios::in|ios::out);
+-   while(fp.read((char*)&st,sizeof(student))&& found==0)
++   cin.ignore(numeric_limits<streamsize>::max(), '\n');
++
++   fp.open("student.dat", ios::in|ios::out);
++   fp1.open("book.dat", ios::in|ios::out);
++
++   while(fp.read((char*)&st, sizeof(student)) && found == 0)
+    {
+-       if(strcmpi(st.retadmno(),sn)==0)//compare admsn no.
++       if(strcmpi(st.retadmno(), sn) == 0)
+        {
+-           found=1;
+-           if(st.rettoken()==1)//if book issued
++           found = 1;
++           if(st.rettoken() == 1)
+            {
+-               while(fp1.read((char*)&bk,sizeof(book))&& flag==0)
++               char issuedBookNo[6];
++               strcpy(issuedBookNo, st.retstbno());
++               
++               while(fp1.read((char*)&bk, sizeof(book)) && flag == 0)
+                {
+-                   if(strcmpi(bk.retbno(),st.retstbno())==0)
++                   if(strcmpi(bk.retbno(), issuedBookNo) == 0)
+                    {
+-                       flag=1;
++                       flag = 1;
+                        bk.showbook();
+                        cout<<"\n\n Book Deposited In No. Of Days";
+                        cin>>day;
++                       cin.ignore(numeric_limits<streamsize>::max(), '\n');
++                       
+                        if(day>15)
+                        {
+-                           fine=(day-15)*1;
+-                           cout<<"\n\n Fine = "<<fine;
++                           fine = (day - 15) * 15; // 15 Rs/day fine
++                           cout<<"\n\nFine = "<<fine<<" Rs";
+                        }
++                       else
++                       {
++                           fine = 0;
++                       }
++                       
++                       // Update book status
++                       bk.incrementCopies();
++                       bk.setIssued(false);
++                       int bpos = -1 * sizeof(bk);
++                       fp1.seekp(bpos, ios::cur);
++                       fp1.write((char*)&bk, sizeof(book));
++                       
++                       // Update student status
+                        st.resettoken();
+-                       
+                        int pos=-1*sizeof(st);
+                        fp.seekg(pos,ios::cur);
+                        fp.write((char*)&st,sizeof(student));
+-                       cout<<"\n\n\tBook Deposited Successfully";
+-                       
+-                    
+-               }
+-           }
+-           if(flag==0)
+-           {
+-               cout<<"Book No. Does Not Exists";
++                       cout<<"\n\n\tBook Deposited Successfully!";
++                       cout<<"\nFine charged: "<<fine<<" Rs";
+                    }
+                }
+-               
+-           }
+-           
+-           else
+-           {
+-               
+-               cout<<"No Book Issued";
+-               
++               if(flag == 0)
++               {
++                   cout<<"\nBook record not found!";
++               }
+            }
+-           
+-       }
+-       
++           else
++           {
++               cout<<"\nNo Book Issued to this student!";
++           }
+        }
+-       
+-   }
+-   
++   }
+    if(found==0)
+    {
+-       cout<<"Student Record Not Exists...";
+-       
++       cout<<"Student Record Not Found";
+    }
+    getch();
+    fp.close();
+    fp1.close();
+ }

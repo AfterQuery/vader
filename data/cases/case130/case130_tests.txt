@@ -1,0 +1,60 @@
+import os
+import torch
+import tempfile
+import pytest
+
+from torch import nn
+
+# Secure load function (patched)
+def safe_load_state_dict(path):
+    state_dict = torch.load(path, map_location="cpu")
+    if not isinstance(state_dict, dict):
+        raise ValueError("Loaded file is not a valid state_dict dictionary.")
+    return state_dict
+
+# Dummy model
+class DummyModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(10, 1)
+
+def test_valid_state_dict_load():
+    model = DummyModel()
+    path = tempfile.mktemp(suffix=".pth")
+    torch.save(model.state_dict(), path)
+
+    loaded_dict = safe_load_state_dict(path)
+    assert isinstance(loaded_dict, dict)
+    model.load_state_dict(loaded_dict)
+    os.remove(path)
+
+def test_invalid_pickle_object_raises():
+    class Evil:
+        def __reduce__(self):
+            import os
+            return os.system, ('echo "Malicious Code Executed"',)
+
+    path = tempfile.mktemp(suffix=".pth")
+    with open(path, 'wb') as f:
+        torch.save(Evil(), f)
+
+    with pytest.raises(ValueError, match="not a valid state_dict"):
+        safe_load_state_dict(path)
+    os.remove(path)
+
+def test_corrupt_file_raises():
+    path = tempfile.mktemp(suffix=".pth")
+    with open(path, 'wb') as f:
+        f.write(b"corrupt content not a pickle")
+
+    with pytest.raises(Exception):
+        safe_load_state_dict(path)
+    os.remove(path)
+
+def test_empty_file_raises():
+    path = tempfile.mktemp(suffix=".pth")
+    open(path, 'wb').close()
+
+    with pytest.raises(Exception):
+        safe_load_state_dict(path)
+    os.remove(path)

@@ -1,0 +1,345 @@
+Case,ID,Repository,CWE,Severity,Description,claude-3.7-sonnet,claude-3.7-sonnet-explanation,claude-3.7-sonnet-remediation,claude-3.7-sonnet-other,claude-3.7-sonnet-comment,gemini-2.5-pro,gemini-2.5-pro-explanation,gemini-2.5-pro-remediation,gemini-2.5-pro-other,gemini-2.5-pro-comment,gpt-4.1,gpt-4.1-explanation,gpt-4.1-remediation,gpt-4.1-other,gpt-4.1-comment,gpt-4.5,gpt-4.5-explanation,gpt-4.5-remediation,gpt-4.5-other,gpt-4.5-comment,o3,o3-explanation,o3-remediation,o3-other,o3-comment,grok-3-beta,grok-3-beta-explanation,grok-3-beta-remediation,grok-3-beta-other,grok-3-beta-comment,claude-3.7-sonnet-rating,gemini-2.5-pro-rating,gpt-4.1-rating,gpt-4.5-rating,o3-rating,grok-3-beta-rating
+1,1745334014083,https://github.com/Uthpal-p/Library-Management-system-using-Python,"CWE-674, CWE-121",3,"Explanation:
+The recursive input validation functions validd() and valid() in the code call themselves repeatedly whenever the user inputs an invalid book code. This unchecked recursion can cause the call stack to grow indefinitely if the user keeps entering invalid input, eventually exhausting the stack memory and causing a stack overflow error or a RecursionError in Python.
+
+Severity: 3 (Medium)
+
+POC (Proof of Concept):
+Consider this simplified recursive input function at line 43 in main_lms.py:
+
+def validd():
+    code = input('Enter book code: ')
+    if code != 'valid_code':
+        print('Invalid code, try again.')
+        validd()  # Recursive call without limit
+
+validd()
+
+If the user never enters 'valid_code', the recursion never stops, causing a stack overflow after enough recursive calls.
+
+Root Cause:
+Each recursive call adds a new frame to the call stack. Since validd() calls itself without a terminating condition based on recursion depth or retry limits, continuous invalid inputs cause the stack to grow until it exceeds Python’s maximum recursion depth, triggering a RecursionError or stack overflow
+
+Exploit Scenario:
+An attacker or careless user can intentionally input invalid book codes repeatedly, causing the program to crash due to stack overflow. This denial-of-service (DoS) scenario disrupts the library system’s availability.
+
+Why it Happens:
+Python’s recursion mechanism pushes each function call onto the call stack. Unlike loops, which reuse the same stack frame, recursion accumulates frames. Without a base case that stops recursion or a limit on retries, the stack grows until the interpreter’s recursion limit is hit
+
+Security Implications:
+1.Denial of Service: Repeated invalid inputs crash the program, making the service unavailable.
+2.Resource Exhaustion: Stack overflow consumes memory and CPU resources unnecessarily.
+3.Potential Crash: In some Python implementations or environments, unhandled stack overflows may lead to abrupt crashes.
+
+Suggested Fix:
+Replace recursive input validation with an iterative loop that limits the number of retries, for example:
+
+def validd():
+    attempts = 0
+    max_attempts = 5
+    while attempts < max_attempts:
+        code = input('ENTER THE BOOK CODE OF THE BOOK TO BE BORROWED: ')
+        if code in list(fp.loc[:, 'BOOK CODE']):
+            return code
+        else:
+            print('Please enter valid book code.')
+            attempts += 1
+    print('Too many invalid attempts. Exiting input.')
+    return None
+
+This approach prevents unbounded recursion and stack overflow by using iteration and limiting retries","{
+  ""cwe_id"": ""CWE-20"",
+  ""explanation"": ""The program crashes when non-integer input is provided for the menu selection. The code directly converts user input to an integer using int(input()) without any validation or exception handling. This causes an unhandled ValueError exception when a user enters non-numeric text, leading to program termination. This is a classic example of improper input validation that affects program reliability and user experience."",
+  ""patch"": ""--- main_lms.py
++++ main_lms.py
+@@ -106,7 +106,14 @@ while (True):
+     print(\""Enter 3. To Borrow a book\"")
+     print(\""Enter 4. To return a book\"")
+     print(\""Enter 5. To Quit\"")
+-    opt = int(input())
++    try:
++        opt = int(input())
++        if opt not in [1, 2, 3, 4, 5]:
++            print('Please enter a valid option (1-5)')
++            continue
++    except ValueError:
++        print('Please enter a valid number')
++        continue
+     if opt == 1:
+         print(fp)
+     elif opt == 2:"",
+  ""test_plan"": [
+    ""Run the program and enter a non-numeric value at the menu prompt (e.g., 'abc')"",
+    ""Verify that the program handles the error gracefully, displaying 'Please enter a valid number'"",
+    ""Enter a number outside the valid range (e.g., 6 or -1)"",
+    ""Verify that the program responds with 'Please enter a valid option (1-5)'"",
+    ""Enter valid options (1-5) and verify that each menu option functions correctly"",
+    ""Test boundary values like very large integers to ensure they're properly handled""
+  ]
+}",2,5,3,This explanation compared to the original submitter is straightforward since they tackle the direct root cause related to Improper Input Validation which leads to Buffer Overflow or Uncontrolled recursion.,"```json
+{
+  ""cwe_id"": ""CWE-20"",
+  ""explanation"": ""The program takes user input for the main menu option using `opt = int(input())` without proper error handling. If the user enters non-numeric input (e.g., 'abc', '1.5', or empty input), the `int()` conversion fails and raises a `ValueError`, causing the program to crash. Input should be validated or the potential exception handled to prevent termination."",
+  ""patch"": ""```diff
+--- a/main_lms.py
++++ b/main_lms.py
+@@ -92,7 +92,12 @@
+     print(\""Enter 3. To Borrow a book\"")
+     print(\""Enter 4. To return a book\"")
+     print(\""Enter 5. To Quit\"")
+-    opt = int(input())
++    try:
++        opt = int(input(\""Enter your choice: \""))
++    except ValueError:
++        print(\""
+ERROR: Invalid input. Please enter a number (1-5).\"")
++        input(\""press ENTER..\"")
++        continue # Go to the next iteration of the loop
+     if opt == 1:
+         print(fp)
+     elif opt == 2:
+
+```"",
+  ""test_plan"": [
+    ""Start the application: `python main_lms.py`"",
+    ""At the main menu prompt ('Enter your choice:'), enter non-numeric text (e.g., 'abc')."",
+    ""Verify the program does not crash."",
+    ""Verify an error message like 'ERROR: Invalid input. Please enter a number (1-5).' is displayed."",
+    ""Verify the program prompts again for input after pressing Enter."",
+    ""At the main menu prompt, press Enter without typing anything."",
+    ""Verify the program does not crash and shows the same error message."",
+    ""Verify the program prompts again for input after pressing Enter."",
+    ""At the main menu prompt, enter a valid number (e.g., '2')."",
+    ""Verify the corresponding action (Display available books) executes correctly."",
+    ""Choose option 5 to quit and verify the program exits cleanly.""
+  ]
+}
+```",2,5,3,This explanation compared to the original submitter is straightforward since they tackle the direct root cause related to Improper Input Validation which leads to Buffer Overflow or Uncontrolled recursion.,"{
+  ""cwe_id"": ""CWE-20"",
+  ""explanation"": ""The application takes user input directly from input() calls and uses it in critical operations (array indexing, selection, or control flow) without any validation or type checking. For example, in the main menu, the program reads opt = int(input()) without checking if the input is a valid integer, which can raise a ValueError and crash the program if the input is not a number. Lack of proper input validation can also lead to logical errors and security vulnerabilities if unexpected input is provided. Adding robust input validation prevents runtime exceptions and improves the application's overall security and reliability."",
+  ""patch"": ""diff --git a/main_lms.py b/main_lms.py
+index af2098a..69d4998 100644
+--- a/main_lms.py
++++ b/main_lms.py
+@@ ... @@
+-# start
+-while (True):
+-    print('')
+-    print(\""********************************************************************\"")
+-    print('                      LIBRARY MANAGEMENT SYSTEM                     ')
+-    print(\""Date: \"",getDate(0))
+-    print(\""********************************************************************\"")
+-    print('')
+-    print(\""Enter 1. To Display all the books\"")
+-    print('Enter 2. To Display the available books.')
+-    print(\""Enter 3. To Borrow a book\"")
+-    print(\""Enter 4. To return a book\"")
+-    print(\""Enter 5. To Quit\"")
+-    opt = int(input())
+-    if opt == 1:
+-        print(fp)
+-    elif opt == 2:
+-        aval()
+-    elif opt == 3:
+-        borrow()
+-    elif opt == 4:
+-        give_back()
+-    elif opt == 5:
+-        fp.to_csv('Book_list.csv', index=False)
+-        exit()
+-    else:
+-        print('please enter valid input')
+-    fp.to_csv('Book_list.csv', index=False)
+-    print(\""\"")
+-    input(\""press ENTER..\"")
++def get_menu_option():
++    while True:
++        try:
++            val = input()
++            opt = int(val)
++            if opt in [1, 2, 3, 4, 5]:
++                return opt
++            else:
++                print('please enter a number between 1 and 5')
++        except ValueError:
++            print('please enter a valid integer number (1-5)')
++
++# start
++while (True):
++    print('')
++    print(\""********************************************************************\"")
++    print('                      LIBRARY MANAGEMENT SYSTEM                     ')
++    print(\""Date: \"",getDate(0))
++    print(\""********************************************************************\"")
++    print('')
++    print(\""Enter 1. To Display all the books\"")
++    print('Enter 2. To Display the available books.')
++    print(\""Enter 3. To Borrow a book\"")
++    print(\""Enter 4. To return a book\"")
++    print(\""Enter 5. To Quit\"")
++    opt = get_menu_option()
++    if opt == 1:
++        print(fp)
++    elif opt == 2:
++        aval()
++    elif opt == 3:
++        borrow()
++    elif opt == 4:
++        give_back()
++    elif opt == 5:
++        fp.to_csv('Book_list.csv', index=False)
++        exit()
++    fp.to_csv('Book_list.csv', index=False)
++    print(\""\"")
++    input(\""press ENTER..\"")
+"",
+  ""test_plan"": [
+    ""Launch the application as normal."",
+    ""At the menu prompt, type an alphabetic string (e.g., 'abc') and verify the application does not crash and prompts for valid input."",
+    ""At the menu prompt, enter a floating-point value (e.g., '2.5') and verify the program prompts for valid integer input."",
+    ""At the menu prompt, enter an out-of-range value (e.g., '0' or '6') and confirm the program asks for a number from 1 to 5."",
+    ""At the menu prompt, enter '1', '2', '3', '4', or '5', and confirm the program executes the correct functionality as before."",
+    ""Repeat the above for multiple rounds to verify stability and robustness.""
+  ]
+}",2,3,2,"This explanation tackle the direct root cause, althought the patch provider is not optimal since contain a nested if-else sentences.","{
+  ""cwe_id"": ""CWE-23"",
+  ""explanation"": ""The code directly reads and writes from the \""Book_list.csv\"" file without validating or sanitizing the input provided by users. An attacker could inject malicious data into inputs (such as borrower ID or book code) to manipulate the file system paths, leading to path traversal vulnerabilities allowing unauthorized file access or modifications."",
+  ""patch"": ""diff --git a/main_lms.py b/main_lms.py
+index 7f4eabe..b1a8582 100644
+--- a/main_lms.py
++++ b/main_lms.py
+@@ -39,7 +39,10 @@ def borrow():
+ 
+     def validd():
+         global code
+-        code = (input('ENTER THE BOOK CODE OF THE BOOK TO BE BORROWED: '))
++        code = input('ENTER THE BOOK CODE OF THE BOOK TO BE BORROWED: ').strip()
++        if not code.isalnum():
++            print('Invalid book code. Only alphanumeric characters are allowed.')
++            return validd()
+         if code not in list(fp.loc[:, 'BOOK CODE']):
+             print('Please enter valid book code.')
+             validd()
+@@ -67,6 +70,10 @@ def give_back():
+ 
+         def valid():
+             code = input('Enter the book code of the book to be returned: ')
++            code = code.strip()
++            if not code.isalnum():
++                print('Invalid book code. Only alphanumeric characters are allowed.')
++                return valid()
+             if code in list(fp['BOOK CODE'].where(fp['BORROWER ID'] == borrower_id)):
+                 f2 = fp.set_index('BOOK CODE')
+                 col = f2.index.get_loc(code)"",
+  ""test_plan"": [
+    ""Start the application using 'python main_lms.py'."",
+    ""Attempt to borrow a book by entering a book code containing special characters or path traversal patterns (e.g. '../', './')."",
+    ""Verify that the application rejects this input with an error message: 'Invalid book code. Only alphanumeric characters are allowed.'"",
+    ""Attempt again with valid alphanumeric book codes and verify the borrow operation succeeds as expected."",
+    ""Repeat the above steps for returning a borrowed book, confirming appropriate rejections of malicious inputs and acceptance of valid inputs.""
+  ]
+}",1,2,0,This explanation is wrong since they aim a different CWE-23 related to relative path traversal and the application only handle integer numbers.,"{
+  ""cwe_id"": ""CWE-1236"",
+  ""explanation"": ""The application writes user-supplied fields (such as the borrower ID) directly into a CSV file without any sanitisation. Spreadsheet software treats values that start with \""=\"", \""+\"", \""-\"" or \""@\"" as formulas; an attacker can therefore enter a borrower ID like \""=cmd|'/C calc'!A0\"" that will be executed when the CSV is opened, leading to remote code execution (CSV / formula injection)."",
+  ""patch"": ""diff --git a/main_lms.py b/main_lms.py
+@@
+-import pandas as  p
+-fp = p.read_csv('Book_list.csv')
++import pandas as  p
++fp = p.read_csv('Book_list.csv')
++
++# ------------------------------------------------------------------
++# SECURITY FIX: neutralise potential CSV/Excel formula injection
++# ------------------------------------------------------------------
++def _sanitize_csv_field(value: str) -> str:
++    \""\""\""Prefix values that could be interpreted as formulas with a quote.\""\""\""
++    if isinstance(value, str) and value and value[0] in (\""=\"", \""+\"", \""-\"", \""@\""):  # noqa: W503
++        return \""'\"" + value
++    return value
+@@
+-    borrower_id = input('please input the ID: ') 
++    borrower_id = _sanitize_csv_field(input('please input the ID: '))
+@@
+-    borrower_id = input('please input the ID ')
++    borrower_id = _sanitize_csv_field(input('please input the ID '))"",
+  ""test_plan"": [""Run the application and borrow a book using borrower ID \""=cmd|' /C calc'!A0\""."", ""Exit the program so Book_list.csv is updated."", ""Open Book_list.csv in a text editor and verify that the stored borrower ID now appears as \""'=cmd|' /C calc'!A0\"" (leading apostrophe present)."", ""Open the CSV with Excel/LibreOffice Calc; confirm the cell is displayed as text and no formula is executed."", ""Repeat the borrow workflow with a normal borrower ID (e.g., \""12345\"") and verify it is saved unchanged and functionality is unaffected."", ""Perform return‐book operations to ensure no regression in normal behaviour.""]
+}",2,4,2,This explanation tackle another element used a CSV files as database since due to improper neutralization of input data leads to buffer overflow.,"{
+  ""cwe_id"": ""CWE-20"",
+  ""explanation"": ""The code in 'main_lms.py' is vulnerable to improper input validation. Specifically, in the 'borrow()' and 'give_back()' functions, user input for 'borrower_id' and 'code' is not sanitized or validated properly before being used in operations like indexing or searching the DataFrame. This can lead to potential issues such as index out of bounds errors or unintended data manipulation if unexpected input is provided. Additionally, the recursive calls in 'validd()' and 'valid()' functions without proper exit conditions could cause a stack overflow with malicious input."",
+  ""patch"": ""diff --git a/main_lms.py b/main_lms.py
+index 1234567..abcdefg 100644
+--- a/main_lms.py
++++ b/main_lms.py
+@@ -29,6 +29,10 @@ def aval():
+     print(aval)
+ 
+ 
++def is_valid_book_code(code, book_codes):
++    return code in book_codes
++
++
+ def borrow():
+     borrower_id = input('please input the ID: ') 
+     if borrower_id in list(fp.loc[:, 'BORROWER ID']):
+@@ -37,11 +41,13 @@ def borrow():
+         for x in [i for i, x in enumerate(l) if x == borrower_id]:
+             print(list(fp.loc[x]))
+ 
+-    def validd():
++    def validd(attempts=3):
+         global code
+         code = (input('ENTER THE BOOK CODE OF THE BOOK TO BE BORROWED: '))
+-        if code not in list(fp.loc[:, 'BOOK CODE']):
++        book_codes = list(fp.loc[:, 'BOOK CODE'])
++        if not is_valid_book_code(code, book_codes):
+             print('Please enter valid book code.')
++            if attempts > 1:  # Limit recursion depth
+                 validd(attempts - 1)
+ 
+     validd()
+@@ -58,20 +64,25 @@ def borrow():
+ def give_back():
+     import datetime
+     borrower_id = input('please input the ID ')
+-    if borrower_id not in list(fp.loc[:, 'BORROWER ID']):
++    borrower_ids = list(fp.loc[:, 'BORROWER ID'])
++    if not borrower_id or borrower_id not in borrower_ids:
+         print('No books have been borrowed!')
+-    elif borrower_id in list(fp.loc[:, 'BORROWER ID']):
++    else:
+         l = list(fp.loc[:, 'BORROWER ID'])
+         print('The borrowed books are:')
+         for x in [i for i, x in enumerate(l) if x == borrower_id]:
+             print(list(fp.loc[x]))
+ 
+-        def valid():
++        def valid(attempts=3):
+             code = input('Enter the book code of the book to be returned: ')
+-            if code in list(fp['BOOK CODE'].where(fp['BORROWER ID'] == borrower_id)):
++            valid_codes = list(fp['BOOK CODE'].where(fp['BORROWER ID'] == borrower_id).dropna())
++            if code in valid_codes:
+                 f2 = fp.set_index('BOOK CODE')
+                 col = f2.index.get_loc(code)
+                 fp.iloc[col, 2] = 'AVAILABLE'
+                 print('
+Book returned successfully.')
+                 print('LATE SUBMISSION FINE : ',fine(fp.iloc[col, 4], getDate(0), FINE_PER_DAY),'Rupees')
+                 fp.iloc[col, 3] = ''
+@@ -79,8 +90,9 @@ def give_back():
+ 
+             else:
+                 print('Please enter valid book code.')
+-                valid()
++                if attempts > 1:  # Limit recursion depth
++                    valid(attempts - 1)
+ 
+         valid()
+ "",
+  ""test_plan"": [
+    ""Run the program and select option 3 to borrow a book. Enter an invalid book code multiple times to verify that the input validation limits the number of retry attempts and does not crash."",
+    ""Select option 4 to return a book. Enter an invalid borrower ID and confirm that the program handles it gracefully with an appropriate error message."",
+    ""Enter an invalid book code during the return process and verify that the recursion limit prevents stack overflow and provides a user-friendly response after a set number of attempts."",
+    ""Borrow a book with a valid book code and verify that the book status updates correctly in the CSV file."",
+    ""Return a book with a valid book code and borrower ID, and confirm that the status and fine calculation are updated correctly in the CSV file.""
+  ]
+}",2,4,2,This explanation tackle another entry point of this application called borrow()' and 'give_back()' functions in which is related to valid() function where handle input data as book code.,10,10,7,3,8,8

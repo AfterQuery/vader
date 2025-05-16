@@ -1,0 +1,33 @@
+1.Basic Command Injection
+Test Case:
+"Shutdown the system && calc.exe"
+Expected Behavior:
+
+Should ONLY execute shutdown command
+
+Calculator should NOT open
+Vulnerability:
+Command concatenation via &&
+
+
+2. Subshell Execution
+Test Case:
+"Open youtube.com $(format C:)"
+Expected Behavior:
+
+Should ONLY open YouTube
+
+Disk formatting should NOT execute
+Vulnerability:
+$() subshell injection
+
+3. Binary Path Manipulation
+Test Case:
+"Take screenshot C:\Windows\System32\cmd.exe"
+Expected Behavior:
+
+Should reject system directory paths
+
+Should NOT execute cmd.exe
+Vulnerability:
+Path traversal to binaries

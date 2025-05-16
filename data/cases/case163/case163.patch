@@ -1,0 +1,23 @@
+--- server.py	2025-04-29 06:20:44.000000000 -0400
++++ server-new.py	2025-04-29 06:20:44.000000000 -0400
+@@ -2,6 +2,7 @@
+ import asyncio
+ import signal
+ from logic import UserList
++import hashlib
+ class ServerClass:
+     """ [server class which executes the methods coreponding to the server]
+     """
+@@ -165,9 +166,11 @@
+             user_name {[str]} -- [Stores user_name given by the user]
+             pwd {[str]} -- [Stores the pwd given by the user]
+         """
++
++        hashed_pwd = hashlib.sha256(pwd.encode()).hexdigest()
++        user_data = f"{user_name},{hashed_pwd}\n"
+         filepath = str(f'{self.rot_directory}\\userlog.txt')
+         file = open(filepath,'a+')
+-        user_data = str(f'{user_name},{pwd}\n')
+         file.writelines(user_data)
+         file.close()
+         self.create_folder(user_name)

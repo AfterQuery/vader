@@ -1,0 +1,130 @@
+From 6b6b605eaf73852fb2dae033f1e786155959de3a Mon Sep 17 00:00:00 2001
+From: Lev Pachmanov <31389480+levpachmanov@users.noreply.github.com>
+Date: Tue, 13 Aug 2024 21:43:05 +0300
+Subject: [PATCH] fix(sec): CVE-2024-39338 (#6539) (#6543)
+
+* fix(sec): cve-2024-39338 (#6539)
+
+* fix(sec): fix test
+---
+ lib/adapters/http.js                          |  2 +-
+ lib/helpers/isAbsoluteURL.js                  |  4 +-
+ test/specs/helpers/isAbsoluteURL.spec.js      |  4 +-
+ test/unit/regression/SNYK-JS-AXIOS-7361793.js | 48 ++++++++++++++++---
+ 4 files changed, 47 insertions(+), 11 deletions(-)
+
+diff --git a/lib/adapters/http.js b/lib/adapters/http.js
+index 7c982fa78b..d5ad9d1f37 100755
+--- a/lib/adapters/http.js
++++ b/lib/adapters/http.js
+@@ -229,7 +229,7 @@ export default isHttpAdapterSupported && function httpAdapter(config) {
+ 
+     // Parse url
+     const fullPath = buildFullPath(config.baseURL, config.url);
+-    const parsed = new URL(fullPath, 'http://localhost');
++    const parsed = new URL(fullPath, utils.hasBrowserEnv ? platform.origin : undefined);
+     const protocol = parsed.protocol || supportedProtocols[0];
+ 
+     if (protocol === 'data:') {
+diff --git a/lib/helpers/isAbsoluteURL.js b/lib/helpers/isAbsoluteURL.js
+index 41f2785c3d..4747a45767 100644
+--- a/lib/helpers/isAbsoluteURL.js
++++ b/lib/helpers/isAbsoluteURL.js
+@@ -8,8 +8,8 @@
+  * @returns {boolean} True if the specified URL is absolute, otherwise false
+  */
+ export default function isAbsoluteURL(url) {
+-  // A URL is considered absolute if it begins with "<scheme>://".
++  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+   // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+   // by any combination of letters, digits, plus, period, or hyphen.
+-  return /^([a-z][a-z\d+\-.]*:)\/\//i.test(url);
++  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+ }
+diff --git a/test/specs/helpers/isAbsoluteURL.spec.js b/test/specs/helpers/isAbsoluteURL.spec.js
+index cf8a4cedbf..872f5efbe1 100644
+--- a/test/specs/helpers/isAbsoluteURL.spec.js
++++ b/test/specs/helpers/isAbsoluteURL.spec.js
+@@ -12,8 +12,8 @@ describe('helpers::isAbsoluteURL', function () {
+     expect(isAbsoluteURL('!valid://example.com/')).toBe(false);
+   });
+ 
+-  it('should return false if URL is protocol-relative', function () {
+-    expect(isAbsoluteURL('//example.com/')).toBe(false);
++  it('should return true if URL is protocol-relative', function () {
++    expect(isAbsoluteURL('//example.com/')).toBe(true);
+   });
+ 
+   it('should return false if URL is relative', function () {
+diff --git a/test/unit/regression/SNYK-JS-AXIOS-7361793.js b/test/unit/regression/SNYK-JS-AXIOS-7361793.js
+index 247e3eaef7..2d8b20565e 100644
+--- a/test/unit/regression/SNYK-JS-AXIOS-7361793.js
++++ b/test/unit/regression/SNYK-JS-AXIOS-7361793.js
+@@ -4,6 +4,9 @@
+ import axios from '../../../index.js';
+ import http from 'http';
+ import assert from 'assert';
++import utils from '../../../lib/utils.js';
++import platform from '../../../lib/platform/index.js';
++
+ 
+ const GOOD_PORT = 4666;
+ const BAD_PORT = 4667;
+@@ -27,7 +30,7 @@ describe('Server-Side Request Forgery (SSRF)', () => {
+         badServer.close();
+     });
+ 
+-    it('should not fetch bad server', async () => {
++    it('should not fetch in server-side mode', async () => {
+         const ssrfAxios = axios.create({
+             baseURL: 'http://localhost:' + String(GOOD_PORT),
+         });
+@@ -36,10 +39,43 @@ describe('Server-Side Request Forgery (SSRF)', () => {
+         // Malicious payload is as below.
+         const userId = '/localhost:' + String(BAD_PORT);
+ 
+-        const response = await ssrfAxios.get(`/${userId}`);
+-        assert.strictEqual(response.data, 'good');
+-        assert.strictEqual(response.config.baseURL, 'http://localhost:' + String(GOOD_PORT));
+-        assert.strictEqual(response.config.url, '//localhost:' + String(BAD_PORT));
+-        assert.strictEqual(response.request.res.responseUrl, 'http://localhost:' + String(GOOD_PORT) + '/localhost:' + String(BAD_PORT));
++        try {
++            await ssrfAxios.get(`/${userId}`);
++        } catch (error) {
++            assert.ok(error.message.startsWith('Invalid URL'));
++            return;
++        }
++        assert.fail('Expected an error to be thrown');
++    });
++
++    describe('should fetch in client-side mode', () => {
++        let hasBrowserEnv, origin;
++
++        before(() => {
++            hasBrowserEnv = utils.hasBrowserEnv;
++            origin = platform.origin;
++            utils.hasBrowserEnv = true;
++            platform.origin = 'http://localhost:' + String(GOOD_PORT);
++        });
++        after(() => {
++            utils.hasBrowserEnv = hasBrowserEnv;
++            platform.origin = origin;
++        });
++        it('should fetch in client-side mode', async () => {
++            utils.hasBrowserEnv = true;
++            const ssrfAxios = axios.create({
++                baseURL: 'http://localhost:' + String(GOOD_PORT),
++            });
++
++            // Good payload would be `userId = '12345'`
++            // Malicious payload is as below.
++            const userId = '/localhost:' + String(BAD_PORT);
++
++            const response = await ssrfAxios.get(`/${userId}`);
++            assert.strictEqual(response.data, 'bad');
++            assert.strictEqual(response.config.baseURL, 'http://localhost:' + String(GOOD_PORT));
++            assert.strictEqual(response.config.url, '//localhost:' + String(BAD_PORT));
++            assert.strictEqual(response.request.res.responseUrl, 'http://localhost:' + String(BAD_PORT) + '/');
++        });
+     });
+ });

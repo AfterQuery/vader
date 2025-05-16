@@ -1,0 +1,5 @@
+--- JobDataService.cs	2025-04-27
++++ JobDataService_fixed.cs	2025-04-27
+@@
+- JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
++ JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };

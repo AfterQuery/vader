@@ -1,0 +1,49 @@
+From 99cce7e2b0da2978411cedd7cac5fffbe15bc466 Mon Sep 17 00:00:00 2001
+From: Jamie Curnow <jc@jc21.com>
+Date: Mon, 1 Jul 2024 16:08:01 +1000
+Subject: [PATCH] Fix command injection when passing bash commands into the dns
+ provider configuration
+
+- Use built in node functions to write the file
+- And to delete the file
+---
+ backend/internal/certificate.js | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/backend/internal/certificate.js b/backend/internal/certificate.js
+index 603370499..291056caa 100644
+--- a/backend/internal/certificate.js
++++ b/backend/internal/certificate.js
+@@ -861,9 +861,8 @@ const internalCertificate = {
+ 		logger.info(`Requesting Let'sEncrypt certificates via ${dnsPlugin.name} for Cert #${certificate.id}: ${certificate.domain_names.join(', ')}`);
+ 
+ 		const credentialsLocation = '/etc/letsencrypt/credentials/credentials-' + certificate.id;
+-		// Escape single quotes and backslashes
+-		const escapedCredentials = certificate.meta.dns_provider_credentials.replaceAll('\'', '\\\'').replaceAll('\\', '\\\\');
+-		const credentialsCmd     = 'mkdir -p /etc/letsencrypt/credentials 2> /dev/null; echo \'' + escapedCredentials + '\' > \'' + credentialsLocation + '\' && chmod 600 \'' + credentialsLocation + '\'';
++		fs.mkdirSync('/etc/letsencrypt/credentials', { recursive: true });
++		fs.writeFileSync(credentialsLocation, certificate.meta.dns_provider_credentials, {mode: 0o600});
+ 
+ 		// Whether the plugin has a --<name>-credentials argument
+ 		const hasConfigArg = certificate.meta.dns_provider !== 'route53';
+@@ -898,17 +897,15 @@ const internalCertificate = {
+ 			mainCmd = mainCmd + ' --dns-duckdns-no-txt-restore';
+ 		}
+ 
+-		logger.info('Command:', `${credentialsCmd} && && ${mainCmd}`);
++		logger.info('Command:', mainCmd);
+ 
+ 		try {
+-			await utils.exec(credentialsCmd);
+ 			const result = await utils.exec(mainCmd);
+ 			logger.info(result);
+ 			return result;
+ 		} catch (err) {
+-			// Don't fail if file does not exist
+-			const delete_credentialsCmd = `rm -f '${credentialsLocation}' || true`;
+-			await utils.exec(delete_credentialsCmd);
++			// Don't fail if file does not exist, so no need for action in the callback
++			fs.unlink(credentialsLocation, () => {});
+ 			throw err;
+ 		}
+ 	},

@@ -1,0 +1,5 @@
+md5 = hashlib.md5()  # Line 84
+Steps to Reproduce:
+Inspect the generate_token function in api/auth.py.
+Observe that MD5 is used for token generation, which is considered cryptographically insecure.
+Note that MD5 creates a risk of collision attacks, potentially allowing unauthorized access.

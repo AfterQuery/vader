@@ -1,0 +1,267 @@
+diff --git a/README.md b/README.md
+index 81a9aa10..105c8037 100644
+--- a/README.md
++++ b/README.md
+@@ -1,9 +1,23 @@
+ Embedded JavaScript templates<br/>
+-[![Build Status](https://img.shields.io/travis/mde/ejs/master.svg?style=flat)](https://travis-ci.org/mde/ejs)
+-[![Developing Dependencies](https://img.shields.io/david/dev/mde/ejs.svg?style=flat)](https://david-dm.org/mde/ejs?type=dev)
+ [![Known Vulnerabilities](https://snyk.io/test/npm/ejs/badge.svg?style=flat)](https://snyk.io/test/npm/ejs)
+ =============================
+ 
++## Security
++
++Security professionals, before reporting any security issues, please reference the
++<a href="https://github.com/mde/ejs/blob/main/SECURITY.md">SECURITY.md</a>
++in this project, in particular, the following: "EJS is effectively a JavaScript runtime.
++Its entire job is to execute JavaScript. If you run the EJS render method without
++checking the inputs yourself, you are responsible for the results."
++
++In short, DO NOT submit 'vulnerabilities' that include this snippet of code:
++
++```javascript
++app.get('/', (req, res) => {
++  res.render('index', req.query);
++});
++```
++
+ ## Installation
+ 
+ ```bash
+@@ -92,14 +106,14 @@ You should never give end-users unfettered access to the EJS render method, If y
+   - `outputFunctionName`    Set to a string (e.g., 'echo' or 'print') for a function to print
+     output inside scriptlet tags.
+   - `async`                 When `true`, EJS will use an async function for rendering. (Depends
+-    on async/await support in the JS runtime.
++    on async/await support in the JS runtime).
+   - `includer`              Custom function to handle EJS includes, receives `(originalPath, parsedPath)`
+     parameters, where `originalPath` is the path in include as-is and `parsedPath` is the
+     previously resolved path. Should return an object `{ filename, template }`,
+     you may return only one of the properties, where `filename` is the final parsed path and `template`
+     is the included content.
+ 
+-This project uses [JSDoc](http://usejsdoc.org/). For the full public API
++This project uses [JSDoc](https://jsdoc.app/). For the full public API
+ documentation, clone the repository and run `jake doc`. This will run JSDoc
+ with the proper options and output the documentation to `out/`. If you want
+ the both the public & private API docs, run `jake devdoc` instead.
+diff --git a/SECURITY.md b/SECURITY.md
+index 91756a61..0011b240 100644
+--- a/SECURITY.md
++++ b/SECURITY.md
+@@ -18,5 +18,25 @@ To ensure the timely response to your report, please ensure that the entirety of
+ 
+ The EJS team will then evaluate your report and will reply with the next steps in handling your report and may ask for additional information or guidance.
+ 
+-## out of scope vulnerabilities
+-If you give end-users unfettered access to the EJS render method, you are using EJS in an inherently un-secure way. Please do not report security issues that stem from doing that. EJS is effectively a JavaScript runtime. Its entire job is to execute JavaScript. If you run the EJS render method without checking the inputs yourself, you are responsible for the results.
++## Out-of-Scope Vulnerabilities
++If you give end-users unfettered access to the EJS render method, you are using EJS in an inherently un-secure way. Please do not report security issues that stem from doing that.
++
++EJS is effectively a JavaScript runtime. Its entire job is to execute JavaScript. If you run the EJS render method without checking the inputs yourself, you are responsible for the results.
++
++In short, DO NOT send reports including this snippet of code:
++
++```javascript
++const express = require('express');
++const app = express();
++const PORT = 3000;
++app.set('views', __dirname);
++app.set('view engine', 'ejs');
++
++app.get('/', (req, res) => {
++    res.render('index', req.query);
++});
++
++app.listen(PORT, ()=> {
++    console.log(`Server is running on ${PORT}`);
++});
++```
+diff --git a/examples/slot/body.ejs b/examples/slot/body.ejs
+new file mode 100644
+index 00000000..cb74d9e8
+--- /dev/null
++++ b/examples/slot/body.ejs
+@@ -0,0 +1 @@
++<div>body</div>
+diff --git a/examples/slot/footer.ejs b/examples/slot/footer.ejs
+new file mode 100644
+index 00000000..27dee2fa
+--- /dev/null
++++ b/examples/slot/footer.ejs
+@@ -0,0 +1 @@
++<div>footer</div>
+diff --git a/examples/slot/index.ejs b/examples/slot/index.ejs
+new file mode 100644
+index 00000000..6aa8ff5c
+--- /dev/null
++++ b/examples/slot/index.ejs
+@@ -0,0 +1,15 @@
++
++<div>
++<%-include('./layout.ejs', {
++  body: include('./body.ejs'),
++  footer: include('./footer.ejs')
++})%>
++</div>
++
++<hr>
++
++<div>
++<%-include('./layout.ejs', {
++  footer: include('./footer.ejs')
++})%>
++</div>
+diff --git a/examples/slot/index.js b/examples/slot/index.js
+new file mode 100644
+index 00000000..de3ce178
+--- /dev/null
++++ b/examples/slot/index.js
+@@ -0,0 +1,12 @@
++/*
++ * Advanced use of "include", fast layout, and dynamic rendering components.
++ */
++
++var ejs = require('../../lib/ejs');
++var read = require('fs').readFileSync;
++var join = require('path').join;
++var path = join(__dirname, '/index.ejs');
++
++var ret = ejs.compile(read(path, 'utf8'), {filename: path})({title: 'use slot'});
++
++console.log(ret);
+diff --git a/examples/slot/layout.ejs b/examples/slot/layout.ejs
+new file mode 100644
+index 00000000..549e70a3
+--- /dev/null
++++ b/examples/slot/layout.ejs
+@@ -0,0 +1,27 @@
++<!DOCTYPE html>
++<html lang="en">
++
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0">
++  <title>layout</title>
++</head>
++
++<body>
++  <div>
++    <h2><%=title%></h2>
++
++    <% if (typeof body !== 'undefined') { %>
++    <%- body %>
++    <% } else { %>
++    <p>This is the default body content.</p>
++    <% } %>
++
++    <div>description</div>
++
++    <%- footer %>
++  </div>
++
++</body>
++
++</html>
+diff --git a/jakefile.js b/jakefile.js
+index 7f601051..0d6b6abb 100644
+--- a/jakefile.js
++++ b/jakefile.js
+@@ -64,7 +64,7 @@ task('docPublish', ['doc'], function () {
+ 
+ desc('Runs the EJS test suite');
+ task('test', ['lint'], function () {
+-  exec(path.join('./node_modules/.bin/mocha'));
++  exec(path.join('./node_modules/.bin/mocha --u tdd'));
+ });
+ 
+ publishTask('ejs', ['build'], function () {
+diff --git a/lib/ejs.js b/lib/ejs.js
+index 65590eae..18ff7b7b 100755
+--- a/lib/ejs.js
++++ b/lib/ejs.js
+@@ -506,8 +506,8 @@ exports.clearCache = function () {
+   exports.cache.reset();
+ };
+ 
+-function Template(text, opts) {
+-  opts = opts || utils.createNullProtoObjWherePossible();
++function Template(text, optsParam) {
++  var opts = utils.hasOwnOnlyObject(optsParam);
+   var options = utils.createNullProtoObjWherePossible();
+   this.templateText = text;
+   /** @type {string | null} */
+@@ -633,13 +633,15 @@ Template.prototype = {
+       src = this.source;
+     }
+ 
++    // if (opts.client) {
++    //   src = 'escapeFn = escapeFn || ' + escapeFn.toString() + ';' + '\n' + src;
++    //   if (opts.compileDebug) {
++    //     src = 'rethrow = rethrow || ' + rethrow.toString() + ';' + '\n' + src;
++    //   }
++    // }
+     if (opts.client) {
+-      src = 'escapeFn = escapeFn || ' + escapeFn.toString() + ';' + '\n' + src;
+-      if (opts.compileDebug) {
+-        src = 'rethrow = rethrow || ' + rethrow.toString() + ';' + '\n' + src;
+-      }
+-    }
+-
++          throw new Error('Client-side compilation disabled for security (SSTI prevention)');
++        }
+     if (opts.strict) {
+       src = '"use strict";\n' + src;
+     }
+@@ -949,3 +951,4 @@ exports.name = _NAME;
+ if (typeof window != 'undefined') {
+   window.ejs = exports;
+ }
++
+diff --git a/lib/utils.js b/lib/utils.js
+index a0434d58..8b35feed 100644
+--- a/lib/utils.js
++++ b/lib/utils.js
+@@ -238,4 +238,21 @@ exports.createNullProtoObjWherePossible = (function () {
+   };
+ })();
+ 
++/**
++ * Copies own-properties from one object to a null-prototype object for basic
++ * protection against prototype pollution
++ *
++ * @return {Object} Object with own-properties of input object
++ * @static
++ * @private
++ */
++exports.hasOwnOnlyObject = function (obj) {
++  var o = exports.createNullProtoObjWherePossible();
++  for (var p in obj) {
++    if (hasOwn(obj, p)) {
++      o[p] = obj[p];
++    }
++  }
++  return o;
++};
+ 
+diff --git a/package.json b/package.json
+index a02fc089..a229989b 100644
+--- a/package.json
++++ b/package.json
+@@ -6,7 +6,7 @@
+     "engine",
+     "ejs"
+   ],
+-  "version": "3.1.9",
++  "version": "3.1.10",
+   "author": "Matthew Eernisse <mde@fleegix.org> (http://fleegix.org)",
+   "license": "Apache-2.0",
+   "bin": {
+@@ -37,6 +37,6 @@
+     "node": ">=0.10.0"
+   },
+   "scripts": {
+-    "test": "mocha -u tdd"
++    "test": "npx jake test"
+   }
+ }

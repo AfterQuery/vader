@@ -1,0 +1,7 @@
+--- a/scraper.py
++++ b/scraper.py
+@@
+-# Amazon URL
+-URL = 'http://www.amazon.com/dp/'
++# Amazon URL (secure HTTPS)
++URL = 'https://www.amazon.com/dp/'

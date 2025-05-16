@@ -1,0 +1,41 @@
+const request = require('supertest');
+const app = require('../app'); // assuming Express app is exported
+const mongoose = require('mongoose');
+
+describe('Notification APIs - NoSQL Injection Prevention', () => {
+
+  it('should reject malformed _id in editNotification', async () => {
+    const res = await request(app)
+      .post('/notification/edit')
+      .send({
+        oldNot: { _id: { "$gt": "" } },
+        newNot: { message: "test" }
+      });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.errors).toBeDefined();
+  });
+
+  it('should reject invalid message format', async () => {
+    const validId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .post('/notification/edit')
+      .send({
+        oldNot: { _id: validId },
+        newNot: { message: { "$ne": "" } }
+      });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.errors).toBeDefined();
+  });
+
+  it('should allow valid editNotification request', async () => {
+    const validId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .post('/notification/edit')
+      .send({
+        oldNot: { _id: validId },
+        newNot: { message: "updated safely" }
+      });
+    expect(res.statusCode).toBe(201);
+  });
+
+});

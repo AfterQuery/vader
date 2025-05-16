@@ -1,0 +1,7 @@
+model,mean_percentage
+o3-rating,54.6551724137931
+gemini-2.5-pro-rating,53.73563218390805
+claude-3.7-sonnet-rating,52.41379310344827
+grok-3-beta-rating,52.06896551724138
+gpt-4.1-rating,50.17241379310345
+gpt-4.5-rating,49.25287356321839

@@ -1,0 +1,26 @@
+diff --git a/backbone.js b/backbone.js
+index abcdef1..1234567 100644
+--- a/backbone.js
++++ b/backbone.js
+@@ -4320,6 +4320,20 @@
+       if (!this._hasPushState && !this.atRoot()) {
+         var rootPath = this.root.slice(0, -1) || '/';
+         var redirectUrl = rootPath + '#' + this.getPath();
++
++        // Open Redirect Mitigation: Ensure the redirect URL is same-origin
++        function isSafeRedirect(url) {
++          try {
++            var parsedUrl = new URL(url, window.location.origin);
++            return parsedUrl.origin === window.location.origin;
++          } catch (e) {
++            return false;
++          }
++        }
++
++        if (isSafeRedirect(redirectUrl)) {
++          this.location.assign(redirectUrl);
++        } else {
++          console.warn("Blocked unsafe redirect attempt:", redirectUrl);
++        }
+        
+       }

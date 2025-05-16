@@ -1,0 +1,12 @@
+#!/bin/bash
+# Test Case: SSH Argument Injection in Gogs (CWE-88)
+
+# Setup:
+# - Ensure you have a Gogs user account with an SSH key added.
+# - Connect via SSH using a malicious env variable to inject payload.
+
+ssh -o SendEnv="EVILVAR=; shutdown -h now" username@your-gogs-server
+
+# Expected Result:
+# - BEFORE the patch: Gogs may accept and process the environment variable.
+# - AFTER the patch: Gogs should reject suspicious payloads and log an error.

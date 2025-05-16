@@ -1,0 +1,29 @@
+describe('CSV XSS Protection Test', () => {
+    it('should not render malicious script from CSV into DOM', () => {
+      const maliciousCSV = "Name,Value\n<script>alert('XSS')</script>,Data";
+      const div = document.createElement("div");
+      document.body.appendChild(div);
+  
+      const rows = maliciousCSV.split("\n");
+      const table = document.createElement("table");
+  
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].split(",");
+        if (cells.length > 1) {
+          const row = table.insertRow(-1);
+          for (let j = 0; j < cells.length; j++) {
+            const cell = row.insertCell(-1);
+            const textNode = document.createTextNode(cells[j]);
+            cell.appendChild(textNode);
+          }
+        }
+      }
+  
+      div.appendChild(table);
+  
+      // Confirm the script tag is not interpreted as HTML
+      expect(div.innerHTML).not.toContain("<script>");
+      expect(div.querySelector("script")).toBeNull();
+    });
+  });
+  

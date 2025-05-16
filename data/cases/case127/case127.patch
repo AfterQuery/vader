@@ -1,0 +1,18 @@
+@@ def _get_session(self, scope=None):
+-        decoded_token = jwt.decode(self._active_session.access_token_response.json()['access_token'],
+-                                   options={'verify_signature': False})
++        decoded_token = jwt.decode(
++            self._active_session.access_token_response.json()['access_token'],
++            options={'verify_signature': True},
++            algorithms=['RS256'],  # specify algorithms
++            verify=True
++        )
+
+@@ def _resolve_configured_scopes(self):
+-        decoded_token = jwt.decode(encoded_token, options={'verify_signature': False})
++        decoded_token = jwt.decode(
++            encoded_token,
++            options={'verify_signature': True},
++            algorithms=['RS256'],
++            verify=True
++        )

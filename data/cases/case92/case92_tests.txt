@@ -1,0 +1,48 @@
+# tests/test_retriever_sql_injection.py
+
+import pytest
+from retriever import Retriever
+
+def test_sql_injection_prevention_food(monkeypatch):
+    config = {'default': {'db_path': ':memory:', 'g_path': 'dummy.pkl', 'g_recent_path': 'dummy.pkl'}}
+    retriever = Retriever(config, 'default')
+
+    # Patch connection methods
+    monkeypatch.setattr(retriever, "_get_rid_exclude_str", lambda: "")
+    monkeypatch.setattr(retriever, "get_random_similar_stmt_by_biz", lambda x, y: "")
+
+    retriever._db_path = ":memory:"  # Use an in-memory SQLite DB
+    conn = sqlite3.connect(retriever._db_path)
+    c = conn.cursor()
+    c.execute("CREATE TABLE venues (rid TEXT, venue_name TEXT, venue_type TEXT, rating REAL, mrt_name TEXT)")
+    c.execute("CREATE TABLE venues_food (rid TEXT, food TEXT)")
+    conn.commit()
+    conn.close()
+
+    malicious_input = "' OR '1'='1"
+    try:
+        retriever.get_venue_by_food({}, malicious_input)
+    except Exception as e:
+        pytest.fail(f"Unexpected error occurred: {e}")
+
+def test_sql_injection_prevention_review(monkeypatch):
+    config = {'default': {'db_path': ':memory:', 'g_path': 'dummy.pkl', 'g_recent_path': 'dummy.pkl'}}
+    retriever = Retriever(config, 'default')
+
+    monkeypatch.setattr(retriever, "_get_rid_exclude_str", lambda: "")
+    monkeypatch.setattr(retriever, "get_random_similar_stmt_by_biz", lambda x, y: "")
+
+    retriever._db_path = ":memory:"
+    conn = sqlite3.connect(retriever._db_path)
+    c = conn.cursor()
+    c.execute("CREATE TABLE tips (tip TEXT, tok_tip TEXT, rid TEXT)")
+    c.execute("CREATE TABLE venues (rid TEXT, venue_name TEXT, venue_type TEXT, rating REAL, mrt_name TEXT)")
+    c.execute("CREATE TABLE venues_food (rid TEXT, food TEXT)")
+    conn.commit()
+    conn.close()
+
+    malicious_input = "'; DROP TABLE venues;--"
+    try:
+        retriever.get_similar_venue_by_review({}, malicious_input)
+    except Exception as e:
+        pytest.fail(f"Unexpected error occurred: {e}")

@@ -1,0 +1,61 @@
+--- a/popup.js
++++ b/popup.js
+@@ -1,9 +1,24 @@
+-document.getElementById('saveBtn').addEventListener('click', () => {
+-    const userData = {
+-      firstName: document.getElementById('firstName').value,
+-      lastName: document.getElementById('lastName').value,
+-      email: document.getElementById('email').value,
+-      phone: document.getElementById('phone').value
+-    };
+-
+-    chrome.storage.sync.set({ userData }, () => {
+-      alert('Data Saved!');
+-    });
+-  });
++document.getElementById('saveBtn').addEventListener('click', () => {
++  const sanitize = (str) => str.replace(/[<>"']/g, '');
++  const getInputValue = (id) => sanitize(document.getElementById(id)?.value || '');
++
++  const userData = {
++    firstName: getInputValue('firstName'),
++    lastName: getInputValue('lastName'),
++    email: getInputValue('email'),
++    phone: getInputValue('phone')
++  };
++
++  if (!userData.email.includes('@')) {
++    alert('Please enter a valid email.');
++    return;
++  }
++
++  chrome.storage.sync.set({ userData }, () => {
++    alert('Data Saved!');
++  });
++});
+ 
+-document.getElementById('fillBtn').addEventListener('click', () => {
+-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+-      chrome.scripting.executeScript({
+-        target: { tabId: tabs[0].id },
+-        files: ['content.js']
+-      });
+-    });
+-  });
++document.getElementById('fillBtn').addEventListener('click', () => {
++  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
++    if (!tabs || tabs.length === 0) {
++      alert('No active tab found.');
++      return;
++    }
++    chrome.scripting.executeScript({
++      target: { tabId: tabs[0].id },
++      files: ['content.js']
++    }, (results) => {
++      if (chrome.runtime.lastError) {
++        console.error('Script injection failed:', chrome.runtime.lastError.message);
++        alert('Failed to execute script.');
++      }
++    });
++  });
++});

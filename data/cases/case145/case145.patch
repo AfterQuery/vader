@@ -1,0 +1,33 @@
+--- a/server.js
++++ b/server.js
+@@ const express = require("express");
++const cookieParser = require("cookie-parser");
++const csrf = require("csurf");
+
+@@ (async () => {
+   await fs.remove(workingDir);
+   await createWorkingDirectories();
+   const app = express();
++
++  // Enable cookie parser and CSRF protection
++  app.use(cookieParser());
++  const csrfProtection = csrf({ cookie: true });
+
+   app.use(fileupload());
+   app.use(express.urlencoded({ extended: false }));
+
+@@
+   app.get("/", (req, res) => {
+     res.send(index);
+   });
+
++  app.get("/form", csrfProtection, (req, res) => {
++    res.send(`<form action="/convert" method="POST" enctype="multipart/form-data">
++                <input type="hidden" name="_csrf" value="${req.csrfToken()}">
++                <input type="file" name="h5p_file" />
++                <input type="submit" value="Upload" />
++              </form>`);
++  });
+
+-  app.post("/convert", async function(req, res) {
++  app.post("/convert", csrfProtection, async function(req, res) {

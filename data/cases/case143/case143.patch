@@ -1,0 +1,10 @@
+@@ -63,7 +63,9 @@
+                 for (var j = 0; j < cells.length; j++) {
+                     var cell = row.insertCell(-1);
+-                    cell.innerHTML = cells[j];
++                    // Avoid using innerHTML directly to prevent XSS
++                    var textNode = document.createTextNode(cells[j]);
++                    cell.appendChild(textNode);
+                 }
+             }
+         }

@@ -1,0 +1,98 @@
+How to Test the URL Injection Vulnerability
+ 1. Manual Test Cases (Browser Based)
+ Step-by-Step:
+
+Run your app locally (npm start / yarn start).
+
+Create some fake blog data with manipulated id values like:
+
+
+Input for id	             Reason
+javascript:alert(1)          Test XSS
+//evil.com	             Test Open Redirect
+../../admin                  Test path traversal
+id123	                     Test normal safe input
+See what happens in your browser:
+
+Hover over the blog links.
+
+Check if the URL looks weird (e.g., starts with javascript: or //).
+
+Click the link.
+
+If it redirects, executes JS, or throws errors â†’ Vulnerability Confirmed.
+
+ If invalid ID renders as "Invalid Blog" (after patch) â€” Security is working.
+
+2. Console Inspection
+Open Developer Tools (Right-click â†’ Inspect â†’ Console).
+
+Hover over the generated <a> tag.
+
+Check if the href looks suspicious.
+
+For example:
+
+<a href="javascript:alert(1)">Blog Post</a>   <!-- VULNERABLE -->
+<a href="/blog/normal-id">Safe Blog Post</a>  <!-- SAFE -->
+ Look for any suspicious href attributes.
+
+ 3. Semi-Automated: Postman or API Testing
+If your app pulls blogs from an API (/api/blogs), you can inject malicious IDs via API testing tools like Postman.
+
+ Test in Postman:
+
+
+{
+  "id": "javascript:alert(1)",
+  "title": "Test Blog",
+  "author": "Hacker"
+}
+Submit this to your backend (or mock if needed).
+
+See if frontend link is built incorrectly afterward.
+
+ 4. Programmatic Test Cases (Jest / RTL)
+You can automate all of this using React Testing Library + Jest.
+
+Hereâ€™s a real test case example:
+
+import { render, screen } from '@testing-library/react';
+import BlogList from './BlogList';
+import { BrowserRouter } from 'react-router-dom';
+
+const renderBlogList = (blogs) => {
+  render(
+    <BrowserRouter>
+      <BlogList blogs={blogs} />
+    </BrowserRouter>
+  );
+};
+
+test('safe blog ID generates a working link', () => {
+  const blogs = [{ id: 'valid123', title: 'Normal Post', author: 'Author' }];
+  renderBlogList(blogs);
+  const link = screen.getByRole('link', { name: /Normal Post/i });
+  expect(link).toHaveAttribute('href', '/blog/valid123');
+});
+
+test('unsafe blog ID (javascript:alert) renders Invalid Blog', () => {
+  const blogs = [{ id: 'javascript:alert(1)', title: 'Hack Post', author: 'Attacker' }];
+  renderBlogList(blogs);
+  expect(screen.getByText('Invalid Blog')).toBeInTheDocument();
+});
+
+test('unsafe blog ID (//evil.com) renders Invalid Blog', () => {
+  const blogs = [{ id: '//evil.com', title: 'Phish Post', author: 'Attacker' }];
+  renderBlogList(blogs);
+  expect(screen.getByText('Invalid Blog')).toBeInTheDocument();
+});
+These tests will automatically tell you if your app is vulnerable or secured.
+
+How to Decide If Vulnerable
+
+Observation	                            Conclusion
+<a href="javascript:alert(1)"> exists	  Vulnerable
+Link redirects to unknown domains	  Vulnerable
+App crashes on bad ID input	          Vulnerable
+Renders "Invalid Blog" safely	         Patched (Safe)

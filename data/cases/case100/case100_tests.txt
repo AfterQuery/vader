@@ -1,0 +1,30 @@
+Test Case 1: Upload Valid PDF File
+•	Scenario: Upload a valid PDF file through the file upload dialog.
+•	Input: Select a file named report.pdf.
+•	Expected Result: The file is accepted and uploaded successfully without any error.
+•	Pass Criteria: The file is stored in the application.
+
+Test Case 2: Upload Valid PNG Image
+•	Scenario: Upload a valid image file (PNG format).
+•	Input: Select a file named image.png.
+•	Expected Result: The file is accepted and uploaded successfully.
+•	Pass Criteria: The file is stored and the upload button is disabled after upload.
+
+Test Case 3: Upload Executable (Disallowed) File
+•	Scenario: Try to upload an executable file.
+•	Input: Select a file named malware.exe.
+•	Expected Result: The application displays an error message like "Unsupported file type."
+•	Pass Criteria: File is rejected, no data is uploaded or stored.
+
+Test Case 4: Upload System Configuration File
+•	Scenario: Attempt to upload a sensitive system file.
+•	Input: Select C:\Windows\System32\drivers\etc\hosts.
+•	Expected Result: The application displays an error message and prevents upload.
+•	Pass Criteria: File is rejected, no data is read or stored.
+
+Test Case 5: Upload Very Large PDF File (>10MB)
+•	Scenario: Upload a large PDF document to check application handling.
+•	Input: Select a largefile.pdf with size over 10MB.
+•	Expected Result: File uploads successfully if no size restrictions are applied; otherwise, a size error.
+•	Pass Criteria: Application handles the large file gracefully without crash or memory issues.
+

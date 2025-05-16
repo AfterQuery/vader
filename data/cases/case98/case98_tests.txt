@@ -1,0 +1,13 @@
+Steps to Reproduce:
+Clone the repository:
+
+git clone https://github.com/cake-tools/ClickExportTool.git
+cd ClickExportTool
+
+Configure the application as per the README, including populating settings.py.
+
+Start the task_runner.py script:
+
+python task_runner.py
+
+Observe that temporary files are created in the working directory with predictable names (temp.csv), which can be overwritten or accessed by unauthorized users.

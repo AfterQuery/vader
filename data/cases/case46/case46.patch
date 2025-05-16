@@ -1,0 +1,79 @@
+--- app.py      2025-04-25 18:41:19.701652995 +0530
++++ app-new.py      2025-04-25 18:41:07.821712930 +0530
+@@ -654,39 +654,44 @@
+     db = get_db()
+     rst = db.cursor().execute(
+         '''
+-        with Shop_Name(TID, S_name) as (
+-                select TID, S_name
+-                from Transaction_Record left join Stores
+-                on T_Object = S_owner
+-            ),
+-            Subj_Name(TID, Subj_name) as (
+-                select TID, U_name as Subj_name
+-                from Transaction_Record, Users
+-                where T_Subject = UID
+-            ),
+-            Obj_Name(TID, Obj_name) as (
+-                select TID, U_name as Obj_name
+-                from Transaction_Record, Users
+-                where T_Object = UID
+-            )
+-        select TID,
+-            case
+-                when T_action = 2 then 'Recharge'
+-                when T_action = 1 then 'Recieve'
+-                when T_action = 0 then 'Payment'
+-            end as Action,
+-            strftime('%Y/%m/%d %H:%M', T_time) as Time,
+-            case
+-                when T_action = 2 then Subj_name
+-                when T_action = 1 and is_refund = 0 then Obj_name
+-                when T_action = 1 and is_refund = 1 then S_name
+-                when T_action = 0 and is_refund = 0 then S_name
+-                when T_action = 0 and is_refund = 1 then Obj_name
+-            end as Trader,
++        WITH Shop_Name(TID, S_name) AS (
++            SELECT TID, S_name
++            FROM Transaction_Record LEFT JOIN Stores
++            ON T_Object = S_owner
++        ),
++        Subj_Name(TID, Subj_name) AS (
++            SELECT TID, U_name AS Subj_name
++            FROM Transaction_Record
++            INNER JOIN Users ON Transaction_Record.T_Subject = Users.UID
++            WHERE Users.UID = ?
++        ),
++        Obj_Name(TID, Obj_name) AS (
++            SELECT TID, U_name AS Obj_name
++            FROM Transaction_Record
++            INNER JOIN Users ON Transaction_Record.T_Object = Users.UID
++            WHERE Users.UID = ?
++        )
++        SELECT TID,
++            CASE
++                WHEN T_action = 2 THEN 'Recharge'
++                WHEN T_action = 1 THEN 'Recieve'
++                WHEN T_action = 0 THEN 'Payment'
++            END AS Action,
++            strftime('%Y/%m/%d %H:%M', T_time) AS Time,
++            CASE
++                WHEN T_action = 2 THEN Subj_name
++                WHEN T_action = 1 AND is_refund = 0 THEN Obj_name
++                WHEN T_action = 1 AND is_refund = 1 THEN S_name
++                WHEN T_action = 0 AND is_refund = 0 THEN S_name
++                WHEN T_action = 0 AND is_refund = 1 THEN Obj_name
++            END AS Trader,
+             T_amount
+-        from Transaction_Record natural join Subj_Name natural join Obj_Name natural join Shop_Name
+-        where T_Subject = ?
+-        ''', (UID,)
++        FROM Transaction_Record
++        NATURAL JOIN Subj_Name
++        NATURAL JOIN Obj_Name
++        NATURAL JOIN Shop_Name
++        WHERE T_Subject = ?
++        ''', (UID, UID, UID)  # Pass UID as parameter to each subquery
+     ).fetchall()
+     transaction = [{'TID': TID, 'Action': Action, 'Time': Time, 'Trader': Trader, 'T_amount': T_amount}
+                    for TID, Action, Time, Trader, T_amount in rst]

@@ -1,0 +1,27 @@
+const request = require('supertest');
+const express = require('express');
+const session = require('express-session');
+
+describe('Session Cookie Security Tests', () => {
+    let app;
+
+    beforeAll(() => {
+        app = express();
+        app.use(session({
+            secret: 'test-secret',
+            resave: false,
+            saveUninitialized: true,
+            cookie: { secure: true }
+        }));
+
+        app.get('/test', (req, res) => {
+            res.send('OK');
+        });
+    });
+
+    it('should set Secure attribute on session cookie over HTTPS', async () => {
+        const res = await request(app).get('/test');
+        const cookie = res.headers['set-cookie'][0];
+        expect(cookie.includes('Secure')).toBe(true);
+    });
+});

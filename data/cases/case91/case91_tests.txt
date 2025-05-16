@@ -1,0 +1,5 @@
+Test Case 1: Malicious Token Deserialization
+1. Craft a malicious payload using pickle to execute arbitrary code.
+2. Encode the payload and set it in the 'reflex-client-token' header.
+3. Send a POST request to the upload endpoint with the malicious token.
+4. Verify that the server does not deserialize the token using pickle and the payload is not executed.

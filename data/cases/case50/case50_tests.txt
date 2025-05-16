@@ -1,0 +1,31 @@
+
+
+CWE79 :  Stored XSS
+
+Here's an example where this code would cause an alert to pop up when an image is loaded in an HTML page:
+Payload Used:
+ 
+<img src=x
+onerror=alert(1);"/>
+If a malicious user manages to inject this code as a New comment, an alert will be triggered whenever the image fails to load.
+ 
+Fixing XSS with Sanitization
+You can prevent this type of XSS attack by sanitizing any input that might contain HTML or JavaScript code. The sanitize() function you're referring to can be used to encode potentially dangerous characters in a string to make sure they don't execute as code.
+Here’s how to implement the sanitize() function to protect against XSS attacks by escaping special characters:
+    function sanitize(string) {
+      const map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#x27;',
+          "/": '&#x2F;',
+      };
+Before :
+<h5 style="margin-bottom: 0; word-break: break-all">${(comment.text)}</h5>
+
+After Fix:
+<h5 style="margin-bottom: 0; word-break: break-all">${sanitize(comment.text)}</h5>
+
+
+

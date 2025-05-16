@@ -1,0 +1,34 @@
+// tests/test_crypto.js
+
+const { encryptData, decryptData, generateRandomKey } = require('../crypto_utils'); // Adjust path accordingly
+const { expect } = require('chai');
+
+describe('Crypto Secure Mode Tests', function () {
+
+  it('should encrypt and decrypt correctly using AES-256-GCM', function () {
+    const key = generateRandomKey(32); // 32 bytes = 256 bits
+    const originalText = 'Sensitive Banking Information';
+    
+    const { encryptedData, iv, authTag } = encryptData(originalText, key);
+    const decryptedText = decryptData(encryptedData, key, iv, authTag);
+
+    expect(decryptedText).to.equal(originalText);
+  });
+
+  it('should fail decryption if authTag is tampered', function () {
+    const key = generateRandomKey(32);
+    const originalText = 'Secure Data Block';
+    
+    const { encryptedData, iv, authTag } = encryptData(originalText, key);
+
+    // Tamper authTag
+    const tamperedAuthTag = authTag.replace(/./, 'a');
+
+    try {
+      decryptData(encryptedData, key, iv, tamperedAuthTag);
+    } catch (error) {
+      expect(error.message).to.exist;
+    }
+  });
+
+});

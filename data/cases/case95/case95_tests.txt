@@ -1,0 +1,26 @@
+import subprocess
+from pathlib import Path
+import pytest
+from utils import get_python_version
+
+def test_get_python_version_safe():
+    # Test with a valid venv path
+    venv_path = Path("/valid/venv")
+    os_name = "linux"
+    # Mock subprocess.check_output to avoid actual execution
+    original_check_output = subprocess.check_output
+    subprocess.check_output = lambda *args, **kwargs: "Python 3.9.0\n".encode()
+    try:
+        version = get_python_version(venv_path, os_name)
+        assert version == "3.9.0"
+    finally:
+        subprocess.check_output = original_check_output
+
+def test_command_injection_attempt():
+    # Attempt command injection via venv_path
+    malicious_path = Path("/tmp; echo 'malicious'")
+    os_name = "linux"
+    # Ensure subprocess.check_output is called safely
+    with pytest.raises(Exception) as excinfo:
+        get_python_version(malicious_path, os_name)
+    assert "No such file or directory" in str(excinfo.value)

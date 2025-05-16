@@ -1,0 +1,25 @@
+import enableAuthProxy from '../server/auth-proxy-strategy.js';
+import supertest from 'supertest';
+import app from '../server/app.js'; // Hypothetical app entry
+
+describe('Auth Proxy Strategy', () => {
+  it('should reject user with invalid role', async () => {
+    const res = await supertest(app)
+      .get('/some-auth-endpoint')
+      .set('X-User-Id', '123')
+      .set('X-User-Email', 'attacker@domain.com')
+      .set('X-User-Role', 'admin');
+
+    expect(res.status).toBe(401);
+  });
+
+  it('should allow user with valid role', async () => {
+    const res = await supertest(app)
+      .get('/some-auth-endpoint')
+      .set('X-User-Id', '124')
+      .set('X-User-Email', 'user@domain.com')
+      .set('X-User-Role', 'viewer');
+
+    expect(res.status).toBe(200);
+  });
+});

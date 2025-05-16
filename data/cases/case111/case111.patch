@@ -1,0 +1,7 @@
+import hashlib
+import os
+
+sha256 = hashlib.sha256()
+rand = os.urandom(32)
+sha256.update(str(rand).encode('UTF-8'))
+token = sha256.hexdigest()

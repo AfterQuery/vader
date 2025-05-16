@@ -1,0 +1,30 @@
+const { JSDOM } = require("jsdom");
+
+test('No XSS via textContent assignment', () => {
+    const dom = new JSDOM(`<div id="displayArea"></div>`);
+    const document = dom.window.document;
+    
+    const displayArea = document.getElementById("displayArea");
+    const maliciousInput = "<img src=x onerror=alert(1)>";
+    
+    // Safe assignment
+    displayArea.textContent = maliciousInput;
+    
+    // Validate that no HTML was parsed
+    expect(displayArea.textContent).toBe(maliciousInput);
+    expect(displayArea.innerHTML).toBe("&lt;img src=x onerror=alert(1)&gt;"); // properly escaped
+});
+
+test('Old vulnerable case would parse HTML', () => {
+    const dom = new JSDOM(`<div id="displayArea"></div>`);
+    const document = dom.window.document;
+    
+    const displayArea = document.getElementById("displayArea");
+    const maliciousInput = "<img src=x onerror=alert(1)>";
+    
+    // Old vulnerable code (simulated)
+    displayArea.innerHTML = maliciousInput;
+    
+    // It would parse and insert an actual <img> tag
+    expect(displayArea.querySelector("img")).not.toBeNull();
+});

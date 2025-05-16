@@ -1,0 +1,15 @@
+Vulnerable code
+
+code = '97532'  # Line 64
+
+Clone the repository:
+
+git clone https://github.com/hylinux1024/datingtoday.git
+cd datingtoday
+
+Locate the send_sms function in api/auth.py.
+Trigger the /api/auth/sendsms endpoint by making a POST request with a valid phone number:
+
+curl -X POST -d "phone=1234567890" http://127.0.0.1:5000/api/auth/sendsms
+
+Observe that the hardcoded SMS code '97532' is returned consistently, making it predictable and exploitable.

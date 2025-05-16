@@ -1,0 +1,48 @@
+const request = require('supertest');
+const express = require('express');
+const authRoutes = require('../routes/auth');
+
+const app = express();
+app.use(express.urlencoded({ extended: false }));
+app.use('/auth', authRoutes);
+
+describe('Signup Validation', () => {
+  it('should reject weak password', async () => {
+    const res = await request(app)
+      .post('/auth/signup')
+      .send({
+        email: 'test@example.com',
+        password: '12345',
+        confirmPassword: '12345'
+      });
+    
+    expect(res.statusCode).toBe(422); // assuming invalid input returns 422
+    expect(res.text).toContain('Password must be at least 8 characters long');
+  });
+
+  it('should reject if passwords do not match', async () => {
+    const res = await request(app)
+      .post('/auth/signup')
+      .send({
+        email: 'test@example.com',
+        password: 'StrongPass1!',
+        confirmPassword: 'DifferentPass1!'
+      });
+    
+    expect(res.statusCode).toBe(422);
+    expect(res.text).toContain('Passwords have to match');
+  });
+
+  it('should allow strong password and matching confirmPassword', async () => {
+    const res = await request(app)
+      .post('/auth/signup')
+      .send({
+        email: 'valid@example.com',
+        password: 'StrongPass1!',
+        confirmPassword: 'StrongPass1!'
+      });
+    
+    // Normally it redirects or moves forward if valid
+    expect(res.statusCode).toBeLessThan(400);
+  });
+});

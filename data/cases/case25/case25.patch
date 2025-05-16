@@ -1,0 +1,24 @@
+--- a/console.py
++++ b/console.py
+@@
+ import platform
+ import shlex
+ import webbrowser
++import subprocess
+ import tkinter as tk
+ import shutil
+@@
+     elif user_input.startswith("open"):
+         user_input = user_input.replace("open ", "", 1)
+         user_input = remove_suffix(user_input, condition=user_input.endswith("\n"))
+         # Opening {user_input}.
+-        if platform.system() == "Windows":
+-            os.system("start " + user_input)
+-        else:
+-            os.system("open " + shlex.quote(user_input))
++        if platform.system() == "Windows":
++            subprocess.run(["start", user_input], shell=True, check=True)
++        else:
++            subprocess.run(["open", shlex.quote(user_input)], check=True)
+         # File opened successfully.
+         print(f"{bcolors.OKGREEN}{texts.console['FileSuccessfullyOpened']}{bcolors.ENDC}")

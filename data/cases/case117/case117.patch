@@ -1,0 +1,23 @@
+diff --git a/internal/ssh/ssh.go b/internal/ssh/ssh.go
+index abcdef1..1234567 100644
+--- a/internal/ssh/ssh.go
++++ b/internal/ssh/ssh.go
+@@ func handleServerConn(keyID string, chans <-chan ssh.NewChannel) {
+     go func(in <-chan *ssh.Request) {
+         defer func() {
+             _ = ch.Close()
+         }()
+         for req := range in {
+-            payload := cleanCommand(string(req.Payload))
++            rawPayload := string(req.Payload)
++            // Reject payloads containing dangerous characters
++            if strings.ContainsAny(rawPayload, "&;|`$><") {
++                log.Error("SSH: Rejected suspicious payload: %v", rawPayload)
++                _ = ch.SendRequest("exit-status", false, []byte{1, 0, 0, 0})
++                return
++            }
++            payload := cleanCommand(rawPayload)
+             switch req.Type {
+             case "env":
+                 // We only need to accept the request and do nothing since whatever environment
+                 // variables being set here won't be used in subsequent commands anyway.

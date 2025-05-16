@@ -1,0 +1,27 @@
+CWE-36: Absolute Path Traversal
+Path to file: ModelConverter\web\hello.py
+The key issue lies in this line:
+send_file(os.path.join(DOWNLOAD_FOLDER, username, filename), as_attachment=True)
+•	The filename parameter is user-controlled and directly passed into os.path.join(...).
+•	If an attacker supplies a malicious path, such as ../../../../etc/passwd, and it evaluates to an absolute path, os.path.join() will ignore preceding paths and honor the absolute one.
+•	This path is then passed to send_file, which will attempt to send back the file to the user, effectively leaking sensitive files.
+ 
+Exploiting the Vulnerability
+Assuming:
+DOWNLOAD_FOLDER = "/var/www/app/downloads"
+🧪 Example URL Attack (with curl)
+curl --path-as-is "http://localhost/download?username=../../&filename=../../../../../../etc/passwd"
+🔍 What Happens
+•	The path becomes:
+os.path.join("/var/www/app/downloads", "../../", "../../../../../../etc/passwd")
+•	This resolves to:
+•	/etc/passwd
+Flask's send_file will serve /etc/passwd to the attacker.
+ 
+Remediation – Secure the File Download
+Use werkzeug.utils.safe_join
+        secure_path = safe_join(DOWNLOAD_FOLDER, username, filename)
+        return send_file(secure_path, as_attachment=True)
+•	safe_join ensures that the final path stays within the DOWNLOAD_FOLDER directory.
+•	If the user attempts to escape the base directory using ../, it will raise an error or return None.
+

@@ -1,0 +1,13 @@
+Steps to Reproduce:
+
+Clone the repository:
+
+git clone https://github.com/algsoch/BS.git
+cd BS
+
+Run the application:
+
+uvicorn grok.tds_app:app --reload
+Upload a file with the same name as an existing file in the uploads directory using the /api/upload endpoint.
+
+Observe that the newly uploaded file overwrites the existing file without warning.

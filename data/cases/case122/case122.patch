@@ -1,0 +1,27 @@
+--- multiChatServer.py	2025-04-28 09:48:08.000000000 -0400
++++ multiChatServer-new.py	2025-04-28 09:48:08.000000000 -0400
+@@ -2,6 +2,7 @@
+ 
+ from socket import AF_INET, socket, SOCK_STREAM
+ from threading import Thread
++from concurrent.futures import ThreadPoolExecutor
+ 
+ clients = {}
+ addresses = {}
+@@ -13,6 +14,7 @@
+ SOCK = socket(AF_INET, SOCK_STREAM)
+ SOCK.bind(ADDR)
+ 
++executor = ThreadPoolExecutor(max_workers=50)  # limit to 50 clients
+ 
+ def accept_incoming_connections():
+     """Sets up handling for incoming clients."""
+@@ -22,7 +24,7 @@
+         client.send("Greetings from the ChatRoom! ".encode("utf8"))
+         client.send("Now type your name and press enter!".encode("utf8"))
+         addresses[client] = client_address
+-        Thread(target=handle_client, args=(client, client_address)).start()
++        executor.submit(handle_client, client, client_address)
+ 
+ 
+ def handle_client(conn, addr):  # Takes client socket as argument.

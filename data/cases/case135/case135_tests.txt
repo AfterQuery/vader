@@ -1,0 +1,57 @@
+Test Case 1 (Positive)
+•	Objective: Deserialize safe JSON with no $type.
+•	Input:
+•	{ "name": "backup-job", "schedule": "daily" }
+•	Expected Result:
+o	Deserialization works as expected.
+•	Outcome:
+Safe input allowed.
+
+Test Case 2 (Negative)
+•	Objective: Block payload with dangerous $type.
+•	Input:
+•	{
+•	  "$type": "System.Diagnostics.Process, System",
+•	  "StartInfo": {
+•	    "FileName": "cmd.exe",
+•	    "Arguments": "/c whoami"
+•	  }
+•	}
+•	Expected Result:
+o	$type is ignored; no dangerous class is instantiated.
+•	Outcome:
+Injection prevented.
+
+Test Case 3 (Negative)
+•	Objective: Block ObjectDataProvider payload.
+•	Input:
+•	{
+•	  "$type": "System.Windows.Data.ObjectDataProvider, PresentationFramework",
+•	  "MethodName": "Start",
+•	  "MethodParameters": ["cmd", "/c calc.exe"]
+•	}
+•	Expected Result:
+o	Deserialization does not execute command.
+•	Outcome:
+RCE attempt blocked.
+
+Test Case 4 (Positive)
+•	Objective: Deserialize explicitly typed object using a known class.
+•	Input:
+Serialized JSON from known class (e.g., JobSchedule)
+•	Expected Result:
+o	Deserialization succeeds using expected type.
+•	Outcome:
+ Safe object deserialized.
+
+Test Case 5 (Negative)
+•	Objective: Prevent $type with encoded payload.
+•	Input:
+•	{
+•	  "$type": "System.IO.FileInfo, mscorlib",
+•	  "OriginalPath": "C:\\sensitive.txt"
+•	}
+•	Expected Result:
+o	Type information is ignored; object not created.
+•	Outcome:
+Unsafe deserialization blocked.

@@ -1,0 +1,41 @@
+1. Valid String Email (Expected: Success)
+Description: Sends a proper string as the email query parameter.
+Request:
+GET /api/verify?email=test@example.com
+Expected Result:
+•	Server responds with 200 OK
+•	Verification code is generated and email is sent
+
+2. Email as Array (Expected: 400 Error)
+Description: Simulates an attacker sending the email parameter as an array.
+Request:
+GET /api/verify?email[]=attacker@example.com&email[]=victim@example.com
+Expected Result (after patch):
+•	Server responds with 400 Bad Request
+•	Message: {"message": "Invalid email format"}
+Expected Result (before patch):
+•	Server throws a TypeError and crashes or responds with 500 Internal Server Error
+
+3. Email as Object (Expected: 400 Error)
+Description: Attempts to send an email as an object-like structure (malformed query).
+Request:
+GET /api/verify?email[foo]=bar
+Parsed by Express:
+{ email: { foo: "bar" } }
+Expected Result (after patch):
+•	Server responds with 400 Bad Request
+4. Missing Email Parameter (Expected: 400 Error)
+Description: No email query parameter is provided at all.
+Request:
+GET /api/verify
+Expected Result (after patch):
+•	Server responds with 400 Bad Request
+•	Message: {"message": "Invalid email format"}
+
+ 5. Email as a Number (Expected: 400 Error)
+Description: Simulates a malformed request where email is passed as a number.
+Request:
+GET /api/verify?email=12345
+Expected Result (after patch):
+•	Server responds with 400 Bad Request
+Rationale: Although technically a string, it's semantically invalid. Additional email format validation would catch this if implemented.

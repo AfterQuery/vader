@@ -1,0 +1,12 @@
+--- vulnerable_xpath_eval.c
++++ vulnerable_xpath_eval.c
+@@ void vulnerable_xpath_eval(xmlDocPtr doc, xmlNodePtr node) {
+-    ctxt = xmlXPathNewContext(doc);
+-    ctxt->node = node; // Potential NULL dereference if ctxt == NULL
++    ctxt = xmlXPathNewContext(doc);
++    if (ctxt == NULL) {
++        // Handle allocation failure safely
++        return;
++    }
++    ctxt->node = node;
+}

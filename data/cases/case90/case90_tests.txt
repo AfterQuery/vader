@@ -1,0 +1,44 @@
+// tests/test_csrf.js
+
+const request = require('supertest');
+const expect = require('chai').expect;
+const app = require('../server'); // Adjust if file is named differently
+
+describe('CSRF Protection Tests', function () {
+  
+  it('should fail before patch - POST without CSRF token', function (done) {
+    request(app)
+      .post('/api/user/someAction') // Adjust this to your actual POST route
+      .send({ name: 'test' })
+      .expect(403, done); // Should get Forbidden due to missing CSRF token
+  });
+
+  it('should pass after patch - POST with valid CSRF token', function (done) {
+    const agent = request.agent(app);
+
+    agent
+      .get('/api/user/formPage') // Adjust to a page that sends the CSRF token, or create a small GET route
+      .end(function (err, res) {
+        if (err) return done(err);
+
+        const csrfToken = extractCsrfToken(res.text);
+
+        agent
+          .post('/api/user/someAction') // Same POST route
+          .set('Cookie', res.headers['set-cookie'])
+          .send({ 
+            _csrf: csrfToken,
+            name: 'test'
+          })
+          .expect(200)
+          .end(done);
+      });
+  });
+
+});
+
+// Utility to extract csrf token
+function extractCsrfToken(html) {
+  const match = html.match(/name="_csrf" value="(.+?)"/);
+  return match ? match[1] : null;
+}

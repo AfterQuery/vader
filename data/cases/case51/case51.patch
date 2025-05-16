@@ -1,0 +1,12 @@
+--- routers/repo/create_repo.go
++++ routers/repo/create_repo.go
+@@ func CreateRepository(name string) error {
++    reserved := []string{".", "..", "admin", "con", "nul", "prn"}
++    for _, r := range reserved {
++        if name == r {
++            return fmt.Errorf("repository name '%s' is reserved or invalid", name)
++        }
++    }
+     fmt.Printf("Creating repository: %s\n", name)
+     return nil
+}

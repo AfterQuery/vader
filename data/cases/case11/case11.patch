@@ -1,0 +1,71 @@
+--- a/ProcessAct.java
++++ b/ProcessAct.java
+@@
+-import javax.servlet.http.HttpServletRequest;
+-import javax.servlet.http.HttpServletResponse;
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++import java.net.URI;
++import java.net.URISyntaxException;
+@@
+-    private static Logger log = LoggerFactory.getLogger(ProcessAct.class);
++    private static final Logger log = LoggerFactory.getLogger(ProcessAct.class);
++    private static final String ALLOWED_DOMAIN = "example.com";
++    private static final String DEFAULT_REDIRECT_URL = "/";
+@@ public class ProcessAct {
+-    @RequestMapping(value = "/process.jspx", method = RequestMethod.GET)
+-    public String process(HttpServletRequest request,
+-            HttpServletResponse response) {
+-        String returnUrl = RequestUtils.getQueryParam(request,
+-                LoginAct.RETURN_URL);
+-        String authId = RequestUtils.getQueryParam(request, AUTH_KEY);
+-        Authentication auth = authMng.retrieve(authId);
++    @RequestMapping(value = "/process.jspx", method = RequestMethod.GET)
++    public String process(HttpServletRequest request, HttpServletResponse response) {
++        String returnUrl = RequestUtils.getQueryParam(request, LoginAct.RETURN_URL);
++        String authId    = RequestUtils.getQueryParam(request, AUTH_KEY);
++        returnUrl        = validateRedirectUrl(returnUrl);
++        Authentication auth = authMng.retrieve(authId);
+@@ public class ProcessAct {
+         if (auth != null) {
+@@
+-    @Autowired
+-    private AuthenticationMng authMng;
+-    @Autowired
+-    private SessionProvider session;
++    }
++
++    private String validateRedirectUrl(String returnUrl) {
++        if (returnUrl == null || returnUrl.isEmpty()) {
++            return DEFAULT_REDIRECT_URL;
++        }
++
++        if (returnUrl.startsWith("/")) {
++            return returnUrl;
++        }
++
++        try {
++            URI uri = new URI(returnUrl);
++            String host = uri.getHost();
++
++            if (host == null) {
++                log.warn("Invalid redirect URL (no host): {}", returnUrl);
++                return DEFAULT_REDIRECT_URL;
++            }
++
++            if (host.equals(ALLOWED_DOMAIN) || host.endsWith("." + ALLOWED_DOMAIN)) {
++                return returnUrl;
++            } else {
++                log.warn("Redirect to untrusted domain blocked: {}", host);
++                return DEFAULT_REDIRECT_URL;
++            }
++        } catch (URISyntaxException e) {
++            log.warn("Malformed redirect URL: {}", returnUrl);
++            return DEFAULT_REDIRECT_URL;
++        }
++    }
++
++    @Autowired
++    private AuthenticationMng authMng;
++    @Autowired
++    private SessionProvider session;

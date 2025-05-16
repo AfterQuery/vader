@@ -1,0 +1,27 @@
+diff --git a/routes/user.js b/routes/user.js
+--- a/routes/user.js
++++ b/routes/user.js
+@@ -9,6 +9,14 @@
+ const path = require('path')
+ const excel = require("./excel")
+ const mime = require('mime')
++const rateLimit = require('express-rate-limit');
++
++const attendanceLimiter = rateLimit({
++  windowMs: 15 * 60 * 1000, // 15 minutes
++  max: 100, // Limit each IP to 100 requests per window
++  standardHeaders: true, // Enable RateLimit headers
++  legacyHeaders: false, // Disable deprecated X-RateLimit headers
++});
+ 
+ //The route to get all the user in the datadase
+ router.get("/", auth,async (req, res) => {
+@@ -173,7 +181,7 @@
+ })
+ 
+ //to get all the attendance in excel format
+-router.get('/getallattendance', auth,async (req,res)=>{
++router.get('/getallattendance', auth, attendanceLimiter, async (req,res)=>{
+ try {
+ //the following are required to get the attendance
+ let {month,year,date,serviceType} = req.query

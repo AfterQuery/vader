@@ -1,0 +1,43 @@
+diff --git a/services/userService.js b/services/userService.js
+index abcdef1..1234567 100644
+--- a/services/userService.js
++++ b/services/userService.js
+@@
++const sanitize = require('mongo-sanitize'); // Added for sanitization
+
+ module.exports.createUser = async serviceData => {
+   try {
+-    const user = await User.findOne({ email: serviceData.email })
++    const email = sanitize(serviceData.email);
++    const user = await User.findOne({ email: email })
+@@
+ module.exports.getUserProfile = async serviceData => {
+   try {
+     const jwtToken = serviceData.headers.authorization.split('Bearer')[1].trim()
+     const decodedJwtToken = jwt.decode(jwtToken)
+-    const user = await User.findOne({ _id: decodedJwtToken.id })
++    const userId = sanitize(decodedJwtToken.id);
++    const user = await User.findOne({ _id: userId })
+@@
+ module.exports.loginUser = async serviceData => {
+   try {
+-    const user = await User.findOne({ email: serviceData.email })
++    const email = sanitize(serviceData.email);
++    const user = await User.findOne({ email: email })
+@@
+ module.exports.updateUserProfile = async serviceData => {
+   try {
+     const jwtToken = serviceData.headers.authorization.split('Bearer')[1].trim()
+     const decodedJwtToken = jwt.decode(jwtToken)
+-    const user = await User.findOneAndUpdate(
+-      { _id: decodedJwtToken.id },
+-      { userName: serviceData.body.userName },
+-      { new: true }
+-    )
++    const userId = sanitize(decodedJwtToken.id);
++    const userName = sanitize(serviceData.body.userName);
++    const user = await User.findOneAndUpdate(
++      { _id: userId },
++      { userName: userName },
++      { new: true }
++    )

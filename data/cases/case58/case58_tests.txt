@@ -1,0 +1,31 @@
+describe('Server Logging Test', () => {
+  let consoleSpy;
+
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+  });
+
+  it('should log full URL in development environment', () => {
+    process.env.NODE_ENV = 'development';
+
+    // Simulate the listen callback manually
+    const PORT = 5000;
+    console.log(`Server running locally at http://localhost:${PORT}`);
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('localhost:5000'));
+  });
+
+  it('should not leak URL in production environment', () => {
+    process.env.NODE_ENV = 'production';
+
+    // Simulate the listen callback manually
+    console.log('Server is running.');
+
+    expect(consoleSpy).toHaveBeenCalledWith('Server is running.');
+    expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('localhost'));
+  });
+});

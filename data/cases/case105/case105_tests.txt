@@ -1,0 +1,4 @@
+testfile; rm -rf /
+"; echo hacked #
+oldname; rm -rf /
+newname; rm -rf /

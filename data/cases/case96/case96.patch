@@ -1,0 +1,12 @@
+diff --git a/reflex/components/forms.py b/reflex/components/forms.py
+--- a/reflex/components/forms.py
++++ b/reflex/components/forms.py
+@@ -187,7 +187,7 @@
+         # Render the form hooks and use the hash of the resulting code to create a unique name.
+         props["handle_submit_unique_name"] = ""
+         form = super().create(*children, **props)
+-        form.handle_submit_unique_name = md5(
++        form.handle_submit_unique_name = hashlib.sha256(
+             str(form._get_all_hooks()).encode("utf-8")
+         ).hexdigest()
+         return form

@@ -1,0 +1,27 @@
+import request from 'supertest';
+import app from '../../app';
+
+describe('POST /get-user-by-slug', () => {
+  it('should accept a valid slug', async () => {
+    const res = await request(app)
+      .post('/get-user-by-slug')
+      .send({ slug: 'valid-slug_123' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('user');
+  });
+
+  it('should reject malicious slug', async () => {
+    const res = await request(app)
+      .post('/get-user-by-slug')
+      .send({ slug: "'; DROP TABLE users; --" });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.errors[0].msg).toEqual('Invalid slug format.');
+  });
+
+  it('should reject missing slug', async () => {
+    const res = await request(app)
+      .post('/get-user-by-slug')
+      .send({});
+    expect(res.statusCode).toBe(400);
+  });
+});

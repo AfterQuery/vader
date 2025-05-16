@@ -1,0 +1,48 @@
+Test Case 1 (Positive)
+•	Objective: Redirect internally to a safe page.
+•	Input:
+•	{ "redirect": "/dashboard" }
+•	Expected Result:
+o	Browser redirects to https://yourdomain.com/dashboard.
+•	Outcome:
+Redirect successful.
+
+Test Case 2 (Negative)
+•	Objective: Prevent redirect to external malicious domain.
+•	Input:
+•	{ "redirect": "https://evil.com/phishing" }
+•	Expected Result:
+o	Redirection blocked.
+o	Error logged: "Blocked open redirect attempt."
+•	Outcome:
+No redirect happens.
+
+Test Case 3 (Negative)
+•	Objective: Block redirect using JavaScript scheme.
+•	Input:
+•	{ "redirect": "javascript:alert('XSS')" }
+•	Expected Result:
+o	Redirection blocked.
+o	No JavaScript is executed.
+•	Outcome:
+Secure blocking.
+
+Test Case 4 (Positive)
+•	Objective: Allow deep internal navigation.
+•	Input:
+•	{ "redirect": "/user/settings/profile" }
+•	Expected Result:
+o	Redirects safely within the app.
+•	Outcome:
+Redirect successful.
+
+Test Case 5 (Negative)
+•	Objective: Handle invalid redirect URL safely.
+•	Input:
+•	{ "redirect": "http:///%%/\\bad-url" }
+•	Expected Result:
+o	Invalid URL is caught by try-catch.
+o	No redirection happens.
+•	Outcome:
+Application stays stable, no error in browser.
+

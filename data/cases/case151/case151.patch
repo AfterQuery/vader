@@ -1,0 +1,12 @@
+@@
+-app.use(session({
+-    secret: 'secret-key',
+-    resave: false,
+-    saveUninitialized: true
+-}));
++app.use(session({
++    secret: 'secret-key',
++    resave: false,
++    saveUninitialized: true,
++    cookie: { secure: process.env.NODE_ENV === 'production' }
++}));

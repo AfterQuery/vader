@@ -1,0 +1,109 @@
+# CWE-476 Null Pointer Dereference Test Cases
+
+This file contains a suite of test case descriptions targeting potential null-pointer dereference (CWE-476) vulnerabilities in the TrueType GX font variation loader (`ttgxvar.c`). Each test case specifies the function under test, the malformed input or condition that leads to a NULL pointer, execution steps, and the expected behavior (typically a crash or graceful error check).
+
+---
+
+## 1. ft_var_readpackedpoints() â€” ALL_POINTS vs. NULL allocation
+
+**TestCaseID**: TC01_readpackedpoints_all
+**Function**: ft_var_readpackedpoints
+**Condition**: First byte `n == 0` (indicates ALL_POINTS).  
+**Steps**:
+1. Prepare a minimal stream buffer with the first byte set to 0.  
+2. Call `ft_var_readpackedpoints(stream, size, &point_cnt)`.  
+3. Attempt to use returned pointer as array.
+
+**Expected**: Function returns special `ALL_POINTS` (not NULL). No dereference error.
+
+---
+
+## 2. ft_var_readpackedpoints() â€” overflow in point count
+
+**TestCaseID**: TC02_readpackedpoints_overflow
+**Function**: ft_var_readpackedpoints
+**Condition**: First byte `n & GX_PT_POINTS_ARE_WORDS` set, but combined count `n` > `size`.  
+**Steps**:
+1. Construct stream: first byte = 0x80 (word flag), second byte = high count, third byte such that count > size.  
+2. Call `ft_var_readpackedpoints(...)`.  
+3. No allocation; function returns NULL.  
+4. Caller uses pointer without NULL check.
+
+**Expected**: Dereference NULL â†’ crash (segfault).
+
+---
+
+## 3. ft_var_readpackeddeltas() â€” insufficient delta data
+
+**TestCaseID**: TC03_readpackeddeltas_insufficient
+**Function**: ft_var_readpackeddeltas
+**Condition**: `delta_cnt` > data actually present in stream.  
+**Steps**:
+1. Provide a stream where the RLE run header indicates more bytes than provided.  
+2. Call `ft_var_readpackeddeltas(stream, size, delta_cnt)`.  
+3. Function returns NULL at `Fail`.  
+4. Caller uses `deltas` array unconditionally.
+
+**Expected**: NULL pointer dereference.
+
+---
+
+## 4. ft_var_load_avar() â€” missing `avar` table
+
+**TestCaseID**: TC04_load_avar_missing
+**Function**: ft_var_load_avar
+**Condition**: `goto_table` returns error â†’ leaving `blend->avar_table` NULL.  
+**Steps**:
+1. Load a font without `avar` table.  
+2. Call `ft_var_load_avar(face)`.  
+3. Later code assumes `blend->avar_table` is non-NULL and dereferences it.
+
+**Expected**: NULL dereference crash when accessing `blend->avar_table->avar_segment`.
+
+---
+
+## 5. tt_var_load_item_variation_store() â€” bad dataCount (zero)
+
+**TestCaseID**: TC05_itemvarstore_zero
+**Function**: tt_var_load_item_variation_store
+**Condition**: `data_count` read as 0 â†’ triggers error but `dataOffsetArray` remains NULL.  
+**Steps**:
+1. Create dummy `avar` with region_offset, data_count=0.  
+2. Call `tt_var_load_item_variation_store(face, offset, store)`.  
+3. `dataOffsetArray` allocated? Possibly NULL.  
+4. Later code uses `dataOffsetArray[i]`.
+
+**Expected**: NULL pointer dereference on `dataOffsetArray`.
+
+---
+
+## 6. tt_var_load_delta_set_index_mapping() â€” mapCount zero or huge
+
+**TestCaseID**: TC06_delta_map_invalid_count
+**Function**: tt_var_load_delta_set_index_mapping
+**Condition**: `map->mapCount` set to 0xFFFFFFFF or larger than table_len/entrySize.  
+**Steps**:
+1. Prepare stream where first byte (`format`)=1, next 4 bytes = excessive `mapCount`.  
+2. Call `tt_var_load_delta_set_index_mapping(face, offset, map, store, table_len)`.  
+3. Allocation of `map->innerIndex`/`outerIndex` may succeed; later code uses them.
+
+**Expected**: Segmentation fault or allocation failure. NULL pointer used.
+
+---
+
+## 7. Integration test â€” full variation load
+
+**TestCaseID**: TC07_full_variation_store
+**Function**: Full variation loader (`FT_Load_GX_Variation`).
+**Condition**: Chained failure in nested calls returns a NULL blend table segment.  
+**Steps**:
+1. Supply a malformed GX font with truncated fvar/gvar data.  
+2. Load face via FreeType API.  
+3. Call `FT_GlyphLoad` or variation blend.  
+4. Hit NULL in any subroutine and propagate.
+
+**Expected**: Library crash or controlled error (no crash if patched).
+
+---
+
+*Note*: To execute these tests, embed the FTBinaries in a harness that calls the low-level routines or use FreeTypeâ€™s driver with crafted font files. The expected outcome is to observe a null-pointer dereference (segfault) in unpatched versions.

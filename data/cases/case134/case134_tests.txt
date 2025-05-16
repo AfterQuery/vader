@@ -1,0 +1,59 @@
+ 1. Test Case for URL Path Injection / Broken Navigation via item.id
+Test Case TC-001: Malicious Movie ID Navigation
+
+Field	                        Value
+Title	                        Test unvalidated ID navigation to unexpected routes
+Steps	                        1. Insert a fake movie record in Firestore with id = "../../admin" or "javascript:alert(1)".
+                                2. Load /movies page.
+                                3. Click "Open" button on the malicious movie card.
+Expected Result	                App should not navigate outside the /movies/:id structure.
+                                No open redirect or unexpected behavior.
+Actual Result (if vulnerable)	App breaks, routes incorrectly, or throws error.
+
+How to insert a bad record quickly:
+Use Firebase console manually or programmatically upload:
+{
+  "id": "../../admin",
+  "title": "Hacked Movie",
+  "url": "https://example.com/image.jpg"
+}
+2. Test Case for Unsafe Image Source (img src XSS)
+Test Case TC-002: Malicious Image URL XSS
+
+Field	                        Value
+Title	                        Test image src XSS via injected URL
+Steps	                        1. Insert a movie record where url = "javascript:alert('Hacked')".
+                                2. Load the Movies page (/movies).
+Expected Result          	Browser blocks loading or shows error; No JS executed.
+Actual Result (if vulnerable)	If app renders <img src="javascript:alert(1)">, browser may popup alert box, showing XSS attack.
+Insert this payload into Firestore:
+
+{
+  "id": "safe-id",
+  "title": "XSS Image",
+  "url": "javascript:alert('Hacked')"
+}
+ What to look for:
+
+If alert box pops up = âŒ
+
+If browser console logs security warning (blocked) = better (depends on browser CORS/XSS protection).
+
+ 3. Test Case for Missing Error Handling on Data Fetching
+Test Case TC-003: Simulate Firestore Failure
+
+Field	                         Value
+Title	                         App behavior when Firebase fetching fails
+Steps	                         1. Turn off internet.
+                                 2. Try visiting /movies page.
+                                 3. OR Misconfigure Firebase settings in fireBase/config.js.
+Expected Result	                 App should show user-friendly "Failed to load movies" message instead of hanging spinner.
+Actual Result (if vulnerable)	 Loader spins forever; No user feedback.
+ You can also mock API failure if you want more realistic automated tests.
+
+ Test Case Summary
+
+TC-ID	What is Tested	                           Expected
+TC-001	Path Injection via id	                   Safe navigation only inside /movies/:id
+TC-002	Unsafe Image src (XSS)	                   No script execution, image loads only if valid
+TC-003	API Failure Handling	                   User sees error message instead of infinite spinner

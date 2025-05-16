@@ -1,0 +1,41 @@
+Vulnerable code
+@app.route('/data', methods=['GET', 'POST'])
+def upload_file():
+    tools.empty_folder('uploads')
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return 'NO FILE SELECTED'
+        if file:
+            file_data = file.read()
+            file_id = fs.put(file_data, filename=file.filename)
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+            with open('raw_data/meta_data.txt', 'a') as file:
+                file.write(filename + '\n')
+            return start_encryption()
+    return 'Invalid File Format !'
+
+Steps to Reproduce:
+Clone the repository:
+
+bash
+git clone https://github.com/DhruvLamba/File-Storage.git
+
+Run the Flask application in local environment
+
+Access the upload endpoint directly:
+
+Open your browser or use cURL to access the /data endpoint:
+
+curl -X POST -F "file=@test.exe" http://127.0.0.1:8000/data
+
+Observe that the file is uploaded successfully without any authentication or authorization checks.
+
+Verify the uploaded file:
+
+Check the ./uploads/ directory to confirm the uploaded file is saved.

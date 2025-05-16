@@ -1,0 +1,28 @@
+--- auth.py	2025-04-27
++++ auth_fixed.py	2025-04-27
+@@
+- @csrf_exempt
+- @require_post
+- def jwt_fetch_api_key(
++ @require_post
++ @csrf_protect
++ def jwt_fetch_api_key(
+
+- @csrf_exempt
+- @require_post
+- def api_fetch_api_key(
++ @require_post
++ @csrf_protect
++ def api_fetch_api_key(
+
+- @csrf_exempt
+- @require_safe
+- def api_get_server_settings(
++ @require_safe
++ @csrf_protect
++ def api_get_server_settings(
+
+- @csrf_exempt
+- def saml_sp_metadata(
++ @csrf_protect
++ def saml_sp_metadata(

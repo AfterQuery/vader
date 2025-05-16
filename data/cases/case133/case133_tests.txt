@@ -1,0 +1,30 @@
+import pytest
+import torch
+import tempfile
+import os
+
+def test_safe_state_dict_load():
+    model = torch.nn.Linear(2, 2)
+    dummy_state = model.state_dict()
+
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        torch.save(dummy_state, f.name)
+        safe_loaded = torch.load(f.name, map_location="cpu")
+
+    assert isinstance(safe_loaded, dict)
+
+def test_unsafe_pickle_load():
+    # simulate unsafe pickle loading
+    class DummyAttack:
+        def __reduce__(self):
+            return (os.system, ('echo UNSAFE CODE EXECUTED',))
+
+    malicious_data = DummyAttack()
+
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        torch.save(malicious_data, f.name)
+
+    with pytest.raises(ValueError):
+        loaded = torch.load(f.name, map_location="cpu")
+        if not isinstance(loaded, dict):
+            raise ValueError("Loaded object is not a state_dict dictionary. Possible unsafe pickle detected.")

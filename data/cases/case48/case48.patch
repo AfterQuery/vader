@@ -1,0 +1,14 @@
+diff --git a/shop.py b/shop.py
+index 7a8b9c0..d4e5f6a 100644
+--- a/shop.py
++++ b/shop.py
+@@ -29,4 +29,7 @@ def showMyCart():
+     # existing cart display logic...
+ 
+-def addToCart(id,qty):
+-    myCart.append(Cart(foods[id -1].name, foods[id -1].price, qty))
++def addToCart(id, qty):
++    # validate the food ID
++    if id < 1 or id > len(foods):
++        raise ValueError("Invalid food ID")
++    myCart.append(Cart(foods[id - 1].name, foods[id - 1].price, qty))

@@ -1,0 +1,17 @@
+
+package repo
+
+import (
+    "testing"
+)
+
+func TestCreateRepositoryValidation(t *testing.T) {
+    err := CreateRepository("admin")
+    if err == nil {
+        t.Error("Expected error for reserved repository name 'admin'")
+    }
+    err = CreateRepository("valid-repo")
+    if err != nil {
+        t.Errorf("Unexpected error for valid repository name: %v", err)
+    }
+}

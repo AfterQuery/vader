@@ -1,0 +1,64 @@
+1. Test Case TC-001: External URL Injection
+
+Field	                                 Value
+Test Case ID	                         TC-001
+Title	                                 Redirect to external domain via injected userId
+Precondition	                         Userâ€™s userId is set to //evil.com in the auth context
+Steps	                                 1. Inject or mock auth.user.userId = "//evil.com"
+                                         2. Click "Profile" in Sidebar
+Expected Result                        	 Browser navigates to https://evil.com â†’ âŒ Open Redirect triggered
+Actual Result	                         If unpatched, browser leaves app and lands on evil.com
+Severity	                         Critical
+
+2. Test Case TC-002: JavaScript URI Injection (XSS via href)
+
+Field	                                 Value
+Test Case ID	                         TC-002
+Title	                                 Inject javascript: URI to execute JS on click
+Precondition	                         userId = javascript:alert(1)
+Steps	                                 1. Inject or simulate auth.user.userId = "javascript:alert(1)"
+                                         2. Click on "Profile" link
+Expected Result	                         Alert box pops up in some browsers â€” âŒ client-side XSS
+Actual Result	                         If XSS protections fail, JS executes
+Severity	                         Critical (browser dependent)
+3. Test Case TC-003: Internal Path Injection
+
+Field	                                 Value
+Test Case ID	                         TC-003
+Title	                                 Redirect to restricted page via manipulated internal path
+Precondition	                         Set userId = "/admin"
+Steps	                                 1. auth.user.userId = "/admin"
+                                         2. Click Profile
+Expected Result	                         Navigates user to /admin page â€” potentially unauthorized access
+Actual Result	                         Unintended access if backend lacks route-level auth
+Severity	                         High
+Bonus (Prevention Test After Fix)
+
+Field	                                 Value
+Test Case ID	                         TC-004
+Title	                                 Validate safe navigation to internal profile route
+Precondition	                         userId = "user123" (expected safe string)
+Steps	                                 1. Inject or simulate auth.user.userId = "user123"
+                                         2. Click Profile
+Expected Result	                         Navigates to /profile/user123 without issues
+Actual Result	                         Profile opens successfully
+Severity	                         None â€” expected behavior
+ðŸ› ï¸ How to Run These Tests
+Modify your frontend state or mock useAuth() hook to simulate the attack values.
+
+Use browser DevTools Console to inspect what the href attribute becomes.
+
+Alternatively, write a Cypress test like:
+
+it('should not allow external URL in userId', () => {
+  cy.visit('/');
+  cy.window().then(win => {
+    win.localStorage.setItem('auth', JSON.stringify({
+      user: { userId: '//evil.com' },
+      token: 'fake'
+    }));
+  });
+  cy.reload();
+  cy.get('.side-nav-link').contains('Profile').click();
+  cy.url().should('not.include', 'evil.com'); // PASS if patch exists
+});

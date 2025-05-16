@@ -1,0 +1,78 @@
+--- a/common_filters.py
++++ b/common_filters.py
+@@ class CommonFilters:
+
+     @staticmethod
+     def set_owner(filters, module, key):
+         if not module or not filters or not key:
+             return None
+
+         if request.method == 'POST':
+             if current_user.is_admin:
+                 if filters.assignees.data:
+-                    owner = text('%s.owner_id=%d' % (module, filters.assignees.data.id))
++                    from sqlalchemy import and_
++                    owner = and_(module.c.owner_id == filters.assignees.data.id)
+                     session[key] = filters.assignees.data.id
+                 else:
+                     session.pop(key, None)
+                     owner = True
+             else:
+-                owner = text('%s.owner_id=%d' % (module, current_user.id))
++                from sqlalchemy import and_
++                owner = and_(module.c.owner_id == current_user.id)
+                 session[key] = current_user.id
+         else:
+             if key in session:
+-                owner = text('%s.owner_id=%d' % (module, session[key]))
++                from sqlalchemy import and_
++                owner = and_(module.c.owner_id == session[key])
+                 filters.assignees.data = User.get_by_id(session[key])
+             else:
+-                owner = True if current_user.is_admin else text('%s.owner_id=%d' % (module, current_user.id))
++                owner = True if current_user.is_admin else and_(module.c.owner_id == current_user.id)
+         return owner
+
+     @staticmethod
+     def set_accounts(filters, module, key):
+         if not module or not filters or not key:
+             return None
+
+         account = True
+         if request.method == 'POST':
+             if filters.accounts.data:
+-                account = text('%s.account_id=%d' % (module, filters.accounts.data.id))
++                from sqlalchemy import and_
++                account = and_(module.c.account_id == filters.accounts.data.id)
+                 session[key] = filters.accounts.data.id
+             else:
+                 session.pop(key, None)
+         else:
+             if key in session:
+-                account = text('%s.account_id=%d' % (module, session[key]))
++                from sqlalchemy import and_
++                account = and_(module.c.account_id == session[key])
+                 filters.accounts.data = Account.get_account(session[key])
+         return account
+
+     @staticmethod
+     def set_contacts(filters, module, key):
+         if not module or not filters or not key:
+             return None
+
+         contact = True
+         if request.method == 'POST':
+             if filters.contacts.data:
+-                contact = text('%s.contact_id=%d' % (module, filters.contacts.data.id))
++                from sqlalchemy import and_
++                contact = and_(module.c.contact_id == filters.contacts.data.id)
+                 session[key] = filters.contacts.data.id
+             else:
+                 session.pop(key, None)
+         else:
+             if key in session:
+-                contact = text('%s.contact_id=%d' % (module, session[key]))
++                from sqlalchemy import and_
++                contact = and_(module.c.contact_id == session[key])
+                 filters.contacts.data = Contact.get_contact(session[key])
+         return contact

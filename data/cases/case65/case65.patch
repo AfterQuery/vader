@@ -1,0 +1,22 @@
+From d3cd06c8633654e43177f596ee652888e1f7b9e2 Mon Sep 17 00:00:00 2001
+From: Xin Huang <xin1.huang@intel.com>
+Date: Sat, 3 Feb 2024 01:37:19 +0800
+Subject: [PATCH] Fix SQL injection in /api/system/meshsync/resources
+
+Signed-off-by: Xin Huang <xin1.huang@intel.com>
+---
+ server/handlers/meshsync_handler.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/server/handlers/meshsync_handler.go b/server/handlers/meshsync_handler.go
+index 7497e7ef4e3..6798b037f4c 100644
+--- a/server/handlers/meshsync_handler.go
++++ b/server/handlers/meshsync_handler.go
+@@ -132,6 +132,7 @@ func (h *Handler) GetMeshSyncResources(rw http.ResponseWriter, r *http.Request,
+ 		result = result.Offset(offset)
+ 	}
+ 
++	order = models.SanitizeOrderInput(order, []string{"created_at", "updated_at", "name"})
+ 	if order != "" {
+ 		if sort == "desc" {
+ 			result = result.Order(clause.OrderByColumn{Column: clause.Column{Name: order}, Desc: true})

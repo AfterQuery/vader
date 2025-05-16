@@ -1,0 +1,48 @@
+Test Case 1
+•	Objective: Successfully upload a simple valid file inside the allowed directory.
+•	Input:
+o	path = "testfile.txt"
+o	contents = "Hello World!"
+•	Expected Result:
+o	File testfile.txt should be created inside /var/www/uploads/.
+•	Outcome:
+o	File is saved successfully.
+
+Test Case 2
+•	Objective: Attempt path traversal to overwrite sensitive system file.
+•	Input:
+o	path = "../../etc/passwd"
+o	contents = "malicious content"
+•	Expected Result:
+o	Application detects invalid path and returns an error (e.g., "Invalid file path!").
+•	Outcome:
+o	File write is blocked; no file is created outside the allowed directory.
+
+
+
+Test Case 3: 
+•	Objective: Upload a file with a slightly complex filename (without traversal).
+•	Input:
+o	path = "nestedfolder/validfile.txt" (after applying basename() this becomes validfile.txt)
+o	contents = "Sample Data"
+•	Expected Result:
+o	File validfile.txt should be safely saved inside /var/www/uploads/.
+•	Outcome:
+o	File upload succeeds without any issues.
+Test Case 4
+•	Objective: Attempt to bypass using symbolic link tricks to traverse directories.
+•	Input:
+o	path = "symlink/../../var/www/html/secret.php"
+•	Expected Result:
+o	Application should reject the request because realpath() verification fails.
+•	Outcome:
+o	File write is blocked; no file is created outside /var/www/uploads/.
+Test Case 5
+•	Objective: Try uploading a file with an empty filename.
+•	Input:
+o	path = ""
+o	contents = "some content"
+•	Expected Result:
+o	Application detects the missing filename and rejects the upload with an error.
+•	Outcome:
+o	File is not created; application responds with an error.

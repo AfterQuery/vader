@@ -1,0 +1,51 @@
+Test Case 1 (Positive )
+•	Objective: Successfully process avatar files for a valid user.
+•	Input:
+o	user.realm_id = 5, user.id = 1001
+•	Expected Result:
+o	Paths resolve to:
+o	/var/www/app/avatars/5/<hashed_user>
+o	File operations (os.link, os.remove, open) succeed.
+•	Outcome:
+Avatar migration works as intended.
+
+Test Case 2 (Negative)
+•	Objective: Attempt path traversal using manipulated realm_id.
+•	Input:
+o	user.realm_id = "../../../../etc"
+•	Expected Result:
+o	Resolved path escapes the avatar directory.
+o	ValueError("Invalid file path detected") is raised.
+•	Outcome:
+Attack blocked.
+
+Test Case 3 (Negative)
+•	Objective: Use symbolic link to escape allowed directory.
+•	Input:
+o	user.realm_id directory is symlinked to /etc/
+•	Expected Result:
+o	realpath() resolves to /etc/...
+o	startswith() check fails.
+o	Operation aborted.
+•	Outcome:
+ Symlink bypass prevented.
+Test Case 4 (Positive)
+•	Objective: Handle legitimate new avatar generation with new user hash.
+•	Input:
+o	user.realm_id = 8, new valid hash
+•	Expected Result:
+o	File paths validated.
+o	Avatar .png file written successfully.
+•	Outcome:
+Process completes normally.
+
+Test Case 5 (Negative)
+•	Objective: Attempt to overwrite a sensitive file via crafted user.id or hash.
+•	Input:
+o	Hash calculation or user.id results in path like:
+o	../../../../etc/passwd
+•	Expected Result:
+o	realpath() detects invalid resolved path.
+o	Script raises error and skips file operation.
+•	Outcome:
+File overwrite attack stopped.

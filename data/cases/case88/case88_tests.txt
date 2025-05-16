@@ -1,0 +1,44 @@
+TEST CASES
+1. Test Case: Manual Redux State Manipulation to Force Login
+Objective: Verify if changing the Redux isLogged flag grants unauthorized access.
+Test Steps:
+Expected Result:
+Access should not be granted to protected routes if the isLogged state is manipulated.
+2. Test Case: Local Storage/Session Storage Tampering
+Objective: Check if altering localStorage/sessionStorage variables grants unauthorized login.
+Test Steps:
+Expected Result:
+Modifying localStorage or sessionStorage should not allow bypassing the authentication
+check. The user should be redirected to the login page.
+1. Open the application in the browser.
+2. Open DevTools → Console.
+3. Set the Redux isLogged state to true by executing the following command:
+store.dispatch({ type: "LOGIN_SUCCESS" });
+4. Attempt to access a protected route (e.g., /dashboard , /user-profile ).
+5. Refresh the page.
+1. Open the application.
+2. Without logging in, navigate to a protected page (e.g., /dashboard ).
+3. Open DevTools → Application Tab.
+4. Set any authentication-related flag in localStorage/sessionStorage (e.g.,
+isLogged=true ).
+5. Refresh the page and attempt to access the protected route.
+3. Test Case: Bypass Navigation to Protected Components
+Directly
+Objective: Test if directly visiting a protected route URL bypasses the login requirement.
+Test Steps:
+Expected Result:
+The application should automatically redirect the user to the login page, and access to
+protected pages should not be granted.
+4. Test Case: Check Token Validation on Page Reload
+Objective: Verify if token validation happens automatically after page refresh.
+Test Steps:
+Expected Result:
+After a page refresh, the session should be invalidated, and the user should be redirected to the
+login page. The application should rely on server-side token validation and not persist invalid
+sessions based solely on Redux state.
+1. Without logging in, manually enter the URL of a protected route (e.g., /projectoverview ).
+2. Press Enter.
+1. Log in normally and capture the token/auth state.
+2. Without logging in, manually enter the URL of a private page (e.g., /project-overview ).
+3. Refresh the page.
+4. Clear session tokens/local storage manually.

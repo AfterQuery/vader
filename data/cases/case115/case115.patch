@@ -1,0 +1,46 @@
+diff --git a/api/src/services/access.ts b/api/src/services/access.ts
+index b3a2d22..f4e123c 100644
+--- a/api/src/services/access.ts
++++ b/api/src/services/access.ts
+@@
+ import { ItemsService } from './items.js';
+
++const ALLOWED_ACCESS_FIELDS = ['role', 'collection', 'action', 'permissions'];
+
+ export class AccessService extends ItemsService {
+     constructor(options: AbstractServiceOptions) {
+         super('directus_access', options);
+     }
++
++    private sanitizeData(data: Partial<Item>): Partial<Item> {
++        const sanitized: Partial<Item> = {};
++        for (const key of ALLOWED_ACCESS_FIELDS) {
++            if (key in data) {
++                sanitized[key] = data[key];
++            }
++        }
++        return sanitized;
++    }
+
+     override async createOne(data: Partial<Item>, opts: MutationOptions = {}): Promise<PrimaryKey> {
+-        const result = await super.createOne(data, opts);
++        const sanitizedData = this.sanitizeData(data);
++        const result = await super.createOne(sanitizedData, opts);
+
+         await this.clearCaches();
+         return result;
+     }
+
+     override async updateMany(
+         keys: PrimaryKey[],
+         data: Partial<Item>,
+         opts: MutationOptions = {},
+     ): Promise<PrimaryKey[]> {
+-        const result = await super.updateMany(keys, data, opts);
++        const sanitizedData = this.sanitizeData(data);
++        const result = await super.updateMany(keys, sanitizedData, opts);
+
+         await this.clearCaches();
+         return result;
+     }
+ }

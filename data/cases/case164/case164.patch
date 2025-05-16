@@ -1,0 +1,79 @@
+--- billing_system.py	2025-04-29 06:40:14.000000000 -0400
++++ billing_system-new.py	2025-04-29 06:40:14.000000000 -0400
+@@ -7,6 +7,8 @@
+ from datetime import date 
+ import time
+ from termcolor import colored
++import os
++import bcrypt
+ 
+ global conn, cursor
+ conn = connector.connect(host="localhost", database="prod",
+@@ -32,7 +34,9 @@
+         print(text)
+         return login()
+     password = input(' Type your password: ')
+-    if password == '1234':
++    stored_hash = os.getenv('ADMIN_HASH')  # Pre-computed bcrypt hash
++    input_hash = bcrypt.hashpw(password.encode(), stored_hash.encode())
++    if bcrypt.checkpw(password.encode(), stored_hash.encode()):
+         time.sleep(0.5) 
+         print("Loged in Successfully ✅")
+         return main_menu() 
+@@ -53,7 +57,7 @@
+ 
+ 
+ def find_item(no):
+-    cursor.execute('select * from items where id ={}'.format(no))
++    cursor.execute('select * from items where id = %s', (no,))
+     record = cursor.fetchone()
+     return record
+ 
+@@ -64,13 +68,10 @@
+     print('-'*100)
+     item_name = input('Enter new Item Name :')
+     item_price = input('Enter Item Price :')
+-    sql = 'select * from items where item_name like "%{}%"'.format(item_name)
+-    cursor.execute(sql)
++    cursor.execute('select * from items where item_name LIKE %s', ("%" + item_name + "%",))
+     record = cursor.fetchone()
+     if record == None:
+-        sql = 'insert into items(item_name,price) values("{}",{});'.format(
+-            item_name, item_price)
+-        cursor.execute(sql)
++        cursor.execute('insert into items(item_name,price) values(%s,%s)', (item_name, item_price))
+         print('\n\nNew Item added successfully.....\nPress any key to continue....')
+     else:
+         print('\n\nItem Name already Exist.....\nPress any key to continue....')
+@@ -97,9 +98,7 @@
+     item_id = input('Enter Item ID :')
+     item_name = input('Enter new Item Name :')
+     item_price = input('Enter Item Price :')
+-    sql = 'update items set item_name = "{}", price ={} where id={}'.format(
+-        item_id, item_name, item_price)
+-    cursor.execute(sql)
++    cursor.execute('update items set item_name=%s, price=%s where id=%s', (item_name, item_price, item_id))
+     print('\n\nRecord Updated Successfully............')
+ 
+ 
+@@ -193,9 +192,7 @@
+     print('-'*100)
+     start_date = input('Enter start Date (yyyy-mm-dd) :')
+     end_date = input('Enter End Date (yyyy-mm-dd) :')
+-    sql = 'select * from bills where bill_date between "{}" and "{}"'.format(
+-        start_date, end_date)
+-    cursor.execute(sql)
++    cursor.execute('select * from bills where bill_date BETWEEN %s AND %s', (start_date, end_date))
+     records = cursor.fetchall()
+     clear()
+     print('Bill No         Customer Name          Phone No          Bill Date')
+@@ -261,8 +258,7 @@
+ def search_item():
+     clear()
+     item_name =input('Enter Item Name :')
+-    sql ='select * from items where item_name like "%{}%";'.format(item_name)
+-    cursor.execute(sql)
++    cursor.execute('select * from items where item_name LIKE %s', ("%" + item_name + "%",))
+     records = cursor.fetchall()
+     clear()
+     print('Item Names start with :',item_name)

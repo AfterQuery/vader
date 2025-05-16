@@ -1,0 +1,14 @@
+--- DashBoard.js	2025-04-27
++++ DashBoard_fixed.js	2025-04-27
+@@
+- $('.js-widget-list').append(data);
++ $('.js-widget-list').append(DOMPurify.sanitize(data));
+
+- $('.dashboardViewContainer').html(data);
++ $('.dashboardViewContainer').html(DOMPurify.sanitize(data));
+
+- filteridSelectDOM.empty().html(res).trigger('change');
++ filteridSelectDOM.empty().html(DOMPurify.sanitize(res)).trigger('change');
+
+- fieldsSelectDOM.empty().html(fieldsHTML).trigger('change');
++ fieldsSelectDOM.empty().html(DOMPurify.sanitize(fieldsHTML)).trigger('change');

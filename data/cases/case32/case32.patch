@@ -1,0 +1,8 @@
+--- log.c
++++ log.c
+@@ void log_user_input(const char *user_input) {
+-    ns_log(Error, "User input: %s", user_input);
++    char safe_input[1024];
++    sanitize_for_log(user_input, safe_input, sizeof(safe_input));
++    ns_log(Error, "User input: %s", safe_input);
+}

@@ -1,0 +1,23 @@
+Test Case â€“ Ensure Token Is Not Stored in localStorage
+Use a Jest test:
+
+import { render } from "@testing-library/react";
+import { AuthContextProvider } from "./AuthContext";
+
+test("token should not be stored in localStorage", () => {
+  localStorage.clear();
+  render(<AuthContextProvider><div /></AuthContextProvider>);
+  expect(localStorage.getItem("token")).toBeNull();
+});
+
+Or simulate a login and ensure nothing is persisted:
+
+test("should not persist token after login", () => {
+  const tokenSpy = jest.spyOn(localStorage.__proto__, 'setItem');
+  const { dispatch } = render(<AuthContextProvider><div /></AuthContextProvider>);
+  dispatch({
+    type: "LOGIN_SUCCESS",
+    payload: { token: "123abc", user: {}, role: "user" }
+  });
+  expect(tokenSpy).not.toHaveBeenCalledWith("token", expect.anything());
+});

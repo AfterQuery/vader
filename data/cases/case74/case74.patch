@@ -1,0 +1,55 @@
+diff --git a/client/src/server.js b/client/src/server.js
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/client/src/server.js
+@@ -0,0 +1,50 @@
++'use strict';
++const express      = require('express');
++const http         = require('http');
++const io           = require('socket.io');
++const cors         = require('cors');
++const csurf        = require('csurf');
++const cookieParser = require('cookie-parser');
++
++const FETCH_INTERVAL = 5000;
++const PORT           = process.env.PORT || 4000;
++
++const tickers = [
++  'AAPL', 'GOOGL', 'MSFT', 'AMZN', 'FB', 'TSLA'
++];
++
++const app = express();
++app.use(cors());
++app.use(cookieParser());
++app.use(express.urlencoded({ extended: true }));
++app.use(csurf({ cookie: true }));
++
++const server = http.createServer(app);
++const socketServer = io(server, {
++  cors: { origin: "*" }
++});
++
++// Middleware para obtener y enviar el token CSRF
++app.get('/csrf-token', (req, res) => {
++  res.json({ csrfToken: req.csrfToken() });
++});
++
++// Endpoint protegido contra CSRF
++app.post('/secure-action', (req, res) => {
++  res.json({ message: "Acción realizada con protección CSRF." });
++});
++
++app.get('/', (req, res) => {
++  res.sendFile(__dirname + '/index.html');
++});
++
++socketServer.on('connection', (socket) => {
++  socket.on('start', () => {
++    trackTickers(socket);
++  });
++});
++
++server.listen(PORT, () => {
++  console.log(`Streaming service is running on http://localhost:${PORT}`);
++});

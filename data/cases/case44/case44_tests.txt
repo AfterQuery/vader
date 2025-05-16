@@ -1,0 +1,19 @@
+
+package main
+
+import (
+    "testing"
+)
+
+func containsIllegalChars(s string) bool {
+    return len(s) > 0 && (s[0] == ';' || s[0] == '&')
+}
+
+func TestIllegalGitArg(t *testing.T) {
+    if !containsIllegalChars(";rm -rf /") {
+        t.Error("Expected true for malicious input")
+    }
+    if containsIllegalChars("status") {
+        t.Error("Expected false for safe input")
+    }
+}

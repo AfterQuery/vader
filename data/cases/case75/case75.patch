@@ -1,0 +1,16 @@
+--- a/tpot_base.py
++++ b/tpot_base.py
+@@ def _import_hash(self, operator):
+-            for var in operator.import_hash[key]:
+-                self.operators_context[var] = eval(var)
++            for var in operator.import_hash[key]:
++                if hasattr(imported_module, var):
++                    self.operators_context[var] = getattr(imported_module, var)
++                else:
++                    raise AttributeError(f"Module '{key}' does not have attribute '{var}'.")
+
+@@ def _compile_to_sklearn(self, expr):
+-        sklearn_pipeline = eval(sklearn_pipeline_str, self.operators_context)
++        import ast
++        compiled_pipeline = compile(sklearn_pipeline_str, "<string>", "eval")
++        sklearn_pipeline = eval(compiled_pipeline, {"__builtins__": {}}, self.operators_context)

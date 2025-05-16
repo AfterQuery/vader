@@ -1,0 +1,19 @@
+--- lambda_handler.py
++++ lambda_handler.py
+@@ def return_customer_info(custName):
+-    query = 'SELECT customerId, customerName, Addr1, Addr2, City, State, Zipcode, PreferredActivity, ShoeSize, OtherInfo from CustomerInfo where customerName like "%' +  custName +'%"'
+-    cursor.execute(query)
++    query = 'SELECT customerId, customerName, Addr1, Addr2, City, State, Zipcode, PreferredActivity, ShoeSize, OtherInfo from CustomerInfo WHERE customerName LIKE ?'
++    cursor.execute(query, (f'%{custName}%',))
+@@ def place_shoe_order(ssId, custId):
+-    query = 'Update ShoeInventory set InvCount = InvCount - 1 where ShoeID = ' + str(ssId)
+-    ret = cursor.execute(query)
++    query = 'UPDATE ShoeInventory SET InvCount = InvCount - 1 WHERE ShoeID = ?'
++    ret = cursor.execute(query, (ssId,))
+     
+-    today = datetime.today().strftime('%Y-%m-%d')
+-    query = 'INSERT INTO OrderDetails (orderdate, shoeId, CustomerId) VALUES ("'+today+'",'+str(ssId)+','+ str(custId)+')'
+-    ret = cursor.execute(query)
++    today = datetime.today().strftime('%Y-%m-%d')
++    query = 'INSERT INTO OrderDetails (orderdate, shoeId, CustomerId) VALUES (?, ?, ?)'
++    ret = cursor.execute(query, (today, ssId, custId))

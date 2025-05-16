@@ -1,0 +1,15 @@
+--- a/braintree.js
++++ b/braintree.js
+@@ -1,7 +1,13 @@
+-const gateway = new braintree.BraintreeGateway({
+-  environment: braintree.Environment.Sandbox, 
+-  merchantId: 'rqvzbh7mvbk7j7z6',
+-  publicKey: 'd2c5c28rzs7mptn5',
+-  privateKey: '6381b191eda7d013124fd464222dbb1e'
+-});
++const gateway = new braintree.BraintreeGateway({
++  environment: braintree.Environment.Sandbox,
++  merchantId: process.env.BRAINTREE_MERCHANT_ID,
++  publicKey: process.env.BRAINTREE_PUBLIC_KEY,
++  privateKey: process.env.BRAINTREE_PRIVATE_KEY
++});

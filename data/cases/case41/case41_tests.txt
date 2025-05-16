@@ -1,0 +1,22 @@
+const request = require('supertest');
+const app = require('../path/to/your/next-app'); // Adjust the import
+
+describe('Authorization Bypass via x-middleware-subrequest Header', () => {
+  it('should block access when x-middleware-subrequest header is present', async () => {
+    const protectedRoute = '/api/protected-route'; // Replace with your protected route
+    const response = await request(app)
+      .get(protectedRoute)
+      .set('x-middleware-subrequest', '1');
+
+    expect(response.statusCode).toBe(403); // Or your expected unauthorized status
+  });
+
+  it('should allow access with valid credentials without the header', async () => {
+    const protectedRoute = '/api/protected-route';
+    const response = await request(app)
+      .get(protectedRoute)
+      .set('Authorization', 'Bearer valid-token'); // Adjust as per your auth mechanism
+
+    expect(response.statusCode).toBe(200);
+  });
+});

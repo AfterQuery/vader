@@ -1,0 +1,81 @@
+diff --git a/routes/user.js b/routes/user.js
+index 1234567..abcdefg 100644
+--- a/routes/user.js
++++ b/routes/user.js
+@@ -13,6 +13,8 @@ const excel = require("./excel")
+ const mime = require('mime')
+ 
+ //The route to get all the user in the datadase
++const monthNames = ["january", "february", "march", "april", "may", "june",
++  "july", "august", "september", "october", "november", "december"];
+ router.get("/", auth,async (req, res) => {
+ try {
+ const users = await User.find().select('-attendance');
+@@ -145,19 +147,49 @@ router.get('/getAttandanceJson',auth,async(req,res)=>{
+ 
+ //to get all the attendance in excel format
+ router.get('/getallattendance', auth,async (req,res)=>{
++const {month,year,date,serviceType} = req.query;
++
++// Validate input parameters
++if (!month || !year || !date || !serviceType) {
++  return res.status(400).send('Missing required parameters');
++}
++
++// Validate month format
++if (!monthNames.includes(month.toLowerCase())) {
++  return res.status(400).send('Invalid month parameter');
++}
++
++// Validate year format
++const currentYear = new Date().getFullYear();
++if (isNaN(year) || year < 2000 || year > currentYear + 1) {
++  return res.status(400).send('Invalid year parameter');
++}
++
++// Validate date format
++if (isNaN(date) || date < 1 || date > 31) {
++  return res.status(400).send('Invalid date parameter');
++}
++
++// Sanitize serviceType parameter
++const sanitizedServiceType = serviceType.replace(/[^a-zA-Z0-9-_]/g, '');
++if (!sanitizedServiceType) {
++  return res.status(400).send('Invalid serviceType parameter');
++}
++
++const sanitizedMonth = month.toLowerCase();
++const numericYear = Number(year);
++const numericDate = Number(date);
++
+ try {
+-//the following are required to get the attendance
+-let {month,year,date,serviceType} = req.query
+-year = Number(year)
+-date = Number(date)
+-const totalAttendance = await User.find({attendance:{ $elemMatch:{month:month.toLowerCase(),date:date,year:year,serviceType:serviceType}}}).select("-attendance -_id -__v")
++const totalAttendance = await User.find({
++  attendance: { 
++    $elemMatch: {
++      month: sanitizedMonth,
++      date: numericDate,
++      year: numericYear,
++      serviceType: sanitizedServiceType
++    }
++  }
++}).select("-attendance -_id -__v")
+ var attendance = JSON.stringify(totalAttendance)
+ attendance = JSON.parse(attendance)
+ console.log(attendance)
+@@ -165,9 +197,9 @@ if(!totalAttendance){
+ return res.send(`no attendance:${date},${month},${year}`)
+ }
+ // The path function to change json into an excel format
+-excel(attendance,date,month,year,serviceType)
++excel(attendance,numericDate,sanitizedMonth,numericYear,sanitizedServiceType)
+ // the path to download the excel file
+-const file = path.join(__dirname,`attendance ${serviceType} (${date}-${month}-${year}).xlsx`)
++const file = path.join(__dirname,`attendance ${sanitizedServiceType}_${numericDate}_${sanitizedMonth}_${numericYear}.xlsx`)
+ const fileName = path.basename(file)
+ const mimeType = mime.getType(file)
+ // setheader to be able to download attendance

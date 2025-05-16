@@ -1,0 +1,39 @@
+# tests/test_oauth2client_jwt_verify.py
+
+import pytest
+import jwt
+import time
+from oauth2_client import OAuth2Client
+
+def create_fake_token(secret, alg='HS256'):
+    payload = {
+        'exp': time.time() + 3600,
+        'scope': ['read', 'write']
+    }
+    return jwt.encode(payload, secret, algorithm=alg)
+
+def test_jwt_signature_verification(monkeypatch):
+    secret = 'test_secret'
+    bad_token = create_fake_token('wrong_secret')
+    good_token = create_fake_token(secret)
+
+    oauth = OAuth2Client(name='test', scope_config={})
+
+    # Patch _get_session to simulate token retrieval
+    monkeypatch.setattr(oauth, '_get_session', lambda: type('obj', (object,), {'access_token_response': type('obj', (object,), {'json': lambda: {'access_token': good_token}})})())
+
+    try:
+        # Now this should succeed
+        oauth._resolve_configured_scopes()
+    except jwt.exceptions.InvalidSignatureError:
+        pytest.fail("Signature verification failed unexpectedly.")
+
+def test_jwt_invalid_signature(monkeypatch):
+    bad_token = create_fake_token('wrong_secret')
+
+    oauth = OAuth2Client(name='test', scope_config={})
+
+    monkeypatch.setattr(oauth, '_get_session', lambda: type('obj', (object,), {'access_token_response': type('obj', (object,), {'json': lambda: {'access_token': bad_token}})})())
+
+    with pytest.raises(jwt.exceptions.InvalidSignatureError):
+        oauth._resolve_configured_scopes()

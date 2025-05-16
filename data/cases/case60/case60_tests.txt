@@ -1,0 +1,25 @@
+
+CWE-434: Unrestricted Upload of File with Dangerous Type
+Vulnerable Code
+if (move_uploaded_file($_FILES["file"]["tmp_name"],$yeni_ad))
+No File Type Validation:
+•	Issue: The code allows any type of file to be uploaded without checking the file extension or MIME type, making it vulnerable to malicious files (e.g., PHP shells).
+•	Consequence: An attacker could upload a .php file disguised as an image or document, which could be executed on the server.
+Create a .php payload and upload it to the site as a login user.
+And once done we can be executed by going to /files endpoint and get the reverse shell.
+
+ 
+
+
+
+	Fix Code:
+    $allowed_extensions = array('jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx');
+    $allowed_mime_types = array('image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+
+    // Get the file extension and MIME type
+    $ext = strtolower(pathinfo($dosya, PATHINFO_EXTENSION));
+    $mime = mime_content_type($tmp_name);
+File Type Validation:
+•	Fixed Issue: The fixed version checks if the uploaded file’s extension and MIME type are within a predefined list of allowed file types.
+•	Benefit: Only valid image and document files are allowed, which mitigates the risk of malicious files being uploaded (e.g., PHP shells).
+

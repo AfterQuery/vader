@@ -1,0 +1,29 @@
+
+Reflected XSS
+A reflected Cross-Site Scripting (XSS) vulnerability exists in the Hostname parameter of WebSSH. An attacker can inject JavaScript code through this parameter, which is then reflected into the response and executed in the context of the victim's browser.
+
+This issue arises because unsanitized user input is inserted directly into the HTML using .html() in the frontend JavaScript:
+status.html(text.split('\n').join('<br/>'));
+If text contains HTML (like a <script> tag), it is rendered and executed.
+
+🧪 Proof of Concept (PoC):
+Start the WebSSH server locally:
+Step1:
+wssh --port=8888
+Open a browser and visit:
+https://localhost:8888/?hostname=<script>alert('XSS')</script>
+Result: The alert('XSS') is triggered, demonstrating successful script execution.
+ 
+is vulnerable to Cross-Site Scripting (XSS) because it directly injects user-controlled content (text) into the DOM using innerHTML via jQuery’s .html() method
+
+ Impact:
+Session Hijacking
+Credential Theft
+Browser Exploitation
+Phishing via Script Injection
+
+Replace vulnerable JS:
+status.html(text.split('\n').join('<br/>'));
+With a safe version:
+status.html(text.replace(/&/, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').split('\n').join('</br>'));
+The remediation code ensures that user input is safely rendered by escaping potentially dangerous characters such as <, >, &, ", and '. This prevents malicious HTML or JavaScript from being executed, eliminating the risk of reflected Cross-Site Scripting (XSS). The code works by replacing special characters with their HTML-safe equivalents, such as converting < to &lt; and > to &gt;. Additionally, newline characters are converted into <br> tags for proper formatting. This approach ensures that user input is displayed as text, rather than executable code, providing a safer browsing experience for users and protecting against security vulnerabilities.

@@ -1,0 +1,11 @@
+--- a/application/modules/admin/controllers/advanced_settings/Languages.php
++++ b/application/modules/admin/controllers/advanced_settings/Languages.php
+@@
+-$cid = $_GET['cid'];
+-$response = file_get_contents($cid); // SSRF here
++$allowedCIDs = ['en', 'fr', 'es']; 
++if (!isset($_GET['cid']) || !in_array($_GET['cid'], $allowedCIDs)) {
++    show_error('Invalid CID value', 400);
++}
++$cid = $_GET['cid'];
++$response = file_get_contents($cid);

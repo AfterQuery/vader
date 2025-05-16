@@ -1,0 +1,30 @@
+// Simulate a DOM environment
+document.body.innerHTML = `<table id="dataTable"><tr><th>ID</th><th>Value</th><th>Timestamp</th></tr></table>`;
+
+function updateTable(data) {
+  const table = document.getElementById("dataTable");
+  const row = table.insertRow(1);
+  const cell1 = row.insertCell(0);
+  const cell2 = row.insertCell(1);
+  const cell3 = row.insertCell(2);
+  cell1.textContent = data.id;
+  cell2.textContent = data.value;
+  cell3.textContent = data.timestamp;
+}
+
+// Simulated malicious payload
+const xssData = {
+  id: "<img src=x onerror='alert(\"XSS\")'>",
+  value: "42",
+  timestamp: "2024-01-01T00:00:00Z"
+};
+
+updateTable(xssData);
+
+// Assert that XSS payload is not interpreted as HTML
+console.assert(
+  document.getElementById("dataTable").rows[1].cells[0].textContent.includes("<img"),
+  "âŒ XSS mitigation failed â€“ innerHTML still used"
+);
+
+console.log("âœ… Test passed â€“ payload rendered as plain text.");

@@ -1,0 +1,54 @@
+// tests/test_xss.js
+
+const { JSDOM } = require('jsdom');
+const { expect } = require('chai');
+
+describe('XSS Protection in displayMovements', function () {
+  
+  it('should fail before patch - XSS can inject script', function () {
+    const dom = new JSDOM(`<!DOCTYPE html><body><div class="movements"></div></body>`);
+    const containerMovements = dom.window.document.querySelector('.movements');
+
+    // Simulate malicious movement injection
+    const i = 0;
+    const type = 'deposit';
+    const displayDate = '<img src=x onerror=alert(1)>';
+    const formattedMov = 'â‚¬1000';
+
+    const html = `
+      <div class="movements__row">
+        <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
+        <div class="movements__date">${displayDate}</div>
+        <div class="movements__value">${formattedMov}</div>
+      </div>
+    `;
+
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+
+    // Vulnerable: Should contain untrusted HTML
+    expect(containerMovements.innerHTML).to.include('onerror');
+  });
+
+  it('should pass after patch - No script injection possible', function () {
+    const dom = new JSDOM(`<!DOCTYPE html><body><div class="movements"></div></body>`);
+    const containerMovements = dom.window.document.querySelector('.movements');
+
+    const i = 0;
+    const type = 'deposit';
+    const displayDate = '<img src=x onerror=alert(1)>';
+    const formattedMov = 'â‚¬1000';
+
+    const htmlElement = dom.window.document.createElement('div');
+    htmlElement.classList.add('movements__row');
+    htmlElement.innerHTML = `
+      <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
+      <div class="movements__date">${dom.window.document.createTextNode(displayDate).textContent}</div>
+      <div class="movements__value">${formattedMov}</div>
+    `;
+    containerMovements.prepend(htmlElement);
+
+    // After patch: No direct 'onerror' should exist
+    expect(containerMovements.innerHTML).to.not.include('onerror');
+  });
+
+});

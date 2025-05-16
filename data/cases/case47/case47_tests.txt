@@ -1,0 +1,48 @@
+Test Case 1: Valid File Path Within Allowed Directory (Positive)
+Input:
+_file = "/allowed/directory/file.txt"
+Expected Output:
+The script processes the file as expected, opening it and reading its content. There are no errors or warnings about the file path.
+Explanation:
+The file path starts with the allowed directory /allowed/directory/, so it is a valid file path and can be safely opened.
+
+Test Case 2: Invalid File Path Using Directory Traversal (Negative)
+Input:
+_file = "../../etc/passwd"
+Expected Output:
+The script prints:
+Invalid file path: ../../etc/passwd
+The file is not processed.
+Explanation:
+The file path contains a directory traversal sequence (../../), which would allow access to system files like /etc/passwd. The script correctly identifies this as invalid and skips opening the file.
+
+Test Case 3: Valid File Path Within Allowed Directory (Positive)
+Input:
+_file = "/allowed/directory/subdir/file2.txt"
+Expected Output:
+The script processes the file, reading its content without any errors or warnings.
+Explanation:
+The file path is still within the allowed base directory, including a subdirectory. The script safely opens the file.
+
+
+
+Test Case 4: Invalid File Path Outside Allowed Directory (Negative)
+Input:
+_file = "/etc/hostname"
+Expected Output:
+The script prints:
+Invalid file path: /etc/hostname
+The file is not processed.
+Explanation:
+The file path is outside the allowed directory (/allowed/directory/) and points to a system file (/etc/hostname). The script correctly rejects this file path to prevent unauthorized access.
+
+Test Case 5: Relative File Path in Disallowed Directory (Negative)
+Input:
+_file = "../outside/directory/file.txt"
+Expected Output:
+The script prints:
+Invalid file path: ../outside/directory/file.txt
+The file is not processed.
+Explanation:
+The relative path includes a directory traversal (../) that leads to an outside directory (outside/directory). Since the base directory is restricted, the script correctly flags this as an invalid file path.
+

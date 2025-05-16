@@ -1,0 +1,19 @@
+diff --git a/index.js b/index.js
+index e4a261b..cc2f87d 100644
+--- a/index.js
++++ b/index.js
+@@ -1,5 +1,6 @@
+ import express from "express";
+ import bodyParser from "body-parser";
++import helmet from "helmet";
+ 
+ import usersRoutes from "./routes/users.js";
+ 
+@@ -7,6 +8,7 @@ const app = express();
+ const PORT = 5000;
+ 
+ app.use(bodyParser.json());
++app.use(helmet());
+ 
+ app.use("/people", usersRoutes);
+ app.get("/", (req, res) => res.send("Welcome to the Users API!"));

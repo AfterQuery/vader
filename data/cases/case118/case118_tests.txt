@@ -1,0 +1,51 @@
+Test Case 1 (Positive )
+•	Objective: Display safe plain text suggestions normally.
+•	Input from server (data):
+•	<li onclick="fill('Apple')">Apple</li>
+•	<li onclick="fill('Banana')">Banana</li>
+•	Expected Result:
+o	Suggestions are shown normally.
+o	Clicking works as expected.
+o	No alert boxes, no JS errors.
+•	Outcome:
+Suggestions work and no security issue.
+Test Case 2 (Negative )
+•	Objective: Block injected <script> tags from executing.
+•	Input from server (data):
+•	<li><script>alert('XSS')</script></li>
+•	Expected Result:
+o	<script> tag is completely removed.
+o	No JavaScript execution (no alert popup).
+•	Outcome:
+XSS attempt blocked.
+Test Case 3 (Negative )
+•	Objective: Sanitize dangerous attributes like onerror.
+•	Input from server (data):
+•	<li><img src="x" onerror="alert('XSS')"></li>
+•	Expected Result:
+o	onerror attribute is removed.
+o	Image does not cause alert or script execution.
+•	Outcome:
+Attack prevented.
+
+Test Case 4 (Positive )
+•	Objective: Allow safe formatting like <b>, <i>, etc.
+•	Input from server (data):
+•	<li><b>Bold Fruit</b></li>
+•	<li><i>Italic Fruit</i></li>
+•	Expected Result:
+o	<b> and <i> tags are preserved (harmless tags).
+o	Text is formatted bold and italic properly.
+•	Outcome:
+Safe HTML rendered correctly.
+
+Test Case 5 (Negative )
+•	Objective: Block JavaScript links like javascript: in attributes.
+•	Input from server (data):
+•	<li><a href="javascript:alert('XSS')">Click Me</a></li>
+•	Expected Result:
+o	href="javascript:..." is removed or sanitized.
+o	No click leading to JavaScript execution.
+•	Outcome:
+ Dangerous link blocked.
+

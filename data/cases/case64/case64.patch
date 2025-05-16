@@ -1,0 +1,78 @@
+diff --git a/server/auth-strategies/auth-proxy.js b/server/auth-strategies/auth-proxy.js
+index e8c3f98..f1a2de7 100644
+--- a/server/auth-strategies/auth-proxy.js
++++ b/server/auth-strategies/auth-proxy.js
+@@
+ async function authProxyStrategy(req, done) {
+   try {
+     const { config, models, webhooks } = req;
+
+     const headerUser = getHeaderUser(req);
+
+     if (!headerUser) {
+       appLog.warn('Auth proxy authentication attempted, but req.headerUser not populated');
+       return done(null, false);
+     }
+
+     // Validate required fields
+     if (!headerUser.id && !headerUser.email) {
+       return done(null, false);
+     }
+
+     // Validate role against allowed roles
+     const allowedRoles = ['editor', 'viewer'];
+     if (headerUser.role && !allowedRoles.includes(headerUser.role)) {
+       appLog.warn(`Rejected auth attempt with invalid role: ${headerUser.role}`);
+       return done(null, false);
+     }
+
+     if (!headerUser.role && config.get('authProxyDefaultRole')) {
+       headerUser.role = config.get('authProxyDefaultRole');
+     }
+
+     let existingUser;
+     if (headerUser.id) {
+       existingUser = await models.users.findOneById(headerUser.id);
+     }
+     if (!existingUser && headerUser.email) {
+       existingUser = await models.users.findOneByEmail(headerUser.email);
+     }
+
+     if (existingUser) {
+       if (existingUser.disabled) {
+         return done(null, false);
+       }
+
+       const allowedUpdateFields = ['email', 'name'];
+       const updateData = {};
+       for (const key of allowedUpdateFields) {
+         if (headerUser[key] && existingUser[key] !== headerUser[key]) {
+           updateData[key] = headerUser[key];
+         }
+       }
+       if (Object.keys(updateData).length > 0) {
+         await models.users.update(existingUser.id, updateData);
+         existingUser = await models.users.findOneById(existingUser.id);
+       }
+       return done(null, existingUser);
+     }
+
+     if (config.get('authProxyAutoSignUp')) {
+       if (!headerUser.role || !headerUser.email) {
+         return done(null, false);
+       }
+
+       const newUser = await models.users.create({
+         email: headerUser.email,
+         name: headerUser.name || '',
+         role: headerUser.role,
+       });
+       webhooks.userCreated(newUser);
+       return done(null, newUser);
+     }
+
+     return done(null, false);
+   } catch (error) {
+     done(error);
+   }
+ }

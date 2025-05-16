@@ -1,0 +1,33 @@
+At the ENTER THE BOOK CODE OF THE BOOK TO BE BORROWED: prompt, enter an invalid code (e.g., ZZZZ) repeatedly (e.g., 2000 times).
+Expected: Program eventually crashes with a stack overflow (RecursionError).
+
+
+At the Enter the book code of the book to be returned: prompt, enter an invalid code (e.g., ZZZZ) repeatedly.
+Expected: Program crashes with a stack overflow.
+
+Enter special characters (e.g., !@#$%) as the book code, repeatedly.
+Expected: Stack overflow after enough recursive calls.
+
+
+Press Enter (empty input) at the book code prompt, repeatedly.
+Expected: Stack overflow.
+
+
+Enter a very long string (e.g., 1000 characters) as the book code, repeatedly.
+Expected: Stack overflow.
+
+
+Enter only spaces or tabs at the book code prompt, repeatedly.
+Expected: Stack overflow.
+
+
+Alternate between different invalid inputs (e.g., 123, abc, !@#, empty) at each prompt, repeatedly.
+Expected: Stack overflow.
+
+
+Enter a valid borrower ID, then continuously enter invalid book codes.
+Expected: Stack overflow.
+
+
+Enter a valid book code once, then revert to invalid codes repeatedly.
+Expected: Stack overflow resumes after the valid input is ignored.

@@ -1,0 +1,15 @@
+--- a/pages/api/verify/index.ts
++++ b/pages/api/verify/index.ts
+@@
+-    const { email } = req.query;
+-    if (!email) {
+-        return;
+-    }
+-    const code = generateUniquePasscode();
+-    const sanitizedEmail = (email as string).toLowerCase();
++    const { email } = req.query;
++    if (typeof email !== "string") {
++        return res.status(400).json({ message: "Invalid email format" });
++    }
++    const code = generateUniquePasscode();
++    const sanitizedEmail = email.toLowerCase();

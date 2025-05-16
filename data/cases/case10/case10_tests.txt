@@ -1,0 +1,40 @@
+Test Cases
+Positive Test Cases
+1. Valid CID - English
+Input: ?cid=en
+Expected Result:
+•	Passes validation
+•	$cid is set to 'en'
+•	file_get_contents() executes (assuming the URL mapped internally)
+2. Valid CID - French
+Input: ?cid=fr
+Expected Result:
+•	Passes validation
+•	file_get_contents() executes
+3. Valid CID - Spanish
+Input: ?cid=es
+Expected Result:
+•	Passes validation
+•	file_get_contents() executes
+
+Negative Test Cases
+4. CID to Internal IP (SSRF Attempt)
+Input: ?cid=http://127.0.0.1:8080/admin
+Expected Result (Patched):
+•	Fails validation (not in $allowedCIDs)
+•	Returns HTTP 400 with message “Invalid CID value”
+5. CID to AWS Metadata Service (SSRF Attempt)
+Input: ?cid=http://169.254.169.254/latest/meta-data/
+Expected Result (Patched):
+•	Fails validation
+•	Returns HTTP 400
+6. CID with Malicious URL
+Input: ?cid=http://malicious-evil-attacker.com/hook
+Expected Result (Patched):
+•	Rejected
+•	HTTP 400 shown
+7. CID Not Set
+Input: (No cid parameter)
+Expected Result:
+•	Rejected
+•	HTTP 400 shown with message “Invalid CID value”

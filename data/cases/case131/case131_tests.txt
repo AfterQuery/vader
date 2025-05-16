@@ -1,0 +1,60 @@
+Test Case 1 (Positive)
+•	Objective: Retrieve records with safe query fields.
+•	Input:
+•	{
+•	  "entityName": "users",
+•	  "filters": { "username": "john" }
+•	}
+•	Expected Result:
+o	Normal database query.
+o	Records returned.
+•	Outcome:
+Request processed safely.
+Test Case 2 (Negative)
+•	Objective: Block SQL injection attempt in entity name.
+•	Input:
+•	{
+•	  "entityName": "users; DROP TABLE users; --"
+•	}
+•	Expected Result:
+o	Validation error thrown.
+o	Database is safe.
+•	Outcome:
+Attack blocked.
+
+Test Case 3 (Negative)
+•	Objective: Block SQL injection in filter value.
+•	Input:
+•	{
+•	  "filters": { "username": "' OR 1=1 --" }
+•	}
+•	Expected Result:
+o	Validation error or cleaned value.
+o	No execution of injected SQL.
+•	Outcome:
+Attack attempt neutralized.
+Test Case 4 (Positive)
+•	Objective: Create a relation safely with clean input.
+•	Input:
+•	{
+•	  "originEntity": "orders",
+•	  "targetEntity": "users",
+•	  "relationName": "order_to_user"
+•	}
+•	Expected Result:
+o	Relation created successfully.
+•	Outcome:
+Normal operation.
+Test Case 5 (Negative)
+•	Objective: Prevent SQL keywords in relation fields.
+•	Input:
+•	{
+•	  "originEntity": "orders; DROP DATABASE",
+•	  "targetEntity": "users",
+•	  "relationName": "attack_relation"
+•	}
+•	Expected Result:
+o	Input rejected.
+o	No harmful SQL triggered.
+•	Outcome:
+Dangerous input blocked.

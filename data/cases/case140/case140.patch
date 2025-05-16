@@ -1,0 +1,17 @@
+--- a/app/common.js
++++ b/app/common.js
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import $ from 'jquery';
+ import moment from 'moment';
++import DOMPurify from 'dompurify';
+ import { Link } from 'react-router';
+ import { converter } from '../constants/constants';
+ import Icon from './lib/icon/icon';
+@@ -66,7 +67,9 @@
+             <div
+               className="card-content" dangerouslySetInnerHTML={{
+-                __html: converter.makeHtml(item.content1)
++                __html: DOMPurify.sanitize(converter.makeHtml(item.content1))
+               }}
+             />

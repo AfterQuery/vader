@@ -1,0 +1,15 @@
+diff --git a/packages/auth/src/lib/useFromRedirect.ts b/packages/auth/src/lib/useFromRedirect.ts
+index b3a2d22..c1b57f9 100644
+--- a/packages/auth/src/lib/useFromRedirect.ts
++++ b/packages/auth/src/lib/useFromRedirect.ts
+@@
+-import { useMemo } from 'react'
+-
+-// TODO: remove or fix
+-export function useRedirect() {
+-  return useMemo(() => '/', [])
+-}
++// Safe redirect hook - no dynamic behavior
++export function useRedirect() {
++  return '/';
++}

@@ -1,0 +1,38 @@
+--- shop.py     2025-04-27 13:29:30.000000000 -0400
++++ shop-new.py 2025-04-27 13:29:30.000000000 -0400
+@@ -5,7 +5,7 @@
+ import operator
+ import datetime
+ import webbrowser
+-
++import os
+ 
+ conn = pymysql.connect(host="localhost",user="root",password="root123",db="foodmenu")
+ curs = conn.cursor()
+@@ -88,14 +88,18 @@
+                self.proceed_button.pack(side=BOTTOM)
+ 
+        def getMenu(self):
+-               self.menu = foodmenu.Menu()
+-               sqlQuery = "SELECT * FROM "+self.name+"_menu"
+-               curs.execute(sqlQuery)
+-               foods = curs.fetchall()
+-               for values in foods:
+-                       food = foodmenu.Food(*values)
+-                       self.menu.add(food)
+-               self.menu.reduceRanks()
++    self.menu = foodmenu.Menu()
++    # Only allow alphanumeric and underscores in table names
++    if not re.match(r'^\w+$', self.name):
++        raise ValueError("Invalid shop name")
++    table_name = f"{self.name}_menu"
++    sqlQuery = f"SELECT * FROM `{table_name}`"
++    curs.execute(sqlQuery)
++    foods = curs.fetchall()
++    for values in foods:
++        food = foodmenu.Food(*values)
++        self.menu.add(food)
++    self.menu.reduceRanks()
+ 
+        def clearEditFrame(self):
+                for widget in self.editFrame.winfo_children():

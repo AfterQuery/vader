@@ -1,0 +1,14 @@
+--- a/main.cpp
++++ b/main.cpp
+@@ -90,6 +90,10 @@
+         char *parse_string = parse(buffer, " ");
+         printf("Client ask for path: %s\n", parse_string);
+
++        // Basic security check: prevent directory traversal
++        if (strstr(parse_string, "..") != NULL) {
++            send404(new_socket);
++            continue;
++        }
+
+         char *copy = (char *)malloc(strlen(parse_string) + 1);
+         strcpy(copy, parse_string);

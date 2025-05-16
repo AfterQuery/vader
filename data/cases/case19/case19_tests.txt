@@ -1,0 +1,27 @@
+Test Cases
+Test Case 1: Internal IP Redirection
+Input: Set the Host header to redirect backend to http://127.0.0.1:8000
+Expected Behaviour (Vulnerable): Server fetches from http://127.0.0.1:8000/verify-domain
+Expected Behaviour (Patched): Server blocks the request and throws or logs an error (URL validation fails)
+
+Test Case 2: AWS Metadata Endpoint
+Input: Set Host header to resolve backend as http://169.254.169.254
+Expected Behaviour (Vulnerable): Server contacts AWS metadata service
+Expected Behaviour (Patched): Server blocks request due to private IP detection
+
+Test Case 3: Malicious Logo URL
+Input: Backend returns JSON: { "logo": "http://attacker.com/evil.png" }
+Expected Behaviour (Vulnerable): Server downloads the image from the malicious server
+Expected Behaviour (Patched): Server blocks fetch to untrusted domain (attacker.com)
+
+Test Case 4: DNS Rebinding Attack
+Input: Backend responds with "logo": "http://rebind.attacker.com/logo.png"
+Rebind domain resolves to 127.0.0.1 at request time
+Expected Behaviour (Vulnerable): Server fetches internal resource
+Expected Behaviour (Patched): Server resolves IP and blocks internal IP addresses
+
+Test Case 5: Safe Domain with Path Manipulation
+Input: Logo URL: https://cdn.trusted.com/../internal/file
+Expected Behaviour (Vulnerable): Server might access unintended paths
+Expected Behaviour (Patched): Server normalizes path or ensures path traversal is prevented, or validates full URL structure
+

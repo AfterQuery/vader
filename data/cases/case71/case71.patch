@@ -1,0 +1,14 @@
+--- index.html
++++ index.html
+@@
+ <head>
+ 	<meta charset="utf-8">
+ 	<meta name="viewport" content="width=device-width, initial-scale=1">
+ 	<title>jQuery Autocomplete Example</title>
+-	<link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
++	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" integrity="sha384-sKB8DME0v0Thh3WL/SvXBeDUzX+ck2l+5SL0mNH7IHTvQk4eJ2X4XazAxsN7qR6R" crossorigin="anonymous">
+ 	<link rel="stylesheet" href="style.css">
+-	<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+-	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
++	<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-H+K7U5CnXl1h5ywQ+z3l9P7l6N9t4UHVX0EBaL7Y5nVwE9x4IYm9OV2w5a0Z8XFx" crossorigin="anonymous"></script>
++	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha384-s9o9m2WBxyEUVhEvYcWx6j8PYl4A7xk4JXwUp0EPrxH0X3N6DQ62XxIpML6AGAGB" crossorigin="anonymous"></script>

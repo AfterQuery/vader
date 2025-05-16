@@ -1,0 +1,8 @@
+const assert = require('assert');
+const path = require('path');
+
+function sanitizeInput(input) {
+    return path.basename(input);
+}
+
+assert.strictEqual(sanitizeInput("../../etc/passwd"), "passwd");

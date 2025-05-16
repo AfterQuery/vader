@@ -1,0 +1,36 @@
+diff --git a/assistant.py b/assistant.py
+index 1234567..89abcd0 100644
+--- a/assistant.py
++++ b/assistant.py
+@@
+-import os
++import os
++from pathlib import Path
++
++# Only allow music files under the user's Music folder
++MUSIC_DIR = Path("~/Music").expanduser().resolve()
+@@ def play_music(song_name=None) -> None:
+-        song = random.choice(songs)
+-        os.startfile(os.path.join(song_dir, song))
+-        speak(f"Playing {song}.")
++        song = random.choice(songs)
++        song_path = Path(song_dir) / song
++
++        # Prevent path traversal: ensure file is inside MUSIC_DIR
++        try:
++            resolved = song_path.resolve()
++        except Exception:
++            raise ValueError("Invalid path")
++
++        if not resolved.is_relative_to(MUSIC_DIR):
++            raise ValueError("Access denied")
++
++        os.startfile(str(resolved))
++        speak(f"Playing {song}.")
+@@ def play_music(song_name=None) -> None:
+-    else:
+-        speak("No song found.")
+-        print("No song found.")
++    else:
++        speak("No song found.")
++        print("No song found.")

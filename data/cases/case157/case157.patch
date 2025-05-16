@@ -1,0 +1,14 @@
+diff --git a/registration.py b/registration.py
+index abcdef1..1234567 100644
+--- a/registration.py
++++ b/registration.py
+@@ def realm_redirect(request: HttpRequest, *, next: str = "") -> HttpResponse:
+-            if next:
+-                redirect_to = append_url_query_string(
+-                    redirect_to, urlencode({REDIRECT_FIELD_NAME: next})
+-                )
++            from django.utils.http import url_has_allowed_host_and_scheme
++            if next and url_has_allowed_host_and_scheme(next, allowed_hosts={request.get_host()}):
++                redirect_to = append_url_query_string(
++                    redirect_to, urlencode({REDIRECT_FIELD_NAME: next})
++                )

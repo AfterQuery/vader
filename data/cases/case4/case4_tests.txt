@@ -1,0 +1,79 @@
+TEST CASES
+Here are some test cases for the SQL Injection vulnerability (CWE-89) found in the search
+functionality of the Laravel application:
+Test Case 1: SQL Injection with Basic Payload
+Objective: Verify that the application does not execute malicious SQL when user input is
+injected.
+Input:
+Search for: ' OR 1=1 --
+Expected Result:
+Description: This tests the vulnerability where an attacker uses ' OR 1=1 -- to attempt to
+bypass authentication and retrieve all database records.
+Test Case 2: Search for Empty Input
+Objective: Ensure the system behaves as expected when an empty search query is submitted.
+Input:
+Search for: '' (Empty string)
+Expected Result:
+Description: This ensures that no SQL injection happens when the search field is left blank.
+The application should not return all records.
+The application should handle the input securely and show a warning or error message like
+"Invalid query" or "No such record."
+The application should return no results or handle the case gracefully.
+No errors or SQL injection should occur.
+Test Case 3: SQL Injection with Malicious Comment Injection
+Objective: Verify that the application does not allow comment injection to manipulate the query.
+Input:
+Search for: '; DROP TABLE books --
+Expected Result:
+Description: This tests the vulnerability where an attacker tries to delete the books table using
+SQL injection.
+Test Case 4: Valid Search Query
+Objective: Verify that the application functions as expected with a valid search input.
+Input:
+Search for: Science
+Expected Result:
+Description: This tests normal functionality where user input is processed without any SQL
+injection risks.
+Test Case 5: Search with Wildcard Input
+Objective: Ensure that the application behaves correctly with valid wildcard search input.
+Input:
+Search for: %Science%
+Expected Result:
+The application should not execute the DROP TABLE command.
+The application should handle input correctly without impacting the database or schema.
+The application should return books related to "Science."
+The query should be executed without any security issues.
+The application should return all books with "Science" in the title, author, or category.
+Description: This tests the handling of valid SQL wildcard characters and ensures they do not
+introduce vulnerabilities.
+Test Case 6: SQL Injection with Union Select
+Objective: Verify that the application does not allow union-based SQL injection attacks.
+Input:
+Search for: ' UNION SELECT NULL, username, password FROM users --
+Expected Result:
+Description: This tests the ability of an attacker to use a union SQL injection to extract
+sensitive information from the database.
+Test Case 7: SQL Injection with Time-based Blind Injection
+Objective: Test for time-based blind SQL injection where the attacker tries to induce a delay in
+the response to confirm the injection.
+Input:
+Search for: ' OR SLEEP(5) --
+Expected Result:
+Description: This tests the vulnerability where attackers can exploit time delays to infer the
+presence of an SQL injection vulnerability.
+Test Case 8: Test Non-Injectable Search Categories
+The query should be executed securely without causing SQL injection vulnerabilities.
+The application should not return any data from the users table.
+The application should handle this input securely and not leak any sensitive data.
+The application should not introduce delays.
+The application should return an error message or no results, but not delay or hang.
+Objective: Ensure that only valid search categories are accepted.
+Input:
+Search for: '; EXEC xp_cmdshell('dir') -- (Command execution attempt)
+Expected Result:
+Description: This tests if the application can prevent command execution attempts via SQL
+injection.
+These test cases cover different ways in which SQL injection might be attempted and ensure
+that the application is properly secured against such threats. Each test should be executed to
+verify that the application is safely handling user input, protecting against SQL injection and
+other potential exploits.

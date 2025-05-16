@@ -1,0 +1,9 @@
+--- a/your_vulnerable_file.py
++++ b/your_vulnerable_file.py
+@@ def main(args):
+-    state_dict = torch.load(args.weight, map_location="cpu")
+-    model.load_state_dict(state_dict, strict=True)
++    state_dict = torch.load(args.weight, map_location="cpu")
++    if not isinstance(state_dict, dict):
++        raise ValueError("Loaded object is not a state_dict dictionary. Possible unsafe pickle detected.")
++    model.load_state_dict(state

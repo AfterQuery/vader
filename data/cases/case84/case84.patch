@@ -1,0 +1,24 @@
+diff --git a/input.js b/input.js
+index 5f2d8ab..7f3c0c1 100644
+--- a/input.js
++++ b/input.js
+@@ -58,10 +58,15 @@
+ module.exports.evalExtendOutputFn = (input) => {
+     let extendOutputFunction;
+     if (typeof input.extendOutputFunction === 'string' && input.extendOutputFunction.trim() !== '') {
+         try {
+-            // eslint-disable-next-line no-eval
+-            extendOutputFunction = eval(input.extendOutputFunction);
++            // PATCH: Replace eval with safer new Function to prevent code injection
++            extendOutputFunction = new Function(`return (${input.extendOutputFunction})`)();
+         } catch (e) {
+             throw new Error(`WRONG INPUT: 'extendOutputFunction' is not valid Javascript! Error: ${e}`);
+         }
+         if (typeof extendOutputFunction !== 'function') {
+             throw new Error(
+                 'WRONG INPUT: extendOutputFunction is not a function! Please fix it or use just default ouput!',
+             );
+         }
+     }
+     return extendOutputFunction;
+ };

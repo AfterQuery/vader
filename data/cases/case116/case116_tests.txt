@@ -1,0 +1,47 @@
+Test Case 1 (Positive )
+•	Objective: Successfully delete a valid logo file inside the allowed directory.
+•	Input:
+o	$logo_file = "/var/www/uploads/logos/company_logo.png"
+•	Expected Result:
+o	The file company_logo.png should be deleted successfully.
+•	Outcome:
+File deleted normally.
+
+Test Case 2 (Negative )
+•	Objective: Attempt to delete a system file using directory traversal.
+•	Input:
+o	$logo_file = "../../../../etc/passwd"
+•	Expected Result:
+o	Server detects the invalid path and does NOT perform deletion.
+o	Action is logged: "Blocked unlink attempt on invalid path."
+•	Outcome:
+ Deletion attempt blocked.
+
+Test Case 3 (Negative )
+•	Objective: Attempt to delete a file outside the allowed logos folder.
+•	Input:
+o	$logo_file = "/var/www/html/index.php"
+•	Expected Result:
+o	Server rejects the unlink operation because the file is outside /var/www/uploads/logos.
+•	Outcome:
+Deletion prevented.
+
+Test Case 4 (Positive)
+•	Objective: Delete a file path that contains valid symbolic link inside allowed directory.
+•	Input:
+o	$logo_file = "/var/www/uploads/logos/symlink_to_logo.png" (points inside the allowed folder)
+•	Expected Result:
+o	Resolved path is inside the allowed directory, deletion succeeds.
+•	Outcome:
+File deleted correctly.
+
+Test Case 5 (Negative )
+•	Objective: Handle an invalid or non-existing file path.
+•	Input:
+o	$logo_file = "/var/www/uploads/logos/non_existing_file.png"
+•	Expected Result:
+o	realpath() returns false, and no unlink() is performed.
+o	Error is logged safely.
+•	Outcome:
+Safe handling without crash.
+

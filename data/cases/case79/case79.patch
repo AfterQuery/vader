@@ -1,0 +1,13 @@
+--- original_file.php	2025-04-27
++++ fixed_file.php	2025-04-27
+@@
+ $safe_base_dir = '/var/www/uploads/'; // Define a safe base directory
+ $real_path = realpath($safe_base_dir . '/' . basename($path));
+
+ if ($real_path === false || strpos($real_path, $safe_base_dir) !== 0) {
+     die('Invalid file path!');
+ }
+
+ if (!file_put_contents($real_path, $contents)) {
+     // error handling
+ }

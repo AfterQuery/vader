@@ -1,0 +1,10 @@
+--- a/index.html
++++ b/index.html
+@@ -17,8 +17,10 @@
+     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+     <!--[if lt IE 9]>
+-      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
++      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js" integrity="sha384-rkct3+bwJNTKG3S0sLMgxi0zG4vF1E1oyWJWZcg1KOHqPYY8kXqlO+6SWdBQWiQ/" crossorigin="anonymous"></script>
++      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js" integrity="sha384-3hGekH8hcF6jBt4ZmlPqDLoDdF0n8uOk15Wf9ztJrbWqQ7iq3c0f/ghKYJvZQc7j" crossorigin="anonymous"></script>
+     <![endif]-->

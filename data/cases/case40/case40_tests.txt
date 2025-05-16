@@ -1,0 +1,75 @@
+const { expect } = require('chai');
+const request = require('supertest');
+const app = require('../path/to/your/express/app');
+const fs = require('fs');
+const path = require('path');
+
+describe('CWE-770 Vulnerability Tests - Missing Rate Limiting on /getallattendance', () => {
+  const validParams = {
+    month: 'december',
+    year: '2023',
+    date: '25',
+    serviceType: 'testService'
+  };
+
+  // Cleanup generated Excel files after tests
+  after(() => {
+    const directory = __dirname;
+    fs.readdirSync(directory)
+      .filter(file => file.startsWith('attendance testService (25-december-2023)'))
+      .forEach(file => {
+        fs.unlinkSync(path.join(directory, file));
+      });
+  });
+
+  it('should handle 50 concurrent requests without rate limiting', async function() {
+    this.timeout(10000); // Extend timeout for concurrent requests
+    
+    const requestCount = 50;
+    const requests = Array.from({ length: requestCount }, () =>
+      request(app)
+        .get('/getallattendance')
+        .query(validParams)
+        .expect('Content-Type', /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/)
+    );
+
+    const responses = await Promise.all(requests);
+    responses.forEach(response => {
+      expect(response.statusCode).to.equal(200);
+    });
+  });
+
+  it('should process 100 sequential requests quickly', async function() {
+    this.timeout(20000);
+    
+    const iterations = 100;
+    for (let i = 0; i < iterations; i++) {
+      const response = await request(app)
+        .get('/getallattendance')
+        .query(validParams);
+      
+      expect(response.statusCode).to.equal(200);
+      expect(response.headers['content-disposition']).to.include('attachment; filename=');
+    }
+  });
+
+  it('should allow parameter variations to generate multiple files', async () => {
+    const paramsVariations = [
+      { ...validParams, serviceType: 'service1' },
+      { ...validParams, serviceType: 'service2' },
+      { ...validParams, date: '26' },
+      { ...validParams, month: 'november' },
+    ];
+
+    for (const params of paramsVariations) {
+      const response = await request(app)
+        .get('/getallattendance')
+        .query(params);
+      
+      expect(response.statusCode).to.equal(200);
+      expect(response.headers['content-disposition']).to.include(
+        `attendance ${params.serviceType} (${params.date}-${params.month}-${params.year})`
+      );
+    }
+  });
+});

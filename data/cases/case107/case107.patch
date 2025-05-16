@@ -1,0 +1,19 @@
+diff --git a/main.py b/main.py
+--- a/main.py
++++ b/main.py
+@@ -[LINE_NUMBER]X,Y +[LINE_NUMBER]X,Y @@
+     def returnbooks(self):
+         class returning(main):
+             def returned(self):
+                 ...
+                 def return_record():
+                     selected = self.all_books_tree_return.focus()
+                     stored_id = str(self.all_books_tree_return.item(selected).get('values')[0])
++                    # Input validation: Ensure `stored_id` is numeric
++                    if not stored_id.isdigit():
++                        messagebox.show_error("Invalid ascension number", 'LBSHS LMS')
++                        return
++                    # Parameterized query to prevent SQL injection
+-                    cursor.execute("DELETE from issues where oid=" + stored_id)
++                    cursor.execute("DELETE FROM issues WHERE oid=?", (stored_id,))
+                     db.commit()

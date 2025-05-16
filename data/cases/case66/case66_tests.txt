@@ -1,0 +1,47 @@
+TEST CASES
+Test Cases for Dangerous Use of exec() in reset_fields()
+Test Case 1: Normal Safe Input
+Test Case 2: Malicious Input to Execute a Command
+Test Case 3: Syntax Error Injection
+Test Case 4: OS-Level Destructive Command (Theoretical)
+Purpose: Check normal behavior with correct variable names.
+Input: ['name_strvar', 'email_strvar']
+Expected Output: Variables reset without any crash.
+Actual Behavior: All fields get reset normally.
+Purpose: Check if command injection is possible.
+Input: ['__import__("os").system("echo hacked")']
+Expected Output: No command should execute.
+Actual Behavior: The string "hacked" gets printed — proves that command injection is
+possible.
+Purpose: Check handling of a broken/incomplete malicious input.
+Input: ['badcodehere)(']
+Expected Output: SyntaxError or crash prevention.
+Actual Behavior: Python throws a SyntaxError and the application crashes.
+Purpose: Test risk level with destructive payload.
+Test Case 5: Empty List Input
+Test Case 6: Non-String Value in List
+�� Test Cases After Refactoring (Safe Version Without exec() )
+Test Case 7: Normal Variable Reset
+Test Case 8: Injection Attempt
+Input: ['__import__("os").system("rm -rf /")'] ( Don't actually run this!!)
+Expected Output: Should never execute or even reach exec() .
+Actual Behavior: If allowed, this would destroy all files on the system!
+Purpose: Test behavior when there are no fields to reset.
+Input: []
+Expected Output: No error; nothing happens.
+Actual Behavior: Application continues safely without error.
+Purpose: Check if non-string types cause issues.
+Input: [None, 123]
+Expected Output: Should be safely ignored or produce a controlled error.
+Actual Behavior: Application crashes with AttributeError because integers or None
+cannot call .set() .
+Purpose: Ensure that fixed variables reset properly.
+Action: Use trusted variable references directly (no list).
+Expected Output: All fields get reset successfully.
+Purpose: Ensure that injection is impossible after removing exec() .
+Action: Try to modify reset behavior.
+Test Case 9: Stability Test
+Expected Output: Injection is impossible; no unexpected behavior happens.
+Purpose: Confirm system doesn't crash with any user input.
+Action: Normal operation, no list manipulation possible.
+Expected Output: Smooth execution with no errors.

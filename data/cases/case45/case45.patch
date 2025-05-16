@@ -1,0 +1,16 @@
+--- class-llms-media-protector.php	2025-04-25 00:00:00.000000000 +0000
++++ class-llms-media-protector.php	2025-04-25 00:00:00.000000000 +0000
+@@ -210,7 +210,17 @@
+-    $result = readfile( filename: $file_name ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_readfile
++    // Define base directory for allowed files
++    $base_dir = __DIR__ . '/protected-media/';
++    $real_path = realpath($base_dir . $file_name);
++
++    // Ensure file is within the base directory
++    if ($real_path !== false && str_starts_with($real_path, $base_dir)) {
++        $result = readfile($real_path);
++    } else {
++        http_response_code(403);
++        echo "Access denied.";
++        exit;
++    }

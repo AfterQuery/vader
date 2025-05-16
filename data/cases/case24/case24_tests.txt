@@ -1,0 +1,51 @@
+# Test Case 1
+CREATE
+Alice
+NO
+1234
+Savings
+1
+2147483647
+WITHDRAW
+[Account_Number_Alice]
+1234
+-1
+
+# Test Case 2
+CREATE
+Bob
+NO
+4321
+Current
+2
+10000
+WITHDRAW
+[Account_Number_Bob]
+4321
+2147483647
+
+# Test Case 3
+CREATE
+Charlie
+NO
+1111
+Savings
+1
+1
+WITHDRAW
+[Account_Number_Charlie]
+1111
+-2147483648
+
+# Test Case 4
+CREATE
+Dave
+NO
+2222
+Savings
+1
+2147483647
+DEPOSIT
+[Account_Number_Dave]
+2222
+1

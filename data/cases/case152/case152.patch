@@ -1,0 +1,190 @@
+--- FileManager.py	2025-04-29 04:22:22.000000000 -0400
++++ FileManager-new.py	2025-04-29 04:22:22.000000000 -0400
+@@ -1,103 +1,116 @@
+ import os
+ import shutil
+ import subprocess
++import re
++from pathlib import Path
++
++def sanitize_input(user_input):
++    """Validate input contains only safe characters"""
++    return re.match(r'^[\w\-\.]+$', user_input)
++
++def safe_path_join(base, *paths):
++    """Secure path construction with traversal protection"""
++    try:
++        return str(Path(base).joinpath(*paths).resolve().relative_to(Path(base).resolve()))
++    except ValueError:
++        raise ValueError("Invalid path traversal attempt")
+ 
+ def moveFile(filepath):
+-    if filepath:
+-        print("File found at: " + filepath)
+-        print("---" * 30)
+-        parent_folder = input("What is the parent of this folder: ")
+-        folder_name = input("Enter folder name to move file into: ")
+-        destination_path = os.path.join(os.path.expanduser("~"), parent_folder, folder_name)
+-        print("Destination path: " + destination_path)
+-        confirm = input("Are you sure you want to do this? (Y/N): ").lower()
+-        if confirm == "y":
+-            try:
+-                os.makedirs(destination_path, exist_ok=True)
+-                shutil.move(filepath, os.path.join(destination_path, os.path.basename(filepath)))
+-                print("File moved successfully!")
+-            except Exception as e:
+-                print("Error: " + str(e))
+-        else:
+-            print("File not moved.")
+-    else:
++    if not filepath:
+         print("File not found.")
++        return
++
++    print(f"File found at: {filepath}")
++    print("---" * 30)
++    
++    parent_folder = input("Parent folder name: ")
++    if not sanitize_input(parent_folder):
++        print("Invalid folder name")
++        return
++
++    folder_name = input("Folder name: ")
++    if not sanitize_input(folder_name):
++        print("Invalid folder name")
++        return
++
++    try:
++        base_dir = Path.home() / "secure_storage"
++        destination_path = safe_path_join(base_dir, parent_folder, folder_name)
++        final_path = Path(base_dir) / destination_path
++        
++        print(f"Destination path: {final_path}")
++        confirm = input("Confirm (Y/N): ").lower()
++        
++        if confirm == "y":
++            final_path.mkdir(parents=True, exist_ok=True)
++            shutil.move(filepath, final_path / Path(filepath).name)
++            print("File moved securely!")
++    except Exception as e:
++        print(f"Security error: {str(e)}")
+ 
+ def openFile(found_file=None):
+     if not found_file:
+-        found_file = input("Enter the file name to search and open: ")
++        found_file = input("File to open: ")
+ 
+-    file_found = False
+-    for dirpath, dirnames, filenames in os.walk(os.path.expanduser("~")):  # Update the base directory to search for files
+-        for file in filenames:
+-            if found_file in file:
+-                found_file = os.path.join(dirpath, file)
+-                file_found = True
+-                break
+-        if file_found:
+-            break
++    try:
++        # Validate path exists and is in allowed locations
++        file_path = Path(found_file).resolve()
++        allowed_base = Path.home()
++        
++        if not str(file_path).startswith(str(allowed_base)):
++            raise ValueError("Access restricted to user directory")
+ 
+-    if file_found:
+-        print("File found at:", found_file)
+-        subprocess.run(['open', found_file])  # Open the file with default macOS application
+-    else:
+-        print("File not found.")
++        # Safe open methods
++        if os.name == 'nt':
++            os.startfile(file_path)
++        else:
++            subprocess.run(['xdg-open', str(file_path)], check=True)
++    except Exception as e:
++        print(f"Secure open failed: {str(e)}")
+ 
+-        
+ def searchComputer():
+-    filename = input("Enter the file name to search: ")
+-    filetype = input("Enter the file type: ")
+-    found_file = None
+-    for dirpath, dirnames, filenames in os.walk('/'):  # Update the base directory to search for files
+-        for file in filenames:
+-            if filename in file and file.endswith("." + filetype):
+-                found_file = os.path.join(dirpath, file)
+-                break
+-        if found_file:
+-            break
++    filename = input("Filename: ")
++    filetype = input("Filetype: ")
+ 
+-    if found_file:
+-        print("File found at:", found_file)
+-        return found_file
+-    
+-    else:
+-        print("File not found.")
++    if not sanitize_input(filename) or not sanitize_input(filetype):
++        print("Invalid input detected")
+         return None
+ 
+-# Update the code to set the filepath variable before calling moveFile or openFile
++    try:
++        search_base = Path.home()
++        for dirpath, _, filenames in os.walk(search_base):
++            for file in filenames:
++                if (filename in file and file.endswith(f".{filetype}")):
++                    found_path = Path(dirpath) / file
++                    print(f"Found: {found_path}")
++                    return str(found_path)
++        print("File not found")
++        return None
++    except Exception as e:
++        print(f"Search error: {str(e)}")
++        return None
+ 
+ def main():
+-    global filepath
+     while True:
+-        print("1. Move File")
+-        print("2. Open File")
+-        print("3. Search Computer")
+-        print("4. Exit")
+-        choice = input("Enter your choice (1/2/3/4): ")
++        print("\n1. Move File\n2. Open File\n3. Search\n4. Exit")
++        choice = input("Choice (1-4): ").strip()
+         print("---" * 30)
+         
+         if choice == "1":
+             filepath = searchComputer()
+-            moveFile(filepath)
+-            filepath = ""
+-
++            if filepath:
++                moveFile(filepath)
+         elif choice == "2":
+             filepath = searchComputer()
+-            openFile(filepath)
+-            filepath = ""
+-
++            if filepath:
++                openFile(filepath)
+         elif choice == "3":
+-            filepath = searchComputer()
+-
++            searchComputer()
+         elif choice == "4":
+-            print("Exiting...")
++            print("Exiting securely...")
+             break
+-
+         else:
+-            print("Invalid choice. Please choose from 1, 2, 3, or 4.")
+-            print("---" * 30)
+-            
+-
++            print("Invalid choice")
+ 
+ if __name__ == "__main__":
+     main()

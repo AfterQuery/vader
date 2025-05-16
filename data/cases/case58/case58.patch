@@ -1,0 +1,14 @@
+diff --git a/index.js b/index.js
+index e4a261b..3c3590b 100644
+--- a/index.js
++++ b/index.js
+@@ -12,4 +12,8 @@ app.use("/people", usersRoutes);
+ app.get("/", (req, res) => res.send("Welcome to the Users API!"));
+ app.all("*", (req, res) =>res.send("You've tried reaching a route that doesn't exist."));
+ 
+-app.listen(PORT, () =>console.log(`Server running on port: http://localhost:${PORT}`));
++app.listen(PORT, () =>
++    process.env.NODE_ENV !== 'production'
++    ? console.log(`Server running locally at http://localhost:${PORT}`)
++    : console.log('Server is running.')
++);

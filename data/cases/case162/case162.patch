@@ -1,0 +1,111 @@
+From f94eb0e2f96782042c96801b5ac448f44f0a81df Mon Sep 17 00:00:00 2001
+From: Jack Christensen <jack@jackchristensen.com>
+Date: Sat, 24 Feb 2024 11:08:51 -0600
+Subject: [PATCH] Always wrap arguments in parentheses in the SQL sanitizer
+
+---
+ internal/sanitize/sanitize.go      | 14 ++++----------
+ internal/sanitize/sanitize_test.go | 20 ++++++++++----------
+ 2 files changed, 14 insertions(+), 20 deletions(-)
+
+diff --git a/internal/sanitize/sanitize.go b/internal/sanitize/sanitize.go
+index e0c9427cb..4c345d508 100644
+--- a/internal/sanitize/sanitize.go
++++ b/internal/sanitize/sanitize.go
+@@ -44,18 +44,8 @@ func (q *Query) Sanitize(args ...interface{}) (string, error) {
+ 				str = "null"
+ 			case int64:
+ 				str = strconv.FormatInt(arg, 10)
+-				// Prevent SQL injection via Line Comment Creation
+-				// https://github.com/jackc/pgx/security/advisories/GHSA-m7wr-2xf7-cm9p
+-				if arg < 0 {
+-					str = "(" + str + ")"
+-				}
+ 			case float64:
+-				// Prevent SQL injection via Line Comment Creation
+-				// https://github.com/jackc/pgx/security/advisories/GHSA-m7wr-2xf7-cm9p
+ 				str = strconv.FormatFloat(arg, 'f', -1, 64)
+-				if arg < 0 {
+-					str = "(" + str + ")"
+-				}
+ 			case bool:
+ 				str = strconv.FormatBool(arg)
+ 			case []byte:
+@@ -68,6 +58,10 @@ func (q *Query) Sanitize(args ...interface{}) (string, error) {
+ 				return "", fmt.Errorf("invalid arg type: %T", arg)
+ 			}
+ 			argUse[argIdx] = true
++
++			// Prevent SQL injection via Line Comment Creation
++			// https://github.com/jackc/pgx/security/advisories/GHSA-m7wr-2xf7-cm9p
++			str = "(" + str + ")"
+ 		default:
+ 			return "", fmt.Errorf("invalid Part type: %T", part)
+ 		}
+diff --git a/internal/sanitize/sanitize_test.go b/internal/sanitize/sanitize_test.go
+index c2ec98f00..e25b78f60 100644
+--- a/internal/sanitize/sanitize_test.go
++++ b/internal/sanitize/sanitize_test.go
+@@ -127,52 +127,52 @@ func TestQuerySanitize(t *testing.T) {
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select 42"}},
+ 			args:     []interface{}{},
+-			expected: `select 42`,
++			expected: `select (42)`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{int64(42)},
+-			expected: `select 42`,
++			expected: `select (42)`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{float64(1.23)},
+-			expected: `select 1.23`,
++			expected: `select (1.23)`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{true},
+-			expected: `select true`,
++			expected: `select (true)`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{[]byte{0, 1, 2, 3, 255}},
+-			expected: `select '\x00010203ff'`,
++			expected: `select ('\x00010203ff')`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{nil},
+-			expected: `select null`,
++			expected: `select (null)`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{"foobar"},
+-			expected: `select 'foobar'`,
++			expected: `select ('foobar')`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{"foo'bar"},
+-			expected: `select 'foo''bar'`,
++			expected: `select ('foo''bar')`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select ", 1}},
+ 			args:     []interface{}{`foo\'bar`},
+-			expected: `select 'foo\''bar'`,
++			expected: `select ('foo\''bar')`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"insert ", 1}},
+ 			args:     []interface{}{time.Date(2020, time.March, 1, 23, 59, 59, 999999999, time.UTC)},
+-			expected: `insert '2020-03-01 23:59:59.999999Z'`,
++			expected: `insert ('2020-03-01 23:59:59.999999Z')`,
+ 		},
+ 		{
+ 			query:    sanitize.Query{Parts: []sanitize.Part{"select 1-", 1}},

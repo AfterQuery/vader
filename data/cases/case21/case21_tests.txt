@@ -1,0 +1,33 @@
+TEST CASES
+Test Case 1: Valid Input - Normal Functionality
+Test Case	Description
+Valid Order Filter Input	Pass a normal value like shipped in shipment_state_eq.
+Input	q[shipment_state_eq]=shipped
+Expected Behavior	Dropdown renders without issue, and "Fulfilled" is selected.
+Security Check	No script or unsafe content is rendered.
+Test Case 2: XSS Script Injection Attempt
+Test Case	Description
+Script Tag Injection	Inject malicious script in parameter value.
+Input	q[shipment_state_eq]=<script>alert("XSS")</script>
+Expected Behavior	The script is not executed or rendered in the HTML.
+Security Check	Page does not contain <script> tags or alert("XSS").
+Test Case 3: HTML Tag Injection Attempt
+Test Case	Description
+HTML Element Injection	Inject HTML like <img src=x onerror=alert(1)>.
+Input	q[shipment_state_eq]=<img src=x onerror=alert(1)>
+Expected Behavior	No image is rendered, and no JavaScript is executed.
+Security Check	Output is HTML-escaped and shows raw string, not actual tags.
+Test Case 4: JavaScript URI Injection
+Test Case	Description
+JavaScript URI Injection	Try injecting a javascript: URI in a parameter.
+Input	q[shipment_state_eq]=javascript:alert("Hacked")
+Expected Behavior	The value is rendered as text or sanitized—not treated as a URI.
+Security Check	Link does not execute or redirect to JavaScript.
+
+ Test Case 5: Special Characters Edge Case
+Test Case	Description
+Edge Character Injection	Inject special characters like <, >, &, ", '.
+Input	q[shipment_state_eq]=<>&"'
+Expected Behavior	These characters are properly escaped in the rendered HTML.
+Security Check	Page shows &lt;&gt;&amp;&quot;&#39; instead of rendering as HTML/JS.
+

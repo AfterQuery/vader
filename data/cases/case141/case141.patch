@@ -1,0 +1,45 @@
+From ff25eb4a7f2392df46481fe86355161067687312 Mon Sep 17 00:00:00 2001
+From: jongleberry <jonathanrichardong@gmail.com>
+Date: Sun, 6 Apr 2025 14:35:16 -0700
+Subject: [PATCH] fix: don't render redirect values in anchor ref
+
+---
+ __tests__/response/redirect.test.js | 4 ++--
+ lib/response.js                     | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/__tests__/response/redirect.test.js b/__tests__/response/redirect.test.js
+index 367213ae1..b3fc08ff9 100644
+--- a/__tests__/response/redirect.test.js
++++ b/__tests__/response/redirect.test.js
+@@ -80,7 +80,7 @@ describe('ctx.redirect(url)', () => {
+       ctx.header.accept = 'text/html'
+       ctx.redirect(url)
+       assert.strictEqual(ctx.response.header['content-type'], 'text/html; charset=utf-8')
+-      assert.strictEqual(ctx.body, `Redirecting to <a href="${url}">${url}</a>.`)
++      assert.strictEqual(ctx.body, `Redirecting to ${url}.`)
+     })
+ 
+     it('should escape the url', () => {
+@@ -90,7 +90,7 @@ describe('ctx.redirect(url)', () => {
+       ctx.redirect(url)
+       url = escape(url)
+       assert.strictEqual(ctx.response.header['content-type'], 'text/html; charset=utf-8')
+-      assert.strictEqual(ctx.body, `Redirecting to <a href="${url}">${url}</a>.`)
++      assert.strictEqual(ctx.body, `Redirecting to ${url}.`)
+     })
+   })
+ 
+diff --git a/lib/response.js b/lib/response.js
+index 07a50df7b..ccaedfdd1 100644
+--- a/lib/response.js
++++ b/lib/response.js
+@@ -309,7 +309,7 @@ module.exports = {
+     if (this.ctx.accepts('html')) {
+       url = escape(url)
+       this.type = 'text/html; charset=utf-8'
+-      this.body = `Redirecting to <a href="${url}">${url}</a>.`
++      this.body = `Redirecting to ${url}.`
+       return
+     }
+ 

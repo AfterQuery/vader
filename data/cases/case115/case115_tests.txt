@@ -1,0 +1,26 @@
+import { AccessService } from '../../services/access-service';
+
+describe('AccessService', () => {
+  let service: AccessService;
+
+  beforeEach(() => {
+    service = new AccessService({ database: {}, schema: {} });
+  });
+
+  it('should sanitize data to allow only whitelisted fields', async () => {
+    const input = {
+      role: 'admin',
+      collection: 'users',
+      action: 'read',
+      permissions: {},
+      is_admin: true, // should be dropped
+      system_flags: 'root', // should be dropped
+    };
+
+    const sanitized = service['sanitizeData'](input);
+    expect(sanitized).not.toHaveProperty('is_admin');
+    expect(sanitized).not.toHaveProperty('system_flags');
+    expect(sanitized).toHaveProperty('role');
+    expect(Object.keys(sanitized)).toEqual(['role', 'collection', 'action', 'permissions']);
+  });
+});

@@ -1,0 +1,35 @@
+@@
+-// Function to encrypt data using AES-512
+-const encryptData = (data, key) => {
+-    const iv = crypto.randomBytes(16); // Generate a random initialization vector
+-    const cipher = crypto.createCipheriv('aes-512-cbc', Buffer.from(key, 'hex'), iv); // Create a cipher
+-    let encrypted = cipher.update(data, 'utf8', 'hex'); // Encrypt the data
+-    encrypted += cipher.final('hex'); // Finalize the encryption
+-    return { iv: iv.toString('hex'), encryptedData: encrypted }; // Return the IV and encrypted data
+-};
++// Function to encrypt data using AES-256-GCM (authenticated encryption)
++const encryptData = (data, key) => {
++    const iv = crypto.randomBytes(12); // GCM standard IV size is 12 bytes
++    const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(key, 'hex'), iv); // AES-256-GCM
++    let encrypted = cipher.update(data, 'utf8', 'hex');
++    encrypted += cipher.final('hex');
++    const authTag = cipher.getAuthTag().toString('hex'); // Get authentication tag
++    return { iv: iv.toString('hex'), encryptedData: encrypted, authTag }; // Return encrypted data and auth tag
++};
+
+@@
+-// Function to decrypt data using AES-512
+-const decryptData = (encryptedData, key, iv) => {
+-    const decipher = crypto.createDecipheriv('aes-512-cbc', Buffer.from(key, 'hex'), Buffer.from(iv, 'hex')); // Create a decipher
+-    let decrypted = decipher.update(encryptedData, 'hex', 'utf8'); // Decrypt the data
+-    decrypted += decipher.final('utf8'); // Finalize the decryption
+-    return decrypted; // Return the decrypted data
+-};
++// Function to decrypt data using AES-256-GCM
++const decryptData = (encryptedData, key, iv, authTag) => {
++    const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(key, 'hex'), Buffer.from(iv, 'hex'));
++    decipher.setAuthTag(Buffer.from(authTag, 'hex')); // Set authentication tag
++    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
++    decrypted += decipher.final('utf8');
++    return decrypted;
++};

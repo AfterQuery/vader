@@ -1,0 +1,44 @@
+Test Case 1 (Positive )
+•	Objective: Successfully fetch API key with a valid CSRF token.
+•	Input:
+o	Proper POST request including valid CSRF token in headers.
+•	Expected Result:
+o	Server returns API key.
+•	Outcome:
+ Request succeeds.
+Test Case 2 (Negative)
+•	Objective: Block API key fetch without a CSRF token.
+•	Input:
+o	POST request missing CSRF token.
+•	Expected Result:
+o	Server returns 403 Forbidden error.
+•	Outcome:
+Attack blocked.
+
+Test Case 3 (Negative)
+•	Objective: Block attempt with invalid or forged CSRF token.
+•	Input:
+o	POST request with an incorrect CSRF token.
+•	Expected Result:
+o	Server rejects the request with 403 Forbidden.
+•	Outcome:
+Forged request blocked.
+
+Test Case 4 (Positive)
+•	Objective: Allow safe server settings fetch with CSRF token.
+•	Input:
+o	Proper GET request (with CSRF token if required by the framework for safe GETs).
+•	Expected Result:
+o	Server returns server settings information safely.
+•	Outcome:
+Information retrieved.
+
+Test Case 5 (Negative)
+•	Objective: Block metadata request from an attacker-controlled site.
+•	Input:
+o	Request issued cross-origin without CSRF token.
+•	Expected Result:
+o	Server blocks the request.
+•	Outcome:
+Cross-origin CSRF attack prevented.
+

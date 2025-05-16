@@ -1,0 +1,83 @@
+diff --git a/config.py b/config.py
+index 1f01a41..32edf0a 100644
+--- a/config.py
++++ b/config.py
+@@ -1,14 +1,25 @@
++import locale
++import os
++
+ # configuration flags
+
+ ## Flag for behavior if bad data is encountered in a logical field
+ ## Return None if True, else raise BadDataError
+ LOGICAL_BAD_IS_NONE = True
+
++version = 0, 99, 11, 1
++
++try:
++    system_encoding = locale.getpreferredencoding(False)
++    system_encoding = system_encoding.lower().replace('-', '')
++except locale.Error:
++    system_encoding = 'ascii'
++
+ ## treat non-unicode data as ...
+-input_decoding = 'utf-8'
++input_decoding = system_encoding
+
+ ## if no codepage specified on dbf creation, use this
+-default_codepage = 'ascii'
++default_codepage = system_encoding
+
+ ## default format if none specified
+ default_type = 'db3'
+diff --git a/dbf/__init__.py b/dbf/__init__.py
+index 3af869b..d150fdc 100644
+--- a/dbf/__init__.py
++++ b/dbf/__init__.py
+@@ -30,11 +30,14 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ """
+-version = 0, 99, 11, 1
+ # Python 2 code may need to change these
+-default_codepage = None     # will be set by tables module (defaults to ascii)
+-default_type = 'db3'        # lowest common denominator
+-input_decoding = 'ascii'
++import config
++
++version = config.version
++input_decoding = config.input_decoding
++default_codepage = config.default_codepage
++default_type = config.default_type
++temp_dir = config.temp_dir
+ 
+ # make dbf module importabl internally (i.e. from . import dbf)
+ import sys as _sys
+diff --git a/dbf/tables.py b/dbf/tables.py
+index 9947007..ff01da0 100644
+--- a/dbf/tables.py
++++ b/dbf/tables.py
+@@ -53,7 +53,7 @@ class NullHandler(logging.Handler):
+ logger = logging.getLogger('dbf')
+ logger.addHandler(NullHandler())
+ 
+-temp_dir = os.environ.get("DBF_TEMP") or os.environ.get("TMP") or os.environ.get("TEMP") or ""
++temp_dir = dbf.temp_dir
+ 
+ # other constructs
+ 
+@@ -5451,8 +5451,13 @@ code_pages = {
+         0xf0 : ('utf8', '8-bit unicode'),
+         }
+ 
++def _detect_codepage(cp):
++    for key, value in code_pages.items():
++        if value[0] == cp:
++            return key
++    raise DbfError("Unsupported codepage: %s" % cp)
+ 
+-dbf.default_codepage = default_codepage =  code_pages.get(0x00)[0]
++default_codepage = _detect_codepage(dbf.default_codepage)
+ 
+ def _codepage_lookup(cp):
+     if cp not in code_pages:

@@ -1,0 +1,22 @@
+--- main_lms.py 2025-04-22 20:23:49.539889003 +0530
++++ new_main_lms.py     2025-04-22 20:24:07.819885015 +0530
+@@ -40,12 +40,13 @@
+         for x in [i for i, x in enumerate(l) if x == borrower_id]:
+             print(list(fp.loc[x]))
+
+-    def validd():
+-        global code
+-        code = (input('ENTER THE BOOK CODE OF THE BOOK TO BE BORROWED: '))
+-        if code not in list(fp.loc[:, 'BOOK CODE']):
+-            print('Please enter valid book code.')
+-            validd()
++    def valid():
++    while True:
++        code = input('Enter the book code of the book to be returned: ')
++        if code in list(fp['BOOK CODE'].where(fp['BORROWER ID'] == borrower_id)):
++            # process return
++            break
++        print('Please enter valid book code.')
+
+     validd()
+     f2 = fp.set_index('BOOK CODE')

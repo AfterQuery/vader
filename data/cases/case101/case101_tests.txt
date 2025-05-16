@@ -1,0 +1,54 @@
+How to Test File Type Validation Vulnerability
+1. Manually Create a Fake "Image" File
+You want to trick the system into thinking a file is an image, but itâ€™s not.
+
+Open a text editor (like Notepad or VS Code).
+
+Write something like:
+
+This is not an image, itâ€™s text pretending to be a .jpg file.
+Save it as:
+malicious.jpg
+(Important: Save as type "All Files", not ".txt"!)
+
+ Now you have a .jpg fake file.
+
+2. Try Uploading This Fake File in Your Web App
+Open your application upload page.
+
+Click "Choose File" and select your fake malicious.jpg.
+
+Click "Upload" (or whatever your upload button is).
+
+If the upload succeeds and the server accepts the file â€” you have found a real vulnerability.
+
+Meaning:
+
+The application is blindly trusting the file extension or Content-Type without verifying file content.
+
+3. Check the Behavior After Upload
+After uploading:
+
+Does the app treat it like a real image?
+
+Does it preview/show it?
+
+Does it crash or behave weirdly?
+
+Can you retrieve and download the file from the server?
+
+ If yes, critical vulnerability confirmed.
+
+4. Advanced: Modify Request Content-Type Using Burp Suite/Postman
+To mimic a real attacker:
+
+Open Burp Suite (or Postman).
+
+Intercept the upload request.
+
+Change the file's Content-Type header manually:
+
+Content-Type: image/jpeg
+even if you are uploading a .php, .exe, or .html file.
+
+ If the server trusts your Content-Type and saves the file â€” serious Content-Type Spoofing vulnerability.

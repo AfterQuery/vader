@@ -1,0 +1,42 @@
+import ssl
+import pytest
+from wtfix.apps.session_app import ClientSessionApp
+
+class DummyPipeline:
+    class settings:
+        SSL_ENABLED = True
+        SSL_SKIP_VERIFY = False
+        HOST = "example.com"
+        PORT = 443
+        TARGET = "dummy_target"
+        SENDER = "dummy_sender"
+
+@pytest.mark.asyncio
+async def test_ssl_context_validation_enabled(monkeypatch):
+    """
+    Ensure that SSL context enforces server certificate validation.
+    """
+
+    app = ClientSessionApp(pipeline=DummyPipeline())
+
+    captured_ssl_context = {}
+
+    async def fake_open_connection(host, port, ssl, limit):
+        captured_ssl_context['context'] = ssl
+        class DummyReader:
+            async def readuntil(self, *args, **kwargs):
+                return b""
+        class DummyWriter:
+            def write(self, data): pass
+            def close(self): pass
+            def is_closing(self): return False
+            async def drain(self): pass
+        return DummyReader(), DummyWriter()
+
+    monkeypatch.setattr('asyncio.open_connection', fake_open_connection)
+
+    await app._open_connection()
+
+    ssl_context = captured_ssl_context['context']
+    assert ssl_context.verify_mode == ssl.CERT_REQUIRED
+    assert ssl_context.check_hostname is True

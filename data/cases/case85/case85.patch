@@ -1,0 +1,19 @@
+diff --git a/session_app.py b/session_app.py
+index 7f9b2cd..a2e5f8b 100644
+--- a/session_app.py
++++ b/session_app.py
+@@ def _open_connection(self):
+-        if self.pipeline.settings.SSL_ENABLED:
+-            ssl_context = ssl.create_default_context()
+-            if self.pipeline.settings.SSL_SKIP_VERIFY:
+-                ssl_context.check_hostname = False
+-                ssl_context.verify_mode = ssl.CERT_NONE
+-            logger.info(
+-                f"{self.name}: Enabling SSL with host/certification validation enabled : {ssl_context.check_hostname}"
+-            )
++        if self.pipeline.settings.SSL_ENABLED:
++            ssl_context = ssl.create_default_context()
++            # Always enforce certificate validation.
++            logger.info(
++                f"{self.name}: Enabling SSL with host/certification validation enabled : {ssl_context.check_hostname}"
++            )

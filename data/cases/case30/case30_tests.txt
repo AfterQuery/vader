@@ -1,0 +1,14 @@
+const ffi = require('ffi-napi');
+
+const libc = ffi.Library('libc', {
+  'atoi': ['int', ['string']]
+});
+
+function leakMemory() {
+  for (let i = 0; i < 1e6; i++) {
+    libc.atoi('123');
+    if (global.gc) global.gc();  // Requires node --expose-gc
+  }
+}
+
+leakMemory();

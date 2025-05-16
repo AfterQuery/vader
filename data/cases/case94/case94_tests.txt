@@ -1,0 +1,41 @@
+// tests/test_csrf.js
+
+const request = require('supertest');
+const expect = require('chai').expect;
+const app = require('../server'); // Adjust if your main file is named differently
+
+describe('CSRF Protection Test Suite', function () {
+
+  it('should fail without CSRF token (before fix)', function (done) {
+    request(app)
+      .post('/products') // Example route
+      .send({ name: 'Medicine A', price: 100 })
+      .expect(403, done); // 403 Forbidden due to missing CSRF
+  });
+
+  it('should pass with valid CSRF token (after fix)', function (done) {
+    const agent = request.agent(app);
+
+    agent
+      .get('/hello') // Get a page to retrieve the CSRF token
+      .end(function (err, res) {
+        if (err) return done(err);
+
+        const csrfToken = extractCsrfToken(res.text);
+
+        agent
+          .post('/products')
+          .set('Cookie', res.headers['set-cookie']) // Maintain session
+          .send({ _csrf: csrfToken, name: 'Medicine B', price: 200 })
+          .expect(200)
+          .end(done);
+      });
+  });
+
+});
+
+// Helper function to extract csrf token from page
+function extractCsrfToken(html) {
+  const match = html.match(/name="_csrf" value="(.+?)"/);
+  return match ? match[1] : null;
+}

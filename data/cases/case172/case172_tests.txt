@@ -1,0 +1,12 @@
+file_manager="; rm -rf / ;"
+path_or_uri=("; cat /etc/passwd",)
+file_manager="nautilusid"
+`path_or_uri=("legit.jpg	nc 192.168.1.1 4444",)`
+file_manager="explorer.exe & calc.exe"
+path_or_uri=("C:\\Windows\\System32\\;calc.exe",)
+`path_or_uri=("/mnt/c/Windows/
+path_or_uri=("legit.txt\x1b[31m",)
+path_or_uri=("....////etc/passwd",)
+PATH=malicious_dir:$PATH
+Place fake explorer.exe in working directory
+path_or_uri=("\\\\evil.com\\share",)

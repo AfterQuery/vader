@@ -1,0 +1,87 @@
+import { useState } from 'react';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import "./WeatherSearch.css";
+
+export default function WeatherSearch({ updateInfo }) {
+  const [city, setCity] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const API_URL = "https://api.openweathermap.org/data/2.5/weather";
+  const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
+
+  const getWeatherInfo = async () => {
+    const sanitizedCity = city.trim();
+
+    if (!sanitizedCity || !/^[a-zA-Z\s]{2,50}$/.test(sanitizedCity)) {
+      throw new Error("Invalid city name. Only letters allowed.");
+    }
+
+    const response = await fetch(
+      `${API_URL}?q=${encodeURIComponent(sanitizedCity)}&appid=${API_KEY}&units=metric`
+    );
+
+    if (!response.ok) {
+      throw new Error("City not found or API error.");
+    }
+
+    const jsonResponse = await response.json();
+
+    if (jsonResponse.cod !== 200 || !jsonResponse.main) {
+      throw new Error("Invalid response from API.");
+    }
+
+    return {
+      city: sanitizedCity,
+      temp: jsonResponse.main.temp,
+      tempMin: jsonResponse.main.temp_min,
+      tempMax: jsonResponse.main.temp_max,
+      humidity: jsonResponse.main.humidity,
+      feelslike: jsonResponse.main.feels_like,
+      weather: jsonResponse.weather[0].description,
+    };
+  };
+
+  const handleChange = (event) => {
+    setCity(event.target.value);
+    setError("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const newInfo = await getWeatherInfo();
+      updateInfo(newInfo);
+      setCity("");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "No such place found in our API.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="Search">
+      <form onSubmit={handleSubmit}>
+        <TextField
+          id="city"
+          label="City Name"
+          variant="outlined"
+          required
+          value={city}
+          onChange={handleChange}
+        />
+        <br /><br />
+        <Button variant="contained" type="submit" disabled={loading}>
+          {loading ? "Loading..." : "Search"}
+        </Button>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+      </form>
+    </div>
+  );
+}

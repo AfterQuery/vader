@@ -1,0 +1,41 @@
+--- fileDownloadApi.ts	2025-04-27
++++ fileDownloadApi_fixed.ts	2025-04-27
+@@
++const SAFE_BASE_DIRECTORY = '/var/www/uploads'; // example safe folder
+
+ async function fileDownloadFn(
+ 	req: FastifyRequest<{ Params: { '*': string } }>,
+ 	reply: FastifyReply,
+ ) {
+ 	const incomingPath = req.params['*'];
+
+ 	if (downloadUrlRegex.test(incomingPath)) {
+ 		logger.trace(`DOWNLOAD_URL_PATTERN ${incomingPath}`);
+ 		const [, document, code, fieldName, fileName] = downloadUrlRegex.exec(incomingPath) ?? [];
+
+-		const destination = path.join(document, code, fieldName, fileName);
++		const destination = path.resolve(SAFE_BASE_DIRECTORY, document, code, fieldName, fileName);
++		if (!destination.startsWith(SAFE_BASE_DIRECTORY)) {
++			logger.warn(`Blocked path traversal attempt: ${destination}`);
++			return reply.status(400).send({ error: 'Invalid file path' });
++		}
+ 		return sendFile(reply, req.url, destination);
+ 	}
+
+ 	if (legacyDownloadUrlRegex.test(incomingPath)) {
+ 		logger.trace(`LEGACY_DOWNLOAD_URL_PATTERN ${incomingPath}`);
+ 		const [, , , document, code, fieldName, fileName] = legacyDownloadUrlRegex.exec(incomingPath) ?? [];
+
+-		const destination = path.join(document, code, fieldName, fileName);
++		const destination = path.resolve(SAFE_BASE_DIRECTORY, document, code, fieldName, fileName);
++		if (!destination.startsWith(SAFE_BASE_DIRECTORY)) {
++			logger.warn(`Blocked path traversal attempt: ${destination}`);
++			return reply.status(400).send({ error: 'Invalid file path' });
++		}
+ 		return sendFile(reply, req.url, destination);
+ 	}
+
+ 	logger.trace(`File not found ${incomingPath}`);
+
+ 	return reply.status(404).send();
+ }

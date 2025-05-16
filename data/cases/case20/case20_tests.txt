@@ -1,0 +1,16 @@
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <assert.h>
+
+void test_xpath_null_context() {
+    xmlDocPtr doc = NULL; // Simulate failure
+    xmlNodePtr node = NULL;
+    xmlXPathContextPtr ctxt = xmlXPathNewContext(doc);
+    assert(ctxt == NULL);
+    // Should not dereference ctxt if NULL
+}
+
+int main() {
+    test_xpath_null_context();
+    return 0;
+}

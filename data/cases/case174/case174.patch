@@ -1,0 +1,47 @@
+From 9fb8fbcc65c29c74473a13715c05725e2b49065d Mon Sep 17 00:00:00 2001
+From: Fred <fred@nextchat.dev>
+Date: Mon, 24 Jun 2024 14:31:50 +0800
+Subject: [PATCH] fix: validate the url to avoid SSRF
+
+---
+ app/api/webdav/[...path]/route.ts | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/app/api/webdav/[...path]/route.ts b/app/api/webdav/[...path]/route.ts
+index 816c2046b22..01286fc1bf9 100644
+--- a/app/api/webdav/[...path]/route.ts
++++ b/app/api/webdav/[...path]/route.ts
+@@ -9,6 +9,14 @@ const mergedAllowedWebDavEndpoints = [
+   ...config.allowedWebDevEndpoints,
+ ].filter((domain) => Boolean(domain.trim()));
+ 
++const normalizeUrl = (url: string) => {
++  try {
++    return new URL(url);
++  } catch (err) {
++    return null;
++  }
++};
++
+ async function handle(
+   req: NextRequest,
+   { params }: { params: { path: string[] } },
+@@ -24,9 +32,15 @@ async function handle(
+ 
+   // Validate the endpoint to prevent potential SSRF attacks
+   if (
+-    !mergedAllowedWebDavEndpoints.some(
+-      (allowedEndpoint) => endpoint?.startsWith(allowedEndpoint),
+-    )
++    !endpoint ||
++    !mergedAllowedWebDavEndpoints.some((allowedEndpoint) => {
++      const normalizedAllowedEndpoint = normalizeUrl(allowedEndpoint);
++      const normalizedEndpoint = normalizeUrl(endpoint as string);
++
++      return normalizedEndpoint &&
++        normalizedEndpoint.hostname === normalizedAllowedEndpoint?.hostname &&
++        normalizedEndpoint.pathname.startsWith(normalizedAllowedEndpoint.pathname);
++    })
+   ) {
+     return NextResponse.json(
+       {

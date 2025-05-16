@@ -1,0 +1,75 @@
+# Test Cases for SQL-Injection “order” Parameter in ExportExcel
+
+## 1. Vulnerable-Mode Detection
+TestCase: OrderInjection_Vulnerable  
+Description: Verify that passing a malicious “order” string containing SQL breaks out of the ORDER BY clause.  
+Steps:
+  1. Call ExportExcel with order="id ASC; DROP TABLE users; --"
+  2. Assert that the generated SQL (DryRun) contains “ORDER BY id ASC; DROP TABLE users; —”
+  3. Expect evidence of unescaped injection in the SQL string.
+
+## 2. Whitelist-Enforcement: Invalid Column
+TestCase: OrderInjection_InvalidColumn  
+Description: Ensure the service rejects ordering by a column name not in the table schema.  
+Steps:
+  1. Call ExportExcel with order="foobar DESC"
+  2. Assert that the method returns an error containing “not in the fields”
+  3. No SQL should be executed or generated.
+
+## 3. Whitelist-Enforcement: Invalid Direction
+TestCase: OrderInjection_InvalidDirection  
+Description: Ensure the service rejects ordering with an invalid sort direction.  
+Steps:
+  1. Call ExportExcel with order="name DROP"
+  2. Assert that the method returns an error containing “not secure”
+  3. No SQL should be executed or generated.
+
+## 4. Whitelist-Enforcement: Valid Order
+TestCase: OrderInjection_Valid  
+Description: Confirm that a valid column and direction is accepted and used correctly.  
+Steps:
+  1. Call ExportExcel with order="name asc"
+  2. Assert no error is returned.
+  3. Inspect DryRun SQL and verify it contains exactly “ORDER BY name asc” and nothing else.
+
+## 5. HTTP Endpoint Rejection of Malicious Input
+TestCase: ExportExcel_HTTP_Malicious  
+Description: Test the HTTP handler rejects SQL-injecting order params at the API boundary.  
+Steps:
+  1. Send GET /export?templateID=tmpl&order=id+DESC%3B+DROP+TABLE+users%3B+--
+  2. Assert HTTP 400 Bad Request.
+
+## 6. HTTP Endpoint Acceptance of Valid Input
+TestCase: ExportExcel_HTTP_Valid  
+Description: Test the HTTP handler accepts a valid order parameter.  
+Steps:
+  1. Send GET /export?templateID=tmpl&order=name+DESC
+  2. Assert HTTP 200 OK.
+
+## 7. Fuzz Test: Empty Order
+TestCase: OrderParam_Fuzz_Empty  
+Description: Empty order parameters should be treated as “no override” and succeed.  
+Steps:
+  1. Call ExportExcel with order=""
+  2. Assert no error and default ordering applies.
+
+## 8. Fuzz Test: Semicolon-Only Injection
+TestCase: OrderParam_Fuzz_Semicolon  
+Description: Semicolon alone or minimal SQL fragments should be rejected.  
+Steps:
+  1. Call ExportExcel with order="name;--"
+  2. Assert an error is returned.
+
+## 9. Fuzz Test: Multiple Clauses
+TestCase: OrderParam_Fuzz_MultiClause  
+Description: Multiple comma-separated ordering clauses should be rejected.  
+Steps:
+  1. Call ExportExcel with order="name desc, id asc"
+  2. Assert an error is returned.
+
+## 10. Fuzz Test: Numeric Injection
+TestCase: OrderParam_Fuzz_Numeric  
+Description: Purely numeric or malformed fragments should be rejected.  
+Steps:
+  1. Call ExportExcel with order="1;SELECT;1"
+  2. Assert an error is returned.

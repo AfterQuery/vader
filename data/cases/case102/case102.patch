@@ -1,0 +1,20 @@
+--- shop.py     2025-04-27 13:22:31.000000000 -0400
++++ shop-new.py 2025-04-27 13:22:31.000000000 -0400
+@@ -5,9 +5,15 @@
+ import operator
+ import datetime
+ import webbrowser
++import os
+ 
+-
+-conn = pymysql.connect(host="localhost",user="root",password="root123",db="foodmenu")
++mydb=mysql.connector.connect(
++    host=os.environ['DB_HOST'],
++    user=os.environ['DB_USER'],
++    passwd=os.environ['DB_PASS'],
++    database=os.environ['DB_NAME']
++)
++conn = pymysql.connect(host,user,password,db)
+ curs = conn.cursor()
+ 
+ class Shop:

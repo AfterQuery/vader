@@ -1,0 +1,23 @@
+diff --git a/utils.py b/utils.py
+--- a/utils.py
++++ b/utils.py
+@@ -1,5 +1,6 @@
+ import subprocess
+ from pathlib import Path
++import shlex
+ 
+ def get_directory_size(path: Path):
+     total = 0
+@@ -11,10 +12,10 @@
+ def get_python_version(venv_path: Path, os_name: str) -> str:
+     if "windows" in os_name.lower():
+         python_exe = venv_path / "Scripts" / "python.exe"
+     else:
+         python_exe = venv_path / "bin" / "python"
+-    command = f'"{python_exe}" --version'
+-    output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, text=True)
++    command = [str(python_exe.resolve()), "--version"]
++    output = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
+     version_line = output.strip()
+     version = version_line.split()[1]
+     return version

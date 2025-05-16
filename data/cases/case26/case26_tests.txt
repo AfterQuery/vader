@@ -1,0 +1,36 @@
+Test Case 1: Accessing Stored User Data from Another Extension
+Purpose: Validate if another extension (malicious or not) can read sensitive user data from chrome.storage.sync.
+
+Steps:
+Install your extension and enter test data in the form (e.g., name, email, phone).
+
+Create a dummy extension with this background script:
+
+chrome.storage.sync.get(null, (data) => {
+  console.log("Other extension accessed data:", data);
+});
+Load it as an unpacked extension.
+
+Expected (secure):
+No sensitive data should be accessible
+
+Data should be encrypted or scoped properly
+
+Vulnerable:
+Data like email and phone are printed in console
+
+Test Case 2: Script Injection on Sensitive Sites
+Purpose: Check whether content.js executes on ANY site when fillBtn is clicked.
+
+Steps:
+Open a high-value site in your browser (e.g., Gmail, PayPal, Banking, etc.).
+
+Click the "Fill" button in your extension popup or UI.
+
+Add a console.log("content.js running") in content.js to verify execution.
+
+Expected (secure):
+Script should not execute on unrelated or sensitive domains
+
+Vulnerable:
+content.js runs on ANY website, confirmed via console

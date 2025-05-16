@@ -1,0 +1,24 @@
+describe('SecureKey Deletion Trigger', function () {
+  let deleteKeyCalled = false;
+
+  beforeEach(() => {
+      // Stub secureKey deletion
+      Radio.reply('encrypt', 'delete:secureKey', () => {
+          deleteKeyCalled = true;
+      });
+  });
+
+  it('should not delete secureKey when not authenticated', function () {
+      Radio.reply('encrypt', 'check:auth', () => false);
+      deleteKeyCalled = false;
+      Radio.trigger('Confirm', 'auth');
+      expect(deleteKeyCalled).toBe(false);
+  });
+
+  it('should delete secureKey when authenticated', function () {
+      Radio.reply('encrypt', 'check:auth', () => true);
+      deleteKeyCalled = false;
+      Radio.trigger('Confirm', 'auth');
+      expect(deleteKeyCalled).toBe(true);
+  });
+});

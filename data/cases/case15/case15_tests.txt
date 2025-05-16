@@ -1,0 +1,61 @@
+import unittest
+from flask import Flask, session
+from eeazycrm.users.models import User
+from eeazycrm.accounts.models import Account
+from eeazycrm.contacts.models import Contact
+from common_filters import CommonFilters
+from sqlalchemy import Table, Column, Integer, MetaData, and_
+
+class TestCommonFilters(unittest.TestCase):
+
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.app.secret_key = 'test_secret'
+        self.client = self.app.test_client()
+
+        metadata = MetaData()
+        self.dummy_table = Table('dummy', metadata,
+            Column('owner_id', Integer),
+            Column('account_id', Integer),
+            Column('contact_id', Integer),
+        )
+
+        class DummyFilters:
+            class DummyField:
+                data = None
+            assignees = DummyField()
+            accounts = DummyField()
+            contacts = DummyField()
+            txt_search = DummyField()
+
+        self.filters = DummyFilters()
+
+    def test_set_owner_safe_query(self):
+        with self.app.test_request_context('/', method='POST'):
+            class DummyUser:
+                id = 1
+                is_admin = True
+            global current_user
+            current_user = DummyUser()
+            self.filters.assignees.data = DummyUser()
+            result = CommonFilters.set_owner(self.filters, self.dummy_table, 'owner_key')
+            self.assertIsInstance(result, type(and_(True)))
+
+    def test_set_account_safe_query(self):
+        with self.app.test_request_context('/', method='POST'):
+            class DummyAccount:
+                id = 2
+            self.filters.accounts.data = DummyAccount()
+            result = CommonFilters.set_accounts(self.filters, self.dummy_table, 'account_key')
+            self.assertIsInstance(result, type(and_(True)))
+
+    def test_set_contact_safe_query(self):
+        with self.app.test_request_context('/', method='POST'):
+            class DummyContact:
+                id = 3
+            self.filters.contacts.data = DummyContact()
+            result = CommonFilters.set_contacts(self.filters, self.dummy_table, 'contact_key')
+            self.assertIsInstance(result, type(and_(True)))
+
+if __name__ == "__main__":
+    unittest.main()

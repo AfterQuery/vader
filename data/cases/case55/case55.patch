@@ -1,0 +1,101 @@
+diff --git a/src/context/AuthContext.jsx b/src/context/AuthContext.jsx
+index e6c1abc..f9de002 100644
+--- a/src/context/AuthContext.jsx
++++ b/src/context/AuthContext.jsx
+@@
+-import { createContext, useContext, useEffect, useReducer } from "react";
+-
+-const initialState = {
+-    user: localStorage.getItem('user') != undefined ? JSON.parse(localStorage.getItem('user')) : null,
+-    role: localStorage.getItem('role') || null,
+-    token: localStorage.getItem('token') || null,
+-}
+-
+-export const authContext = createContext(initialState)
+-const authReducer = (state, action) => {
+-    switch (action.type) {
+-        case 'LOGIN_START':
+-            return {
+-                user: null,
+-                role: null,
+-                token: null
+-            }
+-        case 'LOGIN_SUCCESS':
+-            return {
+-                user: action.payload.user,
+-                token: action.payload.token,
+-                role: action.payload.role
+-            }
+-        case 'LOGOUT':
+-            return {
+-                user: null,
+-                role: null,
+-                token: null
+-            }
+-
+-        default:
+-            return state;
+-    }
+-}
+-
+-export const AuthContextProvider = ({ children }) => {
+-    const [state, dispatch] = useReducer(authReducer, initialState)
+-
+-    useEffect (() => {
+-       localStorage.setItem("user", JSON.stringify(state.user));
+-       localStorage.setItem("token", state.token);
+-       localStorage.setItem("role", state.role);
+-    }, [state]);
+-
+-    return (
+-        <authContext.Provider value={{ user: state.user, token: state.token, role: state.role, dispatch }}>
+-            {children}
+-        </authContext.Provider>
+-    )
+-}
++import { createContext, useContext, useReducer } from "react";
++
++// --- INITIAL STATE ---------------------------------------------------------
++const initialState = {
++  user: null,
++  token: null,            // keep token only in memory, no localStorage
++  role: null
++};
++
++export const AuthContext = createContext(initialState);
++
++// --- REDUCER ----------------------------------------------------------------
++const authReducer = (state, action) => {
++  switch (action.type) {
++    case "LOGIN_SUCCESS":
++      return {
++        user: action.payload.user,
++        token: action.payload.token,
++        role: action.payload.role
++      };
++
++    case "LOGOUT":
++      return {
++        user: null,
++        token: null,
++        role: null
++      };
++
++    default:
++      return state;
++  }
++};
++
++// --- PROVIDER ---------------------------------------------------------------
++export const AuthContextProvider = ({ children }) => {
++  const [state, dispatch] = useReducer(authReducer, initialState);
++
++  return (
++    <AuthContext.Provider value={{ ...state, dispatch }}>
++      {children}
++    </AuthContext.Provider>
++  );
++};
++
++// --- CUSTOM HOOK ------------------------------------------------------------
++export const useAuth = () => useContext(AuthContext);

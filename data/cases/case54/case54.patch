@@ -1,0 +1,16 @@
+diff --git a/laverna/apps/scripts/apps/encryption/appEncrypt.js b/laverna/apps/scripts/apps/encryption/appEncrypt.js
+index 66a7f2a..9c3bf91 100644
+--- a/laverna/apps/scripts/apps/encryption/appEncrypt.js
++++ b/laverna/apps/scripts/apps/encryption/appEncrypt.js
+@@
+ Radio.once('Confirm', 'auth', function() {
+-    Radio.request('encrypt', 'delete:secureKey');
+-    window.location.reload();
++    const isAuthed = Radio.request('encrypt', 'check:auth');
++    if (isAuthed === true) {
++        Radio.request('encrypt', 'delete:secureKey');
++        window.location.reload();
++    } else {
++        console.warn('[SECURITY] Unauthorized key deletion attempt');
++    }
+ });

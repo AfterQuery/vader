@@ -1,0 +1,11 @@
+# Remove dangerous flag and add verification
+def load_safe_index(path, embeddings):
+    if not os.path.exists(f"{path}/index.faiss"):
+        raise FileNotFoundError("Index missing")
+    
+    # Verify file signature
+    with open(f"{path}/index.faiss", "rb") as f:
+        if not f.read(4) == b'FAIS':  # Magic number
+            raise ValueError("Invalid index format")
+    
+    return FAISS.load_local(path, embeddings)  # Safe default

@@ -1,0 +1,11 @@
+diff --git a/src/Pages/Recipe.jsx b/src/Pages/Recipe.jsx
+
+--- a/src/Pages/Recipe.jsx
++++ b/src/Pages/Recipe.jsx
+
++import DOMPurify from 'dompurify'; // add dompurify npm package
+
+-<h3 dangerouslySetInnerHTML={{ __html: details.summary }}></h3>
+-<h3 dangerouslySetInnerHTML={{ __html: details.instructions }}></h3>
++<h3 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(details.summary) }}></h3>
++<h3 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(details.instructions) }}></h3>

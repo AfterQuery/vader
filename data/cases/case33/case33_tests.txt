@@ -1,0 +1,9 @@
+const ffi = require('ffi-napi');
+const ref = require('ref-napi');
+
+const lib = ffi.Library('./libvulnerable', {
+    'process_input': ['void', ['string', 'int']]
+});
+
+const maliciousInput = 'A'.repeat(64); // Exceeds buffer size
+lib.process_input(maliciousInput, maliciousInput.length);

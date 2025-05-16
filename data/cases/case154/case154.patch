@@ -1,0 +1,9 @@
+--- vulnerable.js
++++ secure.js
+@@
+-    cell1.innerHTML = data.id;
+-    cell2.innerHTML = data.value;
+-    cell3.innerHTML = data.timestamp;
++    cell1.textContent = data.id;
++    cell2.textContent = data.value;
++    cell3.textContent = data.timestamp;

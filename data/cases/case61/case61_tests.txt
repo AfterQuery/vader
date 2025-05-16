@@ -1,0 +1,24 @@
+CWE-288: Authentication Bypass Using an Alternate Path or Channel
+	if(!oturum_kontrol(sGet('user'),sGet('pass'))){
+		header('Location:../login.php'); // Redirects but does NOT stop the script!
+	}
+header('Location:../login.php'); only sends the redirect header.
+It does NOT automatically stop the PHP script execution. 
+ 
+
+Here I have changed the header and when use burpsuite to intercept the http://localhost/Web-Sayfasi/login.php it will redirect automatically redirecting  to files without the need of login.
+
+How an attacker can exploit:
+1.	Visit admin.php?sayfa=ekle (direct access to user adding page).
+2.	Server tries to redirect to login page.
+3.	BUT the PHP script still executes and includes the sensitive pages (userekle.php) in the background.
+4.	So the attacker can view or interact with protected content without logging in.
+The server sends the login redirect, but keeps rendering the protected page underneath
+
+Fix:
+	if(!oturum_kontrol(sGet('user'),sGet('pass'))){
+		header('Location:../login.php'); 
+		exit(); // Immediately stop script execution after redirect
+	}
+Add exit(); immediately after any header('Location:...') call to prevent unauthorized page content from loading.
+

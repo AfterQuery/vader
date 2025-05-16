@@ -1,0 +1,19 @@
+--- streamApi.ts	2025-04-27
++++ streamApi_fixed.ts	2025-04-27
+@@
+-import isString from 'lodash/isString';
++import isString from 'lodash/isString';
++import secureParse from 'secure-json-parse'; // new safe parser
+
+ if (req.query.filter != null && isString(req.query.filter)) {
+-    req.query.filter = JSON.parse(req.query.filter.replace(/\+/g, ' '));
++    try {
++        req.query.filter = secureParse.safeParse(req.query.filter.replace(/\+/g, ' '));
++        if (!req.query.filter || typeof req.query.filter !== 'object') {
++            throw new Error('Invalid filter format');
++        }
++    } catch (error) {
++        reply.code(400).send({ error: 'Invalid filter JSON structure' });
++        return;
++    }
+ }

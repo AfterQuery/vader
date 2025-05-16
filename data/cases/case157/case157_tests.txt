@@ -1,0 +1,30 @@
+Test Case 1: Redirect to Safe Internal URL
+•	Scenario: Attempt to redirect to a valid internal path.
+•	Input: next=/user/settings
+•	Expected Result: Redirection happens to /user/settings inside the application.
+•	Pass Criteria: User is redirected correctly within the application.
+Test Case 2: Attempt Redirect to Full External URL (Malicious)
+•	Scenario: Attempt to redirect to an external malicious domain.
+•	Input: next=https://malicious.com
+•	Expected Result: Redirection to external site is blocked; fallback or error occurs.
+•	Pass Criteria: User is not redirected to the external URL. Redirects to a safe internal page instead.
+Test Case 3: Attempt Redirect to Protocol-Relative External URL
+•	Scenario: Use a protocol-relative URL to trick redirection.
+•	Input: next=//evil.com
+•	Expected Result: Redirection is blocked and ignored.
+•	Pass Criteria: User is not redirected to evil.com; fallback redirection happens internally.
+Test Case 4: Missing next Parameter
+•	Scenario: Submit the form without providing any next parameter.
+•	Input: (No next param)
+•	Expected Result: User is redirected to the default home page or logged-in dashboard.
+•	Pass Criteria: Application handles missing parameter gracefully.
+Test Case 5: Redirect to Absolute Internal URL
+•	Scenario: Provide an absolute but internal URL including scheme and host.
+•	Input: next=https://yourdomain.com/user/settings
+•	Expected Result: Redirection succeeds only if the domain matches application's trusted host (yourdomain.com).
+•	Pass Criteria: If host matches, redirection succeeds; if not, it’s blocked.
+Test Case 6: Redirect with Query String Parameters
+•	Scenario: Redirect to a valid internal URL containing additional query parameters.
+•	Input: next=/profile/view?id=123
+•	Expected Result: Redirection happens successfully to /profile/view?id=123.
+•	Pass Criteria: Redirection works safely with query parameters intact.

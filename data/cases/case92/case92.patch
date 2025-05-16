@@ -1,0 +1,81 @@
+@@ def get_venue_by_food(self,parsed_dict,requested_food, uid=None):
+-        sql_str = "SELECT DISTINCT v.rid, v.venue_name, f.food, v.venue_type, v.rating, v.mrt_name FROM venues v " \
+-                  "INNER JOIN venues_food f ON v.rid = f.rid " \
+-                  "WHERE lower(f.food) LIKE '%{0}%'".format(requested_food) + " " + \
+-                  exclude_str + " " + \
+-                  "ORDER BY v.rating DESC;"
++        sql_str = "SELECT DISTINCT v.rid, v.venue_name, f.food, v.venue_type, v.rating, v.mrt_name FROM venues v " \
++                  "INNER JOIN venues_food f ON v.rid = f.rid " \
++                  "WHERE lower(f.food) LIKE ? " + \
++                  exclude_str + " " + \
++                  "ORDER BY v.rating DESC;"
+
+         conn = sqlite3.connect(self._db_path)
+         c = conn.cursor()
+-        c.execute(sql_str)
++        c.execute(sql_str, (f"%{requested_food.lower()}%",))
+         all_results = c.fetchall()
+         conn.close()
+
+@@ def get_venue_by_venue_type(self,parsed_dict,requested_venue_type, uid=None):
+-        sql_str = "WHERE lower(v.venue_type) LIKE '%{0}%' ".format(requested_venue_type) + \
++        sql_str = "WHERE lower(v.venue_type) LIKE ? " + \
+
+         conn = sqlite3.connect(self._db_path)
+         c = conn.cursor()
+-        c.execute(sql_str)
++        c.execute(sql_str, (f"%{requested_venue_type.lower()}%",))
+         all_results = c.fetchall()
+
+@@ def get_venue_by_food_venue_type(self,parsed_dict,requested_food,requested_venue_type, uid=None):
+-        sql_str = "WHERE lower(v.venue_type) LIKE '%{0}%' " \
+-                  "OR lower(f.food) LIKE '%{1}%' ".format(requested_food, requested_venue_type) + " " + \
++        sql_str = "WHERE lower(v.venue_type) LIKE ? OR lower(f.food) LIKE ? " + \
+
+         conn = sqlite3.connect(self._db_path)
+         c = conn.cursor()
+-        c.execute(sql_str)
++        c.execute(sql_str, (f"%{requested_food.lower()}%", f"%{requested_venue_type.lower()}%",))
+         all_results = c.fetchall()
+
+@@ def get_similar_venue_by_name(self,parsed_dict, requested, uid=None):
+-        sql_str = "WHERE 1 = 1 " \
+-                  "AND v.venue_name LIKE '%{0}%' ".format(requested) + " " + exclude_str + " " + \
++        sql_str = "WHERE 1 = 1 " \
++                  "AND v.venue_name LIKE ? " + exclude_str + " " + \
+
+         conn = sqlite3.connect(self._db_path)
+         c = conn.cursor()
+-        c.execute(sql_str)
++        c.execute(sql_str, (f"%{requested}%",))
+         all_results = c.fetchall()
+
+@@ def get_similar_venue_by_review(self,parsed_dict,requested, uid=None):
+-        sql_str = "AND v.rid IN (SELECT DISTINCT(t.rid) FROM tips t WHERE t.tip LIKE '%" + requested + "%')" + \
++        sql_str = "AND v.rid IN (SELECT DISTINCT(t.rid) FROM tips t WHERE t.tip LIKE ?)" + \
+
+         conn = sqlite3.connect(self._db_path)
+         c = conn.cursor()
+-        c.execute(sql_str)
++        c.execute(sql_str, (f"%{requested}%",))
+         all_results = c.fetchall()
+
+@@ def _get_venue_by_rids(self, uid, rids):
+-        sql_str = "SELECT combined_clus_id FROM users WHERE uid = {0}".format(uid)
++        sql_str = "SELECT combined_clus_id FROM users WHERE uid = ?"
+
+         conn = sqlite3.connect(self._db_path)
+         c = conn.cursor()
+-        c.execute(sql_str)
++        c.execute(sql_str, (uid,))
+         result = c.fetchone()
+
+@@ def _get_venue_by_uid(self, uid):
+-        sql_str = "SELECT combined_clus_id FROM users WHERE uid = {0}".format(uid)
++        sql_str = "SELECT combined_clus_id FROM users WHERE uid = ?"
+
+         conn = sqlite3.connect(self._db_path)
+         c = conn.cursor()
+-        c.execute(sql_str)
++        c.execute(sql_str, (uid,))
+         result = c.fetchone()

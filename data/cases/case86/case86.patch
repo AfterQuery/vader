@@ -1,0 +1,32 @@
+diff --git a/main.py b/main.py
+index 4c2b2a3..d4e1f8e 100644
+--- a/main.py
++++ b/main.py
+@@ -6,10 +6,16 @@
+ app = FastAPI()
+-app.add_middleware(
+-    CORSMiddleware,
+-    allow_origins=["*"],  # Adjust this to the origin of your React application
+-    allow_credentials=True,
+-    allow_methods=[
+-        "GET",
+-        "POST",
+-        "PUT",
+-        "DELETE",
+-    ],  # Adjust these based on your allowed methods
+-    allow_headers=["*"],  # Adjust this to the headers your React application sends
+-)
++
++# PATCH: Use explicit allowed origins instead of wildcard
++allowed_origins = [
++    "https://example.com",
++    "https://sub.example.com",
++]
++
++app.add_middleware(
++    CORSMiddleware,
++    allow_origins=allowed_origins,
++    allow_credentials=True,
++    allow_methods=["GET", "POST"],
++    allow_headers=["X-Custom-Header"],
++)

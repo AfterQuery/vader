@@ -1,0 +1,28 @@
+Test Cases
+Valid Test Cases:
+1. Default redirect if no redirect_url is provided
+•	Input: redirect_url not set
+•	Expected: User is redirected to $this->redirectTo
+2. Valid internal redirect: /dashboard
+•	Input: redirect_url=/dashboard
+•	Expected: Redirects to /dashboard
+3. Valid internal redirect: /user/settings
+•	Input: redirect_url=/user/settings
+•	Expected: Redirects to /user/settings
+4. Valid internal redirect with dashes and underscores
+•	Input: redirect_url=/user-profile/settings_tab
+•	Expected: Redirects to /user-profile/settings_tab
+Invalid Test Cases:
+5. Full URL redirect (open redirect attempt)
+•	Input: redirect_url=https://evil.com
+•	Expected: Redirects to $this->redirectTo (default)
+6. Relative path with dot segments
+•	Input: redirect_url=../../admin
+•	Expected: Redirects to $this->redirectTo (default)
+7. Redirect starting with non-slash character
+•	Input: redirect_url=dashboard
+•	Expected: Redirects to $this->redirectTo (default)
+8. Injection attempt using query manipulation
+•	Input: redirect_url=/dashboard?next=https://attacker.com
+•	Expected: Passes regex but might be flagged based on logic or further security checks
+

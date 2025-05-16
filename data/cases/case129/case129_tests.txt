@@ -1,0 +1,18 @@
+// tests/test_cmder.js
+
+const { cmder } = require('../path/to/your/file');
+
+describe('cmder safe execution', () => {
+    test('should execute a valid command successfully', async () => {
+        const result = await cmder('echo HelloWorld');
+        expect(result).toBe('success');
+    });
+
+    test('should fail for an invalid command', async () => {
+        await expect(cmder('nonexistentcommand')).rejects.toThrow();
+    });
+
+    test('should prevent command injection attempt', async () => {
+        await expect(cmder('echo HelloWorld && rm -rf /')).rejects.toThrow();
+    });
+});

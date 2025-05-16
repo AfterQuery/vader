@@ -1,0 +1,35 @@
+diff --git a/golden_patch_sql_injection.js b/golden_patch_sql_injection.js
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/golden_patch_sql_injection.js
+@@ -0,0 +1,30 @@
++const express = require('express');
++const mysql   = require('mysql');
++const app     = express();
++const port    = 3000;
++
++// Use a secure connection pool
++const db = mysql.createPool({
++  host: 'localhost',
++  user: 'your_user',
++  password: 'your_password',
++  database: 'your_database'
++});
++
++// Secure route using parameterized query
++app.get('/user', (req, res) => {
++  const username = req.query.username;
++  const query    = 'SELECT * FROM users WHERE username = ?';
++  db.query(query, [username], (err, result) => {
++    if (err) {
++      console.error('Database error:', err);
++      return res.status(500).send('Internal Server Error');
++    }
++    res.json(result);
++  });
++});
++
++app.listen(port, () => {
++  console.log(`Server is running on http://localhost:${port}`);
++});

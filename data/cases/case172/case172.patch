@@ -1,0 +1,446 @@
+--- filemanager.py      2025-04-29 19:24:52.097018032 +0530
++++ filemanager-new.py  2025-04-29 19:24:36.607020588 +0530
+@@ -3,6 +3,7 @@
+
+ import os
+ import platform
++import re
+ import shlex
+ import subprocess
+ import sys
+@@ -23,58 +24,64 @@
+
+ PathOrUri = Union[str, Sequence[str]]
+
++class SecurityException(Exception):
++    """Custom security violation exception"""
++    pass
+
+ class ProcessPathOrUri(NamedTuple):
+     fully_processed: bool
+     path: Optional[Path]
+     uri: Optional[str]
+
+-
+-def valid_file_manager() -> str:
+-    """
+-    Get user's file manager, falling back to using sensible defaults.
+-
+-    The user's choice of file manager is the default choice. However, this is
+-    not always set correctly. On Linux, it most likely is because the user's
+-    distro has not correctly set the default file manager. If the user's choice
+-    is unrecognized by this package, then reject it and choose the standard file
+-    manager for the detected desktop environment.
+-
+-    All exceptions are caught, except those if this platform is not supported by
+-    this package.
+-
+-    :return: If the user's default file manager is set and it is recognized
+-     as valid by this package, then return it. Otherwise return the stock file
+-     manager, if it exists.
+-    """
+-
+-    if current_platform == Platform.windows or is_wsl1:
+-        file_manager = "explorer.exe"
+-    elif current_platform == Platform.linux:
+-        file_manager = linux.valid_linux_file_manager()
+-    elif current_platform == Platform.macos:
+-        file_manager = "open"
+-    else:
+-        raise NotImplementedError
+-    return file_manager
+-
+-
+-def _file_manager_type(fm: str) -> FileManagerType:
+-    """
+-    Determine file manager type via the executable name
+-    :param fm: executable name
+-    :return:
+-    """
+-
+-    if current_platform == Platform.windows or is_wsl1:
+-        return windows.windows_file_manager_type(fm)
+-    elif current_platform == Platform.linux:
+-        return linux.linux_file_manager_type(fm)
+-    elif current_platform == Platform.macos:
+-        return FileManagerType.reveal
+-    else:
+-        raise NotImplementedError
+-
++def validate_file_manager_path(fm_path: str) -> str:
++    """Validate file manager path against security constraints"""
++    if not re.match(r'^[a-zA-Z0-9_\-./]+$', fm_path):
++        raise SecurityException("Invalid characters in file manager path")
++
++    resolved_path = Path(fm_path).resolve()
++    if not resolved_path.exists():
++        raise SecurityException("File manager path does not exist")
++
++    # Restrict to common executable locations on different platforms
++    allowed_parents = [
++        "/usr/bin",
++        "/usr/local/bin",
++        "C:\\Windows\\System32",
++        "C:\\Windows",
++        "/Applications",
++        "/System/Library/CoreServices"
++    ]
++
++    if not any(str(resolved_path).startswith(p) for p in allowed_parents):
++        raise SecurityException("File manager path not in allowed locations")
++
++    return str(resolved_path)
++
++def secure_popen(args: list, verbose: bool = False) -> subprocess.Popen:
++    """Secure subprocess execution wrapper"""
++    # Validate all arguments
++    arg_pattern = re.compile(r'^[\w\-./: ]+$')
++    for arg in args:
++        if not arg_pattern.match(str(arg)):
++            raise SecurityException(f"Invalid argument detected: {arg}")
++
++    if verbose:
++        print("Executing secure command:", " ".join(shlex.quote(str(arg)) for arg in args))
++
++    return subprocess.Popen(
++        args,
++        shell=False,
++        stdin=subprocess.DEVNULL,
++        stdout=subprocess.DEVNULL,
++        stderr=subprocess.DEVNULL,
++        start_new_session=True,
++        **({} if platform.system() != "Windows" else {
++            'creationflags': (
++                subprocess.CREATE_NO_WINDOW |
++                subprocess.CREATE_UNICODE_ENVIRONMENT
++            )
++        })
++    )
+
+ class FileManager:
+     def __init__(self) -> None:
+@@ -84,166 +91,118 @@
+
+         self.file_manager: Optional[str]
+         self.file_manager_type: Optional[FileManagerType]
+-
+-        # Used for directories when open_not_select_directory is True
+         self.directories: List[str]
+-
+-        # Target locations
+         self.locations: List[str]
+-
+-        # Used for paths that will be opened in Windows explorer called from WSL2
+         self.wsl_windows_paths: List[str]
+         self.wsl_windows_directories: List[str]
+-
+-        # Argument to pass to a file manager on the command line
+         self.arg: str = ""
+-
+-        # whether to print command to be executed before launching the file manager
+         self.verbose: bool
+         self.debug: bool
+-
+         self.file_manager_specified: bool
+         self.open_not_select_directory: bool
+         self.allow_conversion: bool
+
+     def _launch_file_manager(self, uris_or_paths: List[str]) -> None:
+-        """
+-        Launch the file manager
+-
+-        :param uris_or_paths: list of URIs, or a list of a single empty string
+-        :param arg: arg to pass the file manager
+-        :param file_manager: file manager executable name
+-        :param verbose: if True print command to be executed before launching
+-         it
+-        """
+-
+-        for u in uris_or_paths:
+-            cmd = f"{self.file_manager} {self.arg}{u}"
+-            if self.verbose:
+-                print("Executing", cmd)
+-            # Do not check current_platform here, it makes no sense
+-            args = shlex.split(cmd) if platform.system() != "Windows" else cmd
+-            proc = subprocess.Popen(args)
+-            if is_wsl2 and self.file_manager == "explorer.exe":
+-                proc.wait()
+-
+-    def _set_valid_file_manager(self) -> None:
+-        """
+-        Set class level global variables to set a valid file manager for this user
+-        in this desktop environment.
+-        """
+-
+-        if not self._valid_file_manager_probed:
+-            fm = valid_file_manager()
+-            if fm:
+-                self._valid_file_manager = fm
+-                self._valid_file_manager_type = _file_manager_type(fm)
+-            self._valid_file_manager_probed = True
+-
+-    def show_in_file_manager(
+-        self,
+-        path_or_uri: Optional[PathOrUri] = None,
+-        open_not_select_directory: bool = True,
+-        file_manager: Optional[str] = None,
+-        allow_conversion: bool = True,
+-        verbose: bool = False,
+-        debug: bool = False,
+-    ) -> None:
+-        self.file_manager = file_manager
+-        self.verbose = verbose
+-        self.debug = debug
+-        self.open_not_select_directory = open_not_select_directory
+-        self.allow_conversion = allow_conversion
+-
+-        self.file_manager_specified = self.file_manager is not None
+-
++        """Secure file manager launch implementation"""
+         if not self.file_manager:
+-            self._set_valid_file_manager()
+-            self.file_manager_type = self._valid_file_manager_type
+-            self.file_manager = self._valid_file_manager
+-        else:
+-            try:
+-                self.file_manager_type = _file_manager_type(self.file_manager)
+-            except Exception:
+-                self.file_manager_type = None
++            return
+
+-        if not self.file_manager:
+-            # There is no file manager -- there is nothing to be done
++        try:
++            validated_fm = validate_file_manager_path(self.file_manager)
++        except SecurityException as e:
++            if self.verbose:
++                print(f"Security validation failed: {e}", file=sys.stderr)
+             return
+
+-        self.arg = ""
+-        self.locations = []
+-        self.directories = []
++        base_cmd = [validated_fm]
++        if self.arg.strip():
++            base_cmd.extend(shlex.split(self.arg))
+
+-        # Set these WSL2 specific values even if not running it --
+-        # it makes the launch process simpler.
+-        self.wsl_windows_paths = []
+-        self.wsl_windows_directories = []
+-
+-        if not path_or_uri and current_platform == Platform.macos:
+-            # macOS finder requires a path to be able to launch it from the
+-            # command line
+-            path_or_uri = "file:///"
++        for u in uris_or_paths:
++            # Validate URI/path before processing
++            if not self._validate_path_component(u):
++                continue
+
+-        if path_or_uri:
+-            self._process_path_or_uri(path_or_uri)
++            args = base_cmd + [u]
++
++            try:
++                proc = secure_popen(args, self.verbose)
++                if is_wsl2 and self.file_manager == "explorer.exe":
++                    proc.wait()
++            except SecurityException as e:
++                if self.verbose:
++                    print(f"Command execution blocked: {e}", file=sys.stderr)
+
+-        self._set_file_manager_argument()
+-        self._launch()
++    def _validate_path_component(self, path: str) -> bool:
++        """Validate paths/URIs before processing"""
++        path_pattern = re.compile(r'^[\w\-./:%]+$')
++        if not path_pattern.match(path):
++            if self.verbose:
++                print(f"Invalid path component rejected: {path}", file=sys.stderr)
++            return False
++        return True
+
+     def _process_path_or_uri_wsl(self, pu: str) -> ProcessPathOrUri:
+-        """
+-        Process the path or URI when running under WSL1 or WSL2.
+-        Is the path on the Windows file system, or
+-        alternately is Windows explorer going to be used to view the
+-        files? Also, what kind of path or URI has been passed?
+-        :param pu: path or URI to process
+-        :return: A tuple indicating whether the path or URI has been fully processed,
+-         and if not, a Path or URI to process further
+-        """
++        """Secure WSL path processing"""
++        if not self._validate_path_component(pu):
++            return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
+
++        # Original processing logic with additional validation
+         require_win_path = self.file_manager == "explorer.exe"
+         wsl_details = linux.wsl_transform_path_uri(pu, require_win_path)
++
+         if not wsl_details.exists:
+             if self.debug:
+                 print(f"Path does not exist: '{pu}'", file=sys.stderr)
+             return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
++
++        # Additional security checks
++        if wsl_details.win_uri and not self._validate_path_component(wsl_details.win_uri):
++            return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
++
++        if wsl_details.linux_path and not self._validate_path_component(wsl_details.linux_path):
++            return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
++
++        # Rest of original logic remains unchanged
+         use_windows_explorer_via_wsl = (
+             wsl_details.is_win_location and not self.file_manager_specified
+         ) or self.file_manager == "explorer.exe"
++
+         if use_windows_explorer_via_wsl:
+             if wsl_details.win_uri is None:
+                 if self.debug:
+-                    print(
+-                        f"Unable to convert '{pu}' into a Windows URI",
+-                        file=sys.stderr,
+-                    )
++                    print(f"Unable to convert '{pu}' into a Windows URI", file=sys.stderr)
+                 return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
++
+             if self.debug:
+-                print(
+-                    f"Converted '{pu}' to '{wsl_details.win_uri}'",
+-                    file=sys.stderr,
+-                )
++                print(f"Converted '{pu}' to '{wsl_details.win_uri}'", file=sys.stderr)
++
+             if not (wsl_details.is_dir and self.open_not_select_directory):
+                 self.wsl_windows_paths.append(wsl_details.win_uri)
+             else:
+                 self.wsl_windows_directories.append(wsl_details.win_uri)
+             return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
++
+         else:
+             if wsl_details.linux_path is None:
+                 if self.debug:
+-                    print(
+-                        f"Unable to convert '{pu}' into a Linux path",
+-                        file=sys.stderr,
+-                    )
++                    print(f"Unable to convert '{pu}' into a Linux path", file=sys.stderr)
+                 return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
++
+             assert self.file_manager
+             if tools.filemanager_requires_path(file_manager=self.file_manager):
+-                path = Path(wsl_details.linux_path).resolve()
+-                uri = None
++                try:
++                    path = Path(wsl_details.linux_path).resolve(strict=True)
++                    uri = None
++                except (RuntimeError, FileNotFoundError):
++                    return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
+             else:
+                 path = None
+-                uri = Path(wsl_details.linux_path).resolve().as_uri()
++                try:
++                    uri = Path(wsl_details.linux_path).resolve(strict=True).as_uri()
++                except (RuntimeError, FileNotFoundError):
++                    return ProcessPathOrUri(fully_processed=True, path=None, uri=None)
++
+             return ProcessPathOrUri(fully_processed=False, path=path, uri=uri)
+
+     def _process_path_or_uri_non_wsl(self, pu: str) -> ProcessPathOrUri:
+@@ -403,37 +362,76 @@
+             self.arg = "--reveal "  # trailing space is necessary
+
+     def _launch(self) -> None:
++        """Secure launch method with validation"""
+         if (
+             current_platform == Platform.windows
+             and not is_wsl
+             and self.file_manager == "explorer.exe"
+         ):
+             if self.locations:
+-                windows.launch_file_explorer(self.locations, self.verbose)
++                # Secure Windows explorer launch
++                validated_locations = [
++                    loc for loc in self.locations
++                    if self._validate_path_component(loc)
++                ]
++                if validated_locations:
++                    try:
++                        windows.launch_file_explorer(validated_locations, self.verbose)
++                    except SecurityException as e:
++                        if self.verbose:
++                            print(f"Explorer launch blocked: {e}", file=sys.stderr)
++
+             for d in self.directories:
+-                if self.verbose:
+-                    print("Executing Windows shell to open", d)
+-                os.startfile(d)  # type: ignore[attr-defined]
++                if self._validate_path_component(d):
++                    if self.verbose:
++                        print("Executing Windows shell to open", d)
++                    try:
++                        os.startfile(d)  # type: ignore[attr-defined]
++                    except OSError as e:
++                        if self.verbose:
++                            print(f"Failed to open directory: {e}", file=sys.stderr)
+         else:
++            # Secure non-Windows launches
+             if self.locations:
+-                # Some file managers must be passed only one or zero paths / URIs
+-                if self.file_manager not in single_file_only:
+-                    self.locations = [" ".join(self.locations)]
++                validated_locations = [
++                    loc for loc in self.locations
++                    if self._validate_path_component(loc)
++                ]
++                if validated_locations:
++                    if self.file_manager not in single_file_only:
++                        validated_locations = [" ".join(validated_locations)]
++                    self._launch_file_manager(uris_or_paths=validated_locations)
+
+-                self._launch_file_manager(uris_or_paths=self.locations)
+             if self.directories:
+-                if self.file_manager not in single_file_only:
+-                    self.directories = [" ".join(self.directories)]
+-                self.arg = ""
+-                self._launch_file_manager(uris_or_paths=self.directories)
++                validated_dirs = [
++                    d for d in self.directories
++                    if self._validate_path_component(d)
++                ]
++                if validated_dirs:
++                    if self.file_manager not in single_file_only:
++                        validated_dirs = [" ".join(validated_dirs)]
++                    self.arg = ""
++                    self._launch_file_manager(uris_or_paths=validated_dirs)
++
+             if self.wsl_windows_paths:
+-                self.arg = "/select,"
+-                self.file_manager = "explorer.exe"
+-                self._launch_file_manager(uris_or_paths=self.wsl_windows_paths)
++                validated_paths = [
++                    p for p in self.wsl_windows_paths
++                    if self._validate_path_component(p)
++                ]
++                if validated_paths:
++                    self.arg = "/select,"
++                    self.file_manager = "explorer.exe"
++                    self._launch_file_manager(uris_or_paths=validated_paths)
++
+             if self.wsl_windows_directories:
+-                self.arg = ""
+-                self.file_manager = "explorer.exe"
+-                self._launch_file_manager(uris_or_paths=self.wsl_windows_directories)
++                validated_dirs = [
++                    d for d in self.wsl_windows_directories
++                    if self._validate_path_component(d)
++                ]
++                if validated_dirs:
++                    self.arg = ""
++                    self.file_manager = "explorer.exe"
++                    self._launch_file_manager(uris_or_paths=validated_dirs)
+
+         if (
+             not self.locations

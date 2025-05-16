@@ -1,0 +1,303 @@
+--- customer.py	2025-04-29 05:58:43.000000000 -0400
++++ customer-new.py	2025-04-29 05:58:43.000000000 -0400
+@@ -1,34 +1,33 @@
+-from tkinter import*
+-from PIL import Image,ImageTk
++from tkinter import *
++from PIL import Image, ImageTk
+ from tkinter import ttk
+ import random
+ import mysql.connector
+ from tkinter import messagebox
++import os
++from html import escape
+ 
+ class cust_window:
+-    def __init__(self,root):
+-        self.root=root
++    def __init__(self, root):
++        self.root = root
+         self.root.title('Hotel Management System')
+         self.root.geometry('1295x550+230+220')
+-    
+-    
+-        #==================variables================
+-        
+-        self.var_ref=StringVar()
+-        x=random.randint(1000,9999)
++
++        # ==================variables================
++        self.var_ref = StringVar()
++        x = random.randint(1000, 9999)
+         self.var_ref.set(str(x))
+-        
+-        
+-        self.var_name=StringVar()
+-        self.var_mother=StringVar()
+-        self.var_gender=StringVar()
+-        self.var_post=StringVar()
+-        self.var_mobile=StringVar()
+-        self.var_email=StringVar()
+-        self.var_nationality=StringVar()
+-        self.var_address=StringVar() 
+-        self.var_id_proof=StringVar()
+-        self.var_id_number=StringVar()
++
++        self.var_name = StringVar()
++        self.var_mother = StringVar()
++        self.var_gender = StringVar()
++        self.var_post = StringVar()
++        self.var_mobile = StringVar()
++        self.var_email = StringVar()
++        self.var_nationality = StringVar()
++        self.var_address = StringVar()
++        self.var_id_proof = StringVar()
++        self.var_id_number = StringVar()
+ 
+ 
+         #===============Title========================
+@@ -255,45 +254,106 @@
+         self.fetch_data()
+      #Function to add data
+         
+-    def add_data(self):
+-        if self.var_mobile.get()=='' or self.var_mother.get()=='':
+-            messagebox.showerror('Error','All fields are required to be filled',parent=self.root)
+-        else:
++    def get_db_connection(self):
++            return mysql.connector.connect(
++                host=os.getenv('DB_HOST', 'localhost'),
++                user=os.getenv('DB_USER', 'root'),
++                password=os.getenv('DB_PASS', 'mysql123'),
++                database='worksheet',
++                auth_plugin='mysql_native_password'
++            )
++
++        def add_data(self):
++            if not self.validate_inputs():
++                return
++
++            conn = self.get_db_connection()
++            con_cursor = conn.cursor()
++            
+             try:
+-                conn=mysql.connector.connect(host='localhost',user='root',password='mysql123',database='worksheet',auth_plugin='mysql_native_password')
+-                con_cursor=conn.cursor()
+-                con_cursor.execute('insert into customer values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(
+-                                                                                self.var_ref.get(),
+-                                                                                self.var_name.get(),
+-                                                                                self.var_mother.get(),
+-                                                                                self.var_gender.get(),
+-                                                                                self.var_post.get(),
+-                                                                                self.var_mobile.get(),
+-                                                                                self.var_email.get(),
+-                                                                                self.var_nationality.get(),
+-                                                                                self.var_id_proof.get(),
+-                                                                                self.var_id_number.get(),
+-                                                                                self.var_address.get()
+-                                                                            ))
++                query = """
++                    INSERT INTO customer (
++                        Ref, Name, Mother, Gender, PostCode, 
++                        Mobile, Email, Nationality, Idproof, Idnumber, Address
++                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
++                """
++                values = (
++                    self.var_ref.get(),
++                    self.var_name.get(),
++                    self.var_mother.get(),
++                    self.var_gender.get(),
++                    self.var_post.get(),
++                    self.var_mobile.get(),
++                    self.var_email.get(),
++                    self.var_nationality.get(),
++                    self.var_id_proof.get(),
++                    self.var_id_number.get(),
++                    self.var_address.get()
++                )
++                con_cursor.execute(query, values)
+                 conn.commit()
+                 self.fetch_data()
++                messagebox.showinfo('Success', 'Customer added successfully')
++            except Exception as es:
++                messagebox.showerror('Error', f'Operation failed: {str(es)}')
++            finally:
+                 conn.close()
+-                messagebox.showinfo('Success','Customer has been added',parent=self.root)
++
++ #Update function
++
++        def update(self):
++            if not self.validate_mobile():
++                return
++
++            conn = self.get_db_connection()
++            con_cursor = conn.cursor()
++            
++            try:
++                query = """
++                    UPDATE customer SET 
++                        Name=%s, Mother=%s, Gender=%s, PostCode=%s, 
++                        Mobile=%s, Email=%s, Nationality=%s, 
++                        Idproof=%s, Idnumber=%s, Address=%s 
++                    WHERE Ref=%s
++                """
++                values = (
++                    self.var_name.get(),
++                    self.var_mother.get(),
++                    self.var_gender.get(),
++                    self.var_post.get(),
++                    self.var_mobile.get(),
++                    self.var_email.get(),
++                    self.var_nationality.get(),
++                    self.var_id_proof.get(),
++                    self.var_id_number.get(),
++                    self.var_address.get(),
++                    self.var_ref.get()
++                )
++                con_cursor.execute(query, values)
++                conn.commit()
++                self.fetch_data()
++                messagebox.showinfo('Success', 'Customer updated successfully')
+             except Exception as es:
+-                messagebox.showwarning('Warning',f'Some thing went wrong:{str(es)}',parent=self.root)
+-    #Function to fetch data
+-    
+-    def fetch_data(self):
+-        conn=mysql.connector.connect(host='localhost',user='root',password='mysql123',database='worksheet',auth_plugin='mysql_native_password')
+-        con_cursor=conn.cursor()
+-        con_cursor.execute('select * from customer')
+-        rows=con_cursor.fetchall()
+-        if len(rows)!=0:
+-            self.cust_details_table.delete(*self.cust_details_table.get_children())
+-            for i in rows:
+-                self.cust_details_table.insert("",END,values=i)
+-            conn.commit()
+-        conn.close()
++                messagebox.showerror('Error', f'Update failed: {str(es)}')
++            finally:
++                conn.close()
++
++        def fetch_data(self):
++            conn = self.get_db_connection()
++            con_cursor = conn.cursor()
++            
++            try:
++                con_cursor.execute('SELECT * FROM customer')
++                rows = con_cursor.fetchall()
++                
++                self.cust_details_table.delete(*self.cust_details_table.get_children())
++                for row in rows:
++                    sanitized_row = [escape(str(item)) if item else '' for item in row]
++                    self.cust_details_table.insert("", END, values=sanitized_row)
++            except Exception as es:
++                messagebox.showerror('Error', f'Data fetch failed: {str(es)}')
++            finally:
++                conn.close()
+         
+     #Get function
+     def get_cursor(self,event=""):
+@@ -313,34 +373,8 @@
+         self.var_id_number.set(row[9])
+         self.var_address.set(row[10])
+     
+-    #Update function
++   
+     
+-    def update(self):
+-        if self.var_mobile.get()=="":
+-            messagebox.showerror("Error","Please enter mobile number",parent=self.root)
+-        else:
+-            conn=mysql.connector.connect(host='localhost',user='root',password='mysql123',database='worksheet',auth_plugin='mysql_native_password')
+-            con_cursor=conn.cursor()           
+-            con_cursor.execute("update customer set Name=%s,Mother=%s,Gender=%s,PostCode=%s,Mobile=%s,Email=%s,Nationality=%s,Idproof=%s,Idnumber=%s,Address=%s where Ref=%s",(
+-                
+-                                                                                                                    
+-                                                                                                                                                                    self.var_name.get(),
+-                                                                                                                                                                    self.var_mother.get(),
+-                                                                                                                                                                    self.var_gender.get(),
+-                                                                                                                                                                    self.var_post.get(),
+-                                                                                                                                                                    self.var_mobile.get(),
+-                                                                                                                                                                    self.var_email.get(),
+-                                                                                                                                                                    self.var_nationality.get(),
+-                                                                                                                                                                    self.var_id_proof.get(),
+-                                                                                                                                                                    self.var_id_number.get(),
+-                                                                                                                                                                    self.var_address.get(),                                                   
+-                                                                                                                                                                    self.var_ref.get()
+-                                                                                                                                                                        ))
+-            conn.commit()
+-            self.fetch_data()
+-            conn.close()
+-            messagebox.showinfo("Update","Customer details has been updated successfully",parent=self.root)
+-            
+     #Delete function
+     
+     def Delete(self):
+@@ -379,17 +413,56 @@
+     #Search function
+     
+     def search(self):
+-        conn=mysql.connector.connect(host='localhost',user='root',password='mysql123',database='worksheet',auth_plugin='mysql_native_password')
+-        con_cursor=conn.cursor()
+-        
+-        con_cursor.execute("select * from customer where "+str(self.search_var.get())+" LIKE'%"+str(self.txt_search.get())+"%'")
+-        rows=con_cursor.fetchall()
+-        if len(rows)!=0:
+-            self.cust_details_table.delete(*self.cust_details_table.get_children())
+-            for i in rows:
+-                self.cust_details_table.insert("",END,values=i)
+-            conn.commit()
+-        conn.close()
++            conn = self.get_db_connection()
++            con_cursor = conn.cursor()
++            
++            try:
++                # Parameterized query with explicit column mapping
++                allowed_columns = {'Mobile', 'Ref'}
++                search_field = self.search_var.get()
++                
++                if search_field not in allowed_columns:
++                    messagebox.showerror("Error", "Invalid search field")
++                    return
++                
++                query = f"""
++                    SELECT * FROM customer 
++                    WHERE {search_field} LIKE %s
++                """
++                search_term = f"%{self.txt_search.get()}%"
++                
++                con_cursor.execute(query, (search_term,))
++                rows = con_cursor.fetchall()
++                
++                if len(rows) != 0:
++                    self.cust_details_table.delete(*self.cust_details_table.get_children())
++                    for i in rows:
++                        # Sanitize output before rendering
++                        sanitized_row = [escape(str(item)) if item else '' for item in i]
++                        self.cust_details_table.insert("", END, values=sanitized_row)
++                else:
++                    messagebox.showinfo("Info", "No records found")
++            except Exception as es:
++                messagebox.showerror("Error", f"Search failed: {str(es)}")
++            finally:
++                conn.close()
++
++def validate_mobile(self):
++            mobile = self.var_mobile.get()
++            if not mobile.isdigit() or len(mobile) != 10:
++                messagebox.showerror("Error", "Invalid mobile number (10 digits required)")
++                return False
++            return True
++
++        def validate_inputs(self):
++            if not all([
++                self.var_mobile.get(),
++                self.var_mother.get(),
++                self.var_name.get()
++            ]):
++                messagebox.showerror('Error', 'All required fields must be filled')
++                return False
++            return self.validate_mobile()
+         
+ if __name__ == "__main__":
+     root=Tk()

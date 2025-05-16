@@ -1,0 +1,5 @@
+GET /../../etc/passwd HTTP/1.1
+Host: localhost
+
+GET /index.html HTTP/1.1
+Host: localhost

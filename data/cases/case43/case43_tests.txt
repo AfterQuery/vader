@@ -1,0 +1,69 @@
+before_fix.py:
+import pytest
+
+from dbf import dbf
+
+
+def test_unicode_encode_error():
+    dbf_file: str = "test_ascii.dbf"
+
+    try:
+        table: dbf.Table = dbf.Table(filename=dbf_file, field_specs="name C(32)")
+        table.open(mode=dbf.READ_WRITE)
+
+        # Check that the file is in ASCII
+        assert table._meta.codepage == "ascii"
+
+        with pytest.raises(UnicodeEncodeError):
+            table.append({"name": "Björk Guðmundsdóttir 😊"})  # Unicode
+
+    finally:
+        table.close()
+
+after_fix.py:
+from dbf import dbf
+
+
+def test_unicode_encode_pass():
+    dbf_file: str = "test_utf8.dbf"
+
+    try:
+        table: dbf.Table = dbf.Table(filename=dbf_file, field_specs="name C(32)")
+        table.open(mode=dbf.READ_WRITE)
+
+        # Check that the file is in UTF-8
+        assert table._meta.codepage == "utf8"
+
+        # Append a record with Unicode characters
+        table.append({"name": "Björk Guðmundsdóttir 😊"})
+        table.close()
+
+        # Verify that the data was stored correctly
+        table = dbf.Table(filename=dbf_file).open(dbf.READ_WRITE)
+        field_names: list[str] = [field.lower() for field in table.field_names]
+
+        row: dict = dict(zip(field_names, table[0]))
+
+        assert row["name"].strip() == "Björk Guðmundsdóttir 😊"
+
+    finally:
+        table.close()
+
+package main
+
+import (
+    "testing"
+)
+
+func containsIllegalChars(s string) bool {
+    return len(s) > 0 && (s[0] == ';' || s[0] == '&')
+}
+
+func TestIllegalGitArg(t *testing.T) {
+    if !containsIllegalChars(";rm -rf /") {
+        t.Error("Expected true for malicious input")
+    }
+    if containsIllegalChars("status") {
+        t.Error("Expected false for safe input")
+    }
+}

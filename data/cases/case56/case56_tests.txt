@@ -1,0 +1,20 @@
+
+// Simulated test case for prototype pollution
+function config(obj) {
+  for (let key in obj) {
+    if (['__proto__', 'constructor', 'prototype'].includes(key)) continue;
+    this[key] = obj[key];
+  }
+}
+
+let clean = {};
+console.log("Before: ", clean.polluted);
+
+config(JSON.parse('{"__proto__":{"polluted":"yes"}}'));
+
+console.log("After: ", clean.polluted); // Should still be undefined
+if (clean.polluted !== undefined) {
+  console.error("Test failed: prototype was polluted");
+} else {
+  console.log("Test passed: prototype is safe");
+}

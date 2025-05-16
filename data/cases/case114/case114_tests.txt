@@ -1,0 +1,107 @@
+Test Case 1: Unauthorized Review Deletion
+
+Field	                                    Value
+Test Case ID	                            TC-001
+Title	                                    Unauthorized user tries to delete another user's review
+Precondition	                            Two users exist: User A and User B
+Steps	                                    1. User A creates a review.
+                                            2. User B logs in.
+                                            3. User B sends a DELETE request to /listings/:listingId/reviews/:reviewIdOfUserA.
+Expected Result	                            Deletion should be blocked. Server should flash error "You do not have permission" and redirect.
+Actual Result (if vulnerable)	            User B can delete User A's review.
+
+Test Case 2: NoSQL Injection in Review Creation
+
+Field	                                    Value
+Test Case ID	                            TC-002
+Title	                                    Attempt to inject MongoDB operator via review body
+Precondition	                            User logged in.
+Steps	                                    1. Submit POST request to /listings/:id/reviews with JSON body:
+                                            { "review": { "$gt": "" } }
+Expected Result	                            Server should reject malformed review input with validation error.
+Actual Result (if vulnerable)	            Review gets saved or server crashes.
+
+Test Case 3: XSS Payload in Review Body
+
+Field	                                    Value
+Test Case ID	                            TC-003
+Title	                                    Inject script tags into review body
+Precondition	                            User logged in.
+Steps	                                    1. Submit review with body: <script>alert('Hacked')</script>
+                                            2. View the listing page where review shows.
+Expected Result	                            JavaScript should not execute.
+                                            Either show escaped text or block submission.
+Actual Result (if vulnerable)	            Alert popup triggers (XSS).
+
+Test Case 4: Delete Nonexistent Review
+
+Field	                      Value
+Test Case ID	              TC-004
+Title	                      Deleting a review that does not exist
+Precondition	              User logged in.
+Steps	                      1. Send DELETE request to /listings/:id/reviews/123456789012345678901234 (nonexistent ID).
+Expected Result	              App shows graceful "Review not found" error, no crash.
+Actual Result (if vulnerable) Server throws internal error or crash.
+Automated API Test (Using Jest + Supertest)
+Here's an example automated test in JavaScript:
+
+const request = require('supertest');
+const app = require('../app'); // your Express app
+const { setupUser, loginUser } = require('./utils'); // helpers
+
+describe('Review Authorization and Validation Tests', () => {
+  
+  let userA, userB, listingId, reviewId;
+
+  beforeAll(async () => {
+    userA = await setupUser('userA@example.com', 'password');
+    userB = await setupUser('userB@example.com', 'password');
+    // User A creates a listing + review
+    const res = await request(app)
+      .post(`/listings`)
+      .send({ title: 'Test Listing' })
+      .set('Cookie', [`token=${userA.token}`]);
+    
+    listingId = res.body.listing._id;
+
+    const reviewRes = await request(app)
+      .post(`/listings/${listingId}/reviews`)
+      .send({ review: { body: 'Good place!' } })
+      .set('Cookie', [`token=${userA.token}`]);
+
+    reviewId = reviewRes.body.review._id;
+  });
+
+  test('UserB cannot delete UserA review', async () => {
+    const res = await request(app)
+      .delete(`/listings/${listingId}/reviews/${reviewId}`)
+      .set('Cookie', [`token=${userB.token}`]);
+
+    expect(res.statusCode).toBe(403); // or expect redirect with flash error
+  });
+
+  test('NoSQL injection blocked on review creation', async () => {
+    const res = await request(app)
+      .post(`/listings/${listingId}/reviews`)
+      .send({ review: { "$gt": "" } })
+      .set('Cookie', [`token=${userA.token}`]);
+
+    expect(res.statusCode).toBe(400); // bad request
+  });
+
+  test('XSS payload not executed', async () => {
+    const res = await request(app)
+      .post(`/listings/${listingId}/reviews`)
+      .send({ review: { body: "<script>alert(1)</script>" } })
+      .set('Cookie', [`token=${userA.token}`]);
+    
+    expect(res.text).not.toContain('<script>'); // safely escaped
+  });
+});
+ðŸ“‹ Final Test Cases Table:
+
+TC-ID	Description	                        Expected
+TC-001	Unauthorized Review Deletion	        Blocked
+TC-002	NoSQL Injection Review Body	        Blocked
+TC-003	XSS in Review	                        Escaped or Blocked
+TC-004	Delete Nonexistent Review	        Graceful Error

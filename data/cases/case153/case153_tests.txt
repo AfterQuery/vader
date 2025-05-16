@@ -1,0 +1,8 @@
+import requests
+
+def test_amazon_https_redirect():
+    asin = 'B07FZ8S74R'  # Example ASIN
+    url = f"https://www.amazon.com/dp/{asin}"
+    response = requests.get(url)
+    assert response.url.startswith("https://"), "URL must use HTTPS"
+    assert response.status_code in [200, 301, 302], "Valid response expected"

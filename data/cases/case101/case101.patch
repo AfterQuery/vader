@@ -1,0 +1,41 @@
+--- old/UploadComponent.js
++++ new/UploadComponent.js
+@@ -10,8 +10,27 @@
+ function UploadComponent() {
+   const [file, setFile] = useState(null);
+
+-  const handleFileChange = (e) => {
+-    setFile(e.target.files[0]);
++  const handleFileChange = (e) => {
++    const selectedFile = e.target.files[0];
++    if (!selectedFile) return;
++
++    // Validate file type
++    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
++    if (!allowedTypes.includes(selectedFile.type)) {
++      alert('Invalid file type. Only JPEG, PNG, or GIF images are allowed.');
++      return;
++    }
++
++    // Validate file size (optional)
++    const maxSize = 5 * 1024 * 1024; // 5MB
++    if (selectedFile.size > maxSize) {
++      alert('File is too large. Maximum size allowed is 5MB.');
++      return;
++    }
++
++    setFile(selectedFile);
++  }
++
+   return (
+     <div>
+       <input
+         type="file"
+         accept="image/*"
+         onChange={handleFileChange}
+       />
+-      {file && <p>Uploaded: {file.name}</p>}
++      {file && <p>Ready to upload: {file.name}</p>}
+     </div>
+   );
+ }

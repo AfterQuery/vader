@@ -1,0 +1,56 @@
+--- kitchen_app.py      2025-04-25 21:09:56.900206724 +0530
++++ kitchen_app_new.py      2025-04-25 21:09:45.920208473 +0530
+@@ -1,4 +1,5 @@
+ import tkinter as tk
++import re
+
+ started_orders = []
+ completed_orders = []
+@@ -24,22 +25,32 @@
+
+ entered_order = ""
+
++def sanitize_order(order):
++    # Allow only alphanumeric and basic punctuation, strip leading/trailing spaces
++    sanitized = re.sub(r'[^a-zA-Z0-9\s.,-]', '', order).strip()
++    return sanitized
++
+ def complete_order():
+-    global entered_order
+-    entered_order = entry.get()
+-    with open("completed_orders.txt", "a") as f:
+-        f.write(entered_order + "\n")
+-
+-    file_name = "started_orders.txt"
+-    value_to_remove = entered_order
+-
+-    with open(file_name, "r") as file:
+-        lines = file.readlines()
+-
+-    with open(file_name, "w") as file:
+-        for line in lines:
+-            if value_to_remove not in line:
+-                file.write(line)
++    order = entry.get()
++    sanitized_order = sanitize_order(order)
++    if not sanitized_order:
++        print("Invalid order input.")
++        return
++
++    try:
++        with open("completed_orders.txt", "a") as f:
++            f.write(sanitized_order + "\n")
++
++        file_name = "started_orders.txt"
++        with open(file_name, "r") as file:
++            lines = file.readlines()
++
++        with open(file_name, "w") as file:
++            for line in lines:
++                if sanitized_order not in line:
++                    file.write(line)
++    except IOError as e:
++        print(f"File operation failed: {e}")
+
+ def order_received():
+     global entered_order

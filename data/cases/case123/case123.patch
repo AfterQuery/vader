@@ -1,0 +1,11 @@
+--- f88aea41-56e1-43d2-9e80-5735bec3585f.js	2025-04-27
++++ f88aea41-56e1-43d2-9e80-5735bec3585f_fixed.js	2025-04-27
+@@
+- window.location.href = response.url;
++ const allowedBase = window.location.origin; 
++ const targetUrl = new URL(response.url, allowedBase);
++ if (targetUrl.origin === allowedBase) {
++     window.location.href = targetUrl.href;
++ } else {
++     console.error('Blocked open redirect attempt to: ', targetUrl.href);
++ }

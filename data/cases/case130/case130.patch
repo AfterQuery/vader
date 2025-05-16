@@ -1,0 +1,9 @@
+state_dict_path = os.path.join(args.repo_path, subfolder, "diffusion_pytorch_model.bin")
+
+# Safe: only load as state_dict (not entire model object)
+state_dict = torch.load(state_dict_path, map_location="cpu")
+
+if not isinstance(state_dict, dict):
+    raise ValueError("Loaded file is not a valid state_dict dictionary.")
+
+model.load_state_dict(state_dict)

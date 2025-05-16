@@ -1,0 +1,38 @@
+const userService = require('../services/userService');
+const jwt = require('jsonwebtoken');
+const mongoSanitize = require('mongo-sanitize');
+
+// Mock User model
+jest.mock('../database/models/userModel', () => ({
+  findOne: jest.fn(),
+  findOneAndUpdate: jest.fn(),
+  prototype: { save: jest.fn() }
+}));
+
+describe('User Service NoSQL Injection Tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should sanitize email in createUser', async () => {
+    const serviceData = { email: { $gt: '' }, password: 'test123', firstName: 'Test', lastName: 'User', userName: 'testuser' };
+    await expect(userService.createUser(serviceData)).rejects.toThrow();
+  });
+
+  test('should sanitize email in loginUser', async () => {
+    const serviceData = { email: { $gt: '' }, password: 'test123' };
+    await expect(userService.loginUser(serviceData)).rejects.toThrow();
+  });
+
+  test('should sanitize user id in getUserProfile', async () => {
+    const token = jwt.sign({ id: { $gt: '' } }, 'default-secret-key');
+    const serviceData = { headers: { authorization: `Bearer ${token}` } };
+    await expect(userService.getUserProfile(serviceData)).rejects.toThrow();
+  });
+
+  test('should sanitize user id and userName in updateUserProfile', async () => {
+    const token = jwt.sign({ id: { $gt: '' } }, 'default-secret-key');
+    const serviceData = { headers: { authorization: `Bearer ${token}` }, body: { userName: { $ne: 'admin' } } };
+    await expect(userService.updateUserProfile(serviceData)).rejects.toThrow();
+  });
+});

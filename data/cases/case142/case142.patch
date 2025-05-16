@@ -1,0 +1,42 @@
+@app.route('/data', methods=['GET', 'POST'])
+def upload_file():
+    # Ensure the user is authenticated
+    if 'role' not in session or session['role'] not in ['admin', 'user']:
+        flash('Unauthorized access')
+        return redirect('/signin')
+
+    tools.empty_folder('uploads')
+    if request.method == 'POST':
+        # Check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        
+        # Validate the filename
+        if file.filename == '':
+            flash('No selected file')
+            return 'NO FILE SELECTED'
+
+        if file and allowed_file(file.filename):
+            try:
+                # Save file securely
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                
+                # Log upload details for auditing
+                with open('raw_data/meta_data.txt', 'a') as meta_file:
+                    meta_file.write(filename + '\n')
+                
+                # Encrypt the file after upload
+                return start_encryption()
+
+            except Exception as e:
+                flash(f"File upload failed: {str(e)}")
+                return 'File upload failed'
+        else:
+            flash('Invalid file type')
+            return 'Invalid File Format!'
+    
+    return 'Invalid Request!'

@@ -1,0 +1,30 @@
+const assert = require('assert');
+const request = require('supertest');
+const fs = require('fs');
+const path = require('path');
+const app = require('../app'); // hypothetical app import
+
+describe('File Upload Tests', () => {
+  it('should reject SVG uploads with valid extension', async () => {
+    const res = await request(app)
+      .post('/upload')
+      .attach('file', fs.readFileSync('./tests/files/malicious.svg'), 'malicious.svg');
+    assert.strictEqual(res.status, 400);
+    assert.ok(res.text.includes('svg-upload-not-allowed'));
+  });
+
+  it('should reject mismatched MIME type (jpg with JS inside)', async () => {
+    const res = await request(app)
+      .post('/upload')
+      .attach('file', fs.readFileSync('./tests/files/evil.jpg'), 'evil.jpg');
+    assert.strictEqual(res.status, 400);
+    assert.ok(res.text.includes('invalid-mime-type'));
+  });
+
+  it('should accept a clean PNG file', async () => {
+    const res = await request(app)
+      .post('/upload')
+      .attach('file', fs.readFileSync('./tests/files/clean.png'), 'clean.png');
+    assert.strictEqual(res.status, 200);
+  });
+});

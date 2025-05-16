@@ -1,0 +1,47 @@
+@@ def refresh(response: Response, Authorize: AuthJWT = Depends()):
+-    response.set_cookie(
+-        key="access_token_cookie",
+-        value=new_access_token,
+-        httponly=False,
+-        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+-        expires=int(timedelta(hours=8).total_seconds()),
+-    )
++    response.set_cookie(
++        key="access_token_cookie",
++        value=new_access_token,
++        httponly=True,
++        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
++        expires=int(timedelta(hours=8).total_seconds()),
++    )
+
+@@ async def login(...):
+-    response.set_cookie(
+-        key="access_token_cookie",
+-        value=access_token,
+-        httponly=False,
+-        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+-        expires=int(timedelta(hours=8).total_seconds()),
+-    )
++    response.set_cookie(
++        key="access_token_cookie",
++        value=access_token,
++        httponly=True,
++        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
++        expires=int(timedelta(hours=8).total_seconds()),
++    )
+
+@@ async def third_party_login(...):
+-    response.set_cookie(
+-        key="access_token_cookie",
+-        value=access_token,
+-        httponly=False,
+-        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+-        expires=int(timedelta(hours=8).total_seconds()),
+-    )
++    response.set_cookie(
++        key="access_token_cookie",
++        value=access_token,
++        httponly=True,
++        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
++        expires=int(timedelta(hours=8).total_seconds()),
++    )

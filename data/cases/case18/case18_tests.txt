@@ -1,0 +1,33 @@
+Test Cases for Open Redirect Fix in Backbone.History
+
+🔹 Test Case 1: Safe Same-Origin Redirect
+•	Description: Ensure that a same-origin URL is allowed.
+•	Input: /dashboard
+•	Expected Behavior: location.assign() is called, and redirection occurs.
+•	Purpose: Validate that legitimate internal redirects still work after the patch.
+
+🔹 Test Case 2: Unsafe External Redirect
+•	Description: Block an external redirection attempt.
+•	Input: https://evil.com
+•	Expected Behavior: Redirect is blocked, location.assign() is not called.
+•	Console Output: Blocked unsafe redirect attempt: https://evil.com
+•	Purpose: Ensure the patch correctly prevents redirection to external domains.
+
+🔹 Test Case 3: Malformed URL
+•	Description: Handle invalid/malformed URLs gracefully.
+•	Input: http://
+•	Expected Behavior: Redirect is blocked, no exception is thrown.
+•	Purpose: Ensure that malformed input doesn't crash the app and is properly rejected.
+
+🔹 Test Case 4: Empty or Null URL
+•	Description: Prevent redirection when URL is null, undefined, or empty.
+•	Input: "" or null
+•	Expected Behavior: No redirection occurs, function exits silently or logs a warning.
+•	Purpose: Catch edge cases that might bypass the redirect logic.
+
+🔹 Test Case 5: Redirect with JavaScript URL Scheme
+•	Description: Prevent dangerous schemes like javascript:alert(1)
+•	Input: javascript:alert(1)
+•	Expected Behavior: Redirect is blocked.
+•	Purpose: Prevent XSS and ensure scheme validation.
+

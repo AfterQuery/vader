@@ -1,0 +1,7 @@
+- var findResult = recMan.Find(query);
++ ValidateQueryFields(query);
++ var findResult = recMan.Find(SanitizeQuery(query));
+
+- return DoResponse(new EntityRelationManager().Create(relation));
++ ValidateRelationData(relation);
++ return DoResponse(new EntityRelationManager().Create(SanitizeRelation(relation)));

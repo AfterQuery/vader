@@ -1,0 +1,27 @@
+diff --git a/assistant.py b/assistant.py
+index 1234567..89abcde 100644
+--- a/assistant.py
++++ b/assistant.py
+@@
+-import os
++import os
++import subprocess
+@@ if "shutdown" in query:
+-            os.system("shutdown /s /f /t 1")
++            subprocess.run(
++                ["shutdown", "/s", "/f", "/t", "1"],
++                shell=False,
++                check=True
++            )  # Safer, parameterized call
++            subprocess.run(
++                ["shutdown", "/s"],
++                shell=False,
++                check=True
++            )  # Additional parameterized shutdown
+@@ if "restart" in query:
+-            os.system("shutdown /r /f /t 1")
++            subprocess.run(
++                ["shutdown", "/r", "/f", "/t", "1"],
++                shell=False,
++                check=True
++            )  # Safer, parameterized restart

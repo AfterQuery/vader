@@ -1,0 +1,11 @@
+diff --git a/server.js b/server.js
+index abcdef1..1234567 100644
+--- a/server.js
++++ b/server.js
+@@ app.get('/get-project-files', (req, res) => {
+-    const projectName = req.query['project-name'];
+-    const filePath = `./projects/${projectName}`;
++    const path = require('path');
++    const projectName = req.query['project-name'];
++    const safeProjectName = path.basename(projectName);
++    const filePath = path.join(__dirname, 'projects', safeProjectName);

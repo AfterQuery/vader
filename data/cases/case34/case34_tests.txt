@@ -1,0 +1,6 @@
+// This simulates calling the C++ WebAssembly-exposed function unsafely
+var input = "A".repeat(32); // Exceeds buffer
+var ptr = Module._malloc(input.length);
+Module.stringToUTF8(input, ptr, input.length + 1);
+Module._writeToBuffer(ptr, input.length); // unsafe
+Module._free(ptr);

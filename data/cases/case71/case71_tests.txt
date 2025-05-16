@@ -1,0 +1,19 @@
+# tests/test_integrity.py
+
+from bs4 import BeautifulSoup
+
+def test_integrity_attribute():
+    with open("index.html", "r", encoding="utf-8") as file:
+        soup = BeautifulSoup(file, "html.parser")
+
+    scripts = soup.find_all("script", src=True)
+    links = soup.find_all("link", href=True)
+
+    for tag in scripts + links:
+        if "code.jquery.com" in tag.get('src', '') or "code.jquery.com" in tag.get('href', ''):
+            assert tag.get("integrity") is not None, f"Missing integrity in {tag}"
+            assert tag.get("crossorigin") == "anonymous", f"Missing crossorigin in {tag}"
+
+if __name__ == "__main__":
+    test_integrity_attribute()
+    print("All integrity checks passed!")

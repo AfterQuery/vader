@@ -1,0 +1,29 @@
+--- a/RegisterController.php
++++ b/RegisterController.php
+@@ public function register(Request $request)
+ {
+-    $this->validator($request->all())->validate();
+-    event(new Registered($user = $this->create($request->all())));
+-    $user->role()->sync([3]);
+-    $this->guard()->login($user);
+-    return $this->registered($request, $user)
+-        ?: redirect($request->input('redirect_url'));
++    $this->validator($request->all())->validate();
++
++    event(new Registered($user = $this->create($request->all())));
++
++    $user->role()->sync([3]);
++
++    $this->guard()->login($user);
++
++    $redirectUrl = $request->input('redirect_url', $this->redirectTo);
++
++    // Only allow internal redirects
++    if (!preg_match('/^\/[a-zA-Z0-9\/\-_]*$/', $redirectUrl)) {
++        $redirectUrl = $this->redirectTo; // fallback to default
++    }
++
++    return $this->registered($request, $user) ?: redirect($redirectUrl);
+ }
+
+

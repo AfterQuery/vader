@@ -1,0 +1,35 @@
+--- calendar-setup.js	2024-04-26 12:00:00.000000000 +0530
++++ calendar-setup.js	2024-04-26 12:15:00.000000000 +0530
+@@
+-    if (update && p.displayArea)
+-        p.displayArea.innerHTML = cal.date.print(p.daFormat);
++    if (update && p.displayArea)
++        p.displayArea.textContent = cal.date.print(p.daFormat);
+@@
+-    if (dateEl)
+-        params.date = Date.parseDate(dateEl.value || dateEl.innerHTML, dateFmt);
++    if (dateEl)
++        params.date = Date.parseDate(dateEl.value || dateEl.textContent, dateFmt);
+@@
+-            if (typeof p.flatCallback == "function")
+-                p.flatCallback(cal);
++            if (typeof p.flatCallback == "function")
++                p.flatCallback(cal);
+@@
+-            params.flat = document.getElementById(params.flat);
++            params.flat = document.getElementById(params.flat);
+@@
+-    if (params.inputField && typeof params.inputField.value == "string") {
+-        cal.parseDate(params.inputField.value);
++    if (params.inputField && typeof params.inputField.value == "string") {
++        cal.parseDate(params.inputField.value);
+@@
+-    if (!params.position)
+-        cal.showAtElement(params.button || params.displayArea || params.inputField, params.align);
++    if (!params.position)
++        cal.showAtElement(params.button || params.displayArea || params.inputField, params.align);
+@@
+-    if (update && p.displayArea)
+-        p.displayArea.innerHTML = cal.date.print(p.daFormat);
++    if (update && p.displayArea)
++        p.displayArea.textContent = cal.date.print(p.daFormat);

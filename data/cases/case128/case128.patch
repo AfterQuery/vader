@@ -1,0 +1,13 @@
+@@ <head>
+-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+-  <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
++  <link rel="stylesheet" href="https://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css"
++    integrity="sha384-INSERT-CORRECT-HASH-HERE" crossorigin="anonymous" />
++  <script src="https://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"
++    integrity="sha384-INSERT-CORRECT-HASH-HERE" crossorigin="anonymous"></script>
+
+-  <script src="../cesium/Build/Cesium/Cesium.js"></script>
++  <script src="../cesium/Build/Cesium/Cesium.js"></script> <!-- Local script, no integrity needed -->
+
+-  <script src="http://localhost:9810/compile?id=api-debug"></script>
++  <script src="http://localhost:9810/compile?id=api-debug"></script> <!-- Localhost for dev testing -->

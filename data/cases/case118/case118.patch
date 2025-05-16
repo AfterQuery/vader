@@ -1,0 +1,5 @@
+--- workorder.js	2025-04-27
++++ workorder_fixed.js	2025-04-27
+@@
+- $('#autoSuggestionsList').html(data);
++ $('#autoSuggestionsList').html(DOMPurify.sanitize(data));

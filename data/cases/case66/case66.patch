@@ -1,0 +1,19 @@
+diff --git a/School_Management_System.py b/School_Management_System.py
+index e69de29..d95f3ad 100644
+--- a/School_Management_System.py
++++ b/School_Management_System.py
+@@ def reset_fields():
+-    global name_strvar, email_strvar, contact_strvar, gender_strvar, dob, stream_strvar
+-
+-    for i in ['name_strvar', 'email_strvar', 'contact_strvar', 'gender_strvar', 'stream_strvar']:
+-        exec(f"{i}.set('')")
+-    dob.set_date(datetime.datetime.now().date())
++    global name_strvar, email_strvar, contact_strvar, gender_strvar, dob, stream_strvar
++
++    # Securely reset each field without using exec
++    name_strvar.set('')
++    email_strvar.set('')
++    contact_strvar.set('')
++    gender_strvar.set('')
++    stream_strvar.set('')
++    dob.set_date(datetime.datetime.now().date())

@@ -1,0 +1,17 @@
+from fpdf import FPDF
+import tempfile
+
+def safe_extract_text(pdf_file):
+    MAX_SIZE = 10 * 1024 * 1024  # 10MB
+    if len(pdf_file.read()) > MAX_SIZE:
+        raise ValueError("File too large")
+    pdf_file.seek(0)
+    
+    if not pdf_file.read(4) == b'%PDF':
+        raise ValueError("Invalid PDF")
+    pdf_file.seek(0)
+    
+    with tempfile.NamedTemporaryFile() as tmp:
+        tmp.write(pdf_file.read())
+        reader = PdfReader(tmp.name)
+        return "".join(page.extract_text() for page in reader.pages)

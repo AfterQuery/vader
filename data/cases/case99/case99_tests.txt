@@ -1,0 +1,24 @@
+Clone the repository:
+
+git clone "https://github.com/arindhimar/VideoStreamingPlatform/"
+cd animex
+Install the required packages:
+
+ pip install -r requirements.txt
+Set up your environment variables in a .env file. You can use the example .env.example file provided in the repository as a reference.
+
+Run the application:
+
+python app.py
+Open your web browser and navigate to http://127.0.0.1:5000/ to access the ANIMEX platform
+
+nput malicious SQL commands as username or password:
+
+' OR 1=1 -- 
+
+or
+
+
+' UNION SELECT null, null, null, null FROM information_schema.tables --
+
+Observe the application behavior. The system may return unauthorized access or sensitive data.

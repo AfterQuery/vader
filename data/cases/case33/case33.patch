@@ -1,0 +1,12 @@
+diff --git a/vulnerable.c b/vulnerable.c
+index abcdef1..1234567 100644
+--- a/vulnerable.c
++++ b/vulnerable.c
+@@ void process_input(const char* input, int length) {
+-    char buffer[16];
+-    memcpy(buffer, input, length);
++    char buffer[16];
++    int safe_length = length < 16 ? length : 15;
++    memcpy(buffer, input, safe_length);
++    buffer[safe_length] = '\0'; // Ensure null-termination
+}

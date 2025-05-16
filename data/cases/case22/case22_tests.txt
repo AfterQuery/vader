@@ -1,0 +1,5 @@
+// Simulate unsafe call from JS into WebAssembly
+const ptr = Module._malloc(64);
+Module.HEAPU8.set(new Uint8Array(64).fill(0x41), ptr);
+Module._decode_frame(ptr, 64);  // Exceeds 16-byte buffer
+Module._free(ptr);

@@ -1,0 +1,19 @@
+--- global.js	2025-04-27
++++ global_fixed.js	2025-04-27
+@@
+- if (response.data.redirect) {
+-     window.location.href = response.data.redirect;
+- }
++ if (response.data.redirect) {
++     const allowedOrigin = window.location.origin;
++     try {
++         const targetUrl = new URL(response.data.redirect, allowedOrigin);
++         if (targetUrl.origin === allowedOrigin) {
++             window.location.href = targetUrl.href;
++         } else {
++             console.error('Blocked open redirect attempt to:', targetUrl.href);
++         }
++     } catch (e) {
++         console.error('Invalid redirect URL');
++     }
++ }

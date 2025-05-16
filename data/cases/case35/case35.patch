@@ -1,0 +1,25 @@
+diff --git a/internal/route/repo/webhook.go b/internal/route/repo/webhook.go
+index abcdef1..1234567 100644
+--- a/internal/route/repo/webhook.go
++++ b/internal/route/repo/webhook.go
+@@ func validateWebhook(url string) error {
+-   payloadURL, err := webhook.NormalizeURL(url)
+-   if err != nil {
+-       return fmt.Errorf("NormalizeURL: %w", err)
+-   }
+-
+-   if netutil.IsBlockedLocalHostname(payloadURL.Hostname(), conf.Security.LocalNetworkAllowlist) {
+-       return fmt.Errorf("URL hostname is blocked: %s", payloadURL.Hostname())
+-   }
++   payloadURL, err := webhook.NormalizeURL(url)
++   if err != nil {
++       return fmt.Errorf("NormalizeURL: %w", err)
++   }
++
++   resolvedIP, err := netutil.ResolveToIP(payloadURL.Hostname())
++   if err != nil {
++       return fmt.Errorf("DNS resolution failed: %w", err)
++   }
++   if netutil.IsPrivateIP(resolvedIP) {
++       return fmt.Errorf("Blocked potential SSRF to internal IP: %s", resolvedIP)
++   }

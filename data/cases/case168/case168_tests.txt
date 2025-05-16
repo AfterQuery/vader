@@ -1,0 +1,15 @@
+# tests/test_flask_host.py
+
+import requests
+import pytest
+
+def test_localhost_binding():
+    try:
+        response = requests.post('http://127.0.0.1:5000/mcmt', json={'X': [1,2,3]})
+        assert response.status_code == 200
+    except requests.ConnectionError:
+        pytest.fail("Failed to connect to Flask app on 127.0.0.1")
+
+if __name__ == "__main__":
+    test_localhost_binding()
+    print("Flask host binding test passed!")

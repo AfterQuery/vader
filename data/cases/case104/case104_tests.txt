@@ -1,0 +1,38 @@
+TEST CASES
+Test Cases for Logical Flaws in Book Management
+1. Duplicate Book Issuance
+Objective: Ensure the same book cannot be issued to multiple students.
+Steps:
+2. Incorrect Fine Calculation
+Objective: Verify fines are calculated as 15 Rs/day after 15 days.
+Steps:
+3. Invalid Book Return
+Objective: Prevent returning unissued books.
+Steps:
+1. Add a book ( bno = "B101" ).
+2. Issue B101 to Student S001 .
+3. Attempt to issue B101 to Student S002 .
+Expected Result: Second issuance fails with "Book unavailable!"
+Status: Pass/Fail
+1. Issue a book to a student.
+2. Return the book after 20 days.
+Expected Result: Fine = (20-15)*15 = 75 Rs.
+Status: Pass/Fail
+1. Attempt to return a book for a student with token = 0 .
+Expected Result: "No book issued!" error.
+Status: Pass/Fail
+4. Over-Issuance Beyond Copies
+Objective: Block issuing more books than available copies.
+Steps:
+5. Token Consistency After Return
+Objective: Ensure tokens reset only after valid returns.
+Steps:
+1. Add a book ( B102 ) with copies = 2 .
+2. Issue B102 to three students.
+Expected Result: Third issuance fails with "No copies available!"
+Status: Pass/Fail
+1. Issue a book to S001 .
+2. Return the book.
+3. Attempt to return the book again.
+Expected Result: Second return fails with "No book issued!"
+Status: Pass/Fail

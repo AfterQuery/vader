@@ -1,0 +1,12 @@
+diff --git a/decode_frame.cpp b/decode_frame.cpp
+index abcdef1..1234567 100644
+--- a/decode_frame.cpp
++++ b/decode_frame.cpp
+@@ void decode_frame(uint8_t* data, int len) {
+-        for (int i = 0; i < len; ++i) {
+-            buffer[i] = data[i]; // No bounds check
++        int safe_len = len > 16 ? 16 : len;
++        for (int i = 0; i < safe_len; ++i) {
++            buffer[i] = data[i];
+        }
+}

@@ -1,0 +1,32 @@
+Cross-Site Scripting (XSS)
+Purpose: Ensure the application sanitizes and escapes user input to prevent XSS.
+
+Test Case 1: Malicious Script Injection in Email
+Input: <script>alert('XSS')</script> in the email field.
+
+Expected Result: The input is sanitized and displayed as plain text. No JavaScript executes.
+
+Test Case 2: Safe Email Input
+Input: user@example.com in the email field.
+
+Expected Result: The input is accepted and displayed safely in toast messages.
+
+Test Code for XSS:
+
+import DOMPurify from 'dompurify';
+
+test('Sanitize malicious input to prevent XSS', () => {
+    const maliciousInput = "<script>alert('XSS')</script>";
+    const sanitizedInput = DOMPurify.sanitize(maliciousInput);
+
+    // Assert input is sanitized
+    expect(sanitizedInput).toBe("&lt;script&gt;alert('XSS')&lt;/script&gt;");
+});
+
+test('Allow safe email input', () => {
+    const safeInput = "user@example.com";
+    const sanitizedInput = DOMPurify.sanitize(safeInput);
+
+    // Assert input is unchanged for valid email
+    expect(sanitizedInput).toBe("user@example.com");
+});

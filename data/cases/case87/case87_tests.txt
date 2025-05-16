@@ -1,0 +1,53 @@
+TEST CASES
+Test Case 1
+Field: Name
+Input: John Doe
+Expected Behavior: Accept input and save record.
+Test Case 2
+Field: Name
+Input: John123
+Expected Behavior: Show error message: "Name should only contain letters and spaces."
+Test Case 3
+Field: Name
+Input: @!#Name
+Expected Behavior: Show error message: "Name should only contain letters and spaces."
+Test Case 4
+Field: Email
+Input: john@example.com
+Expected Behavior: Accept input and save record.
+Test Case 5
+Field: Email
+Input: john.example.com
+Expected Behavior: Show error message: "Please enter a valid email address."
+Test Case 6
+Field: Email
+Input: john@com
+Expected Behavior: Show error message: "Please enter a valid email address."
+Test Case 7
+Field: Email
+Input: <script>alert(1)</script>@email.com
+Expected Behavior: Show error message: "Please enter a valid email address."
+Test Case 8
+Field: Contact Number
+Input: 9876543210
+Expected Behavior: Accept input and save record.
+Test Case 9
+Field: Contact Number
+Input: 98765abcd0
+Expected Behavior: Show error message: "Phone number must be exactly 10 digits."
+Test Case 10
+Field: Contact Number
+Input: 987654
+Expected Behavior: Show error message: "Phone number must be exactly 10 digits."
+Test Case 11
+Field: Contact Number
+Input: 98765432101
+Expected Behavior: Show error message: "Phone number must be exactly 10 digits."
+Test Case 12
+Field: All Fields
+Input: Leave some fields empty
+Expected Behavior: Show error message: "Please fill all the missing fields!!"
+Test Case 13
+Field: All Fields
+Input: Fill fields with only spaces " "
+Expected Behavior: Show error for missing fields or invalid format depending on the field.

@@ -1,0 +1,14 @@
+import uuid
+
+def secure_filename(filename):
+    unique_id = uuid.uuid4().hex
+    return f"{unique_id}_{filename}"
+
+@app.post("/api/upload")
+async def upload_files(files: list[UploadFile] = File(...)):
+    for file in files:
+        secure_name = secure_filename(file.filename)
+        file_path = UPLOADS_DIR / secure_name
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)

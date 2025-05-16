@@ -1,0 +1,21 @@
+// tests/server_timeout_test.go
+
+package main
+
+import (
+	"net/http"
+	"testing"
+	"time"
+)
+
+func TestServerReadHeaderTimeout(t *testing.T) {
+	srv := &http.Server{
+		Addr:              ":9000",
+		Handler:           http.NewServeMux(),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	if srv.ReadHeaderTimeout != 5*time.Second {
+		t.Errorf("Expected ReadHeaderTimeout to be 5s, got %v", srv.ReadHeaderTimeout)
+	}
+}

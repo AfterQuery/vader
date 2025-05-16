@@ -1,0 +1,47 @@
+Test Case 1 (Positive)
+•	Objective: Redirect internally to a safe page.
+•	Input:
+o	response.url = "/dashboard"
+•	Expected Result:
+o	Browser redirects to https://yourapp.com/dashboard.
+•	Outcome:
+Redirect successful.
+
+Test Case 2 (Negative)
+•	Objective: Prevent redirection to an external malicious domain.
+•	Input:
+o	response.url = "https://evil.com/phish"
+•	Expected Result:
+o	Redirection is blocked.
+o	Error logged: "Blocked open redirect attempt to: https://evil.com/phish"
+•	Outcome:
+No redirect happens.
+
+Test Case 3 (Negative)
+•	Objective: Prevent JavaScript schemes (XSS risk).
+•	Input:
+o	response.url = "javascript:alert('XSS')"
+•	Expected Result:
+o	Redirection is blocked.
+o	No alert is executed.
+•	Outcome:
+ Secure blocking.
+
+Test Case 4 (Positive)
+•	Objective: Redirect to a deeper internal route safely.
+•	Input:
+o	response.url = "/user/profile/settings"
+•	Expected Result:
+o	Redirects to https://yourapp.com/user/profile/settings.
+•	Outcome:
+Redirect successful.
+Test Case 5 (Negative)
+•	Objective: Prevent bypass tricks using double slashes or encoded URLs.
+•	Input:
+o	response.url = "//evil.com"
+•	Expected Result:
+o	Treated as an absolute URL to evil.com → gets blocked.
+o	Error logged.
+•	Outcome:
+Bypass attempt blocked.
+

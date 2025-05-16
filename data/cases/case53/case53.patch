@@ -1,0 +1,82 @@
+diff --git a/LMSCode.cpp b/LMSCode.cpp
+index abc1234..def5678 100644
+--- a/LMSCode.cpp
++++ b/LMSCode.cpp
+@@ -1,24 +1,25 @@
+-#include <iostream.h>
+-#include<conio.h>
+-#include<iomanip.h>//input-output manipulator
+-#include<stdlib.h> 
+-#include<string.h>
+-#include<stdio.h>
+-#include<fstream.h>
++#include <iostream>
++#include <iomanip>
++#include <cstdlib> 
++#include <cstring>
++#include <cstdio>
++#include <fstream>
++#include <limits>
++using namespace std;
++
+ class book
+ {
+ 	char bno[6];//bookno.
+ 	char bname[50];//bookname
+ 	char aname[20];//authorname
+ 	public:
+ 	void createbook()
+ 	{
+ 		cout<<"\nNEW BOOK ENTRY...\n";
+ 		cout<<"\nENTER BOOK NO.";
+-		cin>>bno;
++		cin>>setw(6)>>bno;
++		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+ 		cout<<"\nENTER BOOK NAME";
+-		gets(bname);//enables enter with space
++		cin.getline(bname, 50);
+ 		cout<<"\nENTER AUTHOR NAME";
+-		gets(aname);
++		cin.getline(aname, 20);
+ 		cout<<"\n\n\nBook Created..";
+ 	}
+ 	void showbook()
+@@ -57,9 +58,10 @@
+ 		clrscr();
+ 		cout<<"\nNEW STUDENT ENTRY...\n";
+ 		cout<<"\nEnter The Admission No. ";
+-		cin>>admno;
++		cin>>setw(6)>>admno;
++		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+ 		cout<<"Enter The Student Name ";
+-		gets(name);
++		cin.getline(name, 20);
+ 		token=0;
+ 		stbno[0]='\0';
+ 		cout<<"\n\nStudent Record Created...";
+@@ -77,7 +79,7 @@
+ 	{
+ 		cout<<"\nAdmission No. "<<admno;
+ 		cout<<"\nModify Student Name : ";
+-		gets(name);
++		cin.getline(name, 20);
+ 	}
+ 	char* retadmno()
+ 	{
+@@ -418,7 +420,6 @@
+  gotoxy(35,17);
+  cout<<"SYSTEM";
+  cout<<" \n  by: Chahat"; 
+- getch();
+ }
+ void adminmenu()
+ {
+@@ -482,7 +483,7 @@
+ 	cout<<"\n\n\n\t3 ADMINISTRATOR MENU"; 
+ 	cout<<"\n\n\n\t4 EXIT";
+ 	cout<<"\n\n\n\t PLEASE SELECT YOUR OPTION(1-4)";  
+-	ch=getche();
++	cin>>ch;
+ 	switch(ch)
+ 	{ case '1': bookissue(); 
+ 	  break;

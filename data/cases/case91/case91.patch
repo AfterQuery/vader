@@ -1,0 +1,22 @@
+diff --git a/reflex/state.py b/reflex/state.py
+index 1a2b3c4..d3f4a5e 100644
+--- a/reflex/state.py
++++ b/reflex/state.py
+@@ -123,7 +123,7 @@ class StateManager:
+         """
+         if serialized_state is None:
+             return cls()
+-        return pickle.loads(serialized_state)
++        return json.loads(serialized_state)
+ 
+     async def get_state(self, token: str) -> BaseState:
+         """Get the state for a token.
+@@ -135,7 +135,7 @@ class StateManager:
+             The state for the token.
+         """
+         # Get the serialized state from storage.
+-        serialized_state = await self._get(token)
++        serialized_state = await self._get(token).encode('utf-8')
+         if serialized_state is None:
+             return self.state().reset()
+         return self._deserialize_state(serialized_state)

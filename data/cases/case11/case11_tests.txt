@@ -1,0 +1,5 @@
+Test cases:
+- Open Redirection
+- JavaScript Injection (javascript:alert(1))
+- Malformed URLs (e.g., http:///attacker.com)
+- Phishing via External Domains 

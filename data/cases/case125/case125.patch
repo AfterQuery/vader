@@ -1,0 +1,48 @@
+diff --git a/saas/api/server/api/public.ts b/saas/api/server/api/public.ts
+index b3a2d22..f4e123c 100644
+--- a/saas/api/server/api/public.ts
++++ b/saas/api/server/api/public.ts
+@@
+ import * as express from 'express';
++import { body, validationResult } from 'express-validator';
+
+ const router = express.Router();
+
+ router.post(
+-  '/get-user-by-slug',
+-  async (req, res, next) => {
+-    console.log('Express route: /get-user-by-slug');
+-
+-    try {
+-      const { slug } = req.body;
+-
+-      const user = await User.getUserBySlug({ slug });
+-
+-      res.json({ user });
+-    } catch (err) {
+-      next(err);
+-    }
+-  }
++  '/get-user-by-slug',
++  [
++    body('slug')
++      .isString()
++      .isLength({ min: 1, max: 100 })
++      .matches(/^[a-zA-Z0-9-_]+$/)
++      .withMessage('Invalid slug format.'),
++  ],
++  async (req, res, next) => {
++    console.log('Express route: /get-user-by-slug');
++    const errors = validationResult(req);
++    if (!errors.isEmpty()) {
++      return res.status(400).json({ errors: errors.array() });
++    }
++    try {
++      const { slug } = req.body;
++      const user = await User.getUserBySlug({ slug });
++      res.json({ user });
++    } catch (err) {
++      next(err);
++    }
++  }
+ );

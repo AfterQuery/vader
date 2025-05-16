@@ -1,0 +1,36 @@
+--- a/src/components/BlogList.js
++++ b/src/components/BlogList.js
+@@ import { Link } from "react-router-dom";
+
+ const BlogList = ({ blogs, title, body }) => {
++  // Safe regex for valid IDs (letters, numbers, dash, underscore only)
++  const isValidId = (id) => /^[a-zA-Z0-9_-]+$/.test(id);
+
+   return (
+     <div className="blog-list">
+       {blogs.map(blog => (
+-        <div className="blog-preview" key={blog.id}>
+-          <Link to={`blog/${blog.id}`}>
+-            <h2>{ blog.title }</h2>
+-            <p>Written by { blog.author }</p>
+-          </Link>
+-        </div>
++        <div className="blog-preview" key={blog.id}>
++          {isValidId(blog.id) ? (
++            <Link to={`blog/${blog.id}`}>
++              <h2>{ blog.title }</h2>
++              <p>Written by { blog.author }</p>
++            </Link>
++          ) : (
++            <div>
++              <h2>Invalid Blog</h2>
++              <p>Unsafe blog ID detected</p>
++            </div>
++          )}
++        </div>
+       ))}
+     </div>
+   );
+ }
+ 
+ export default BlogList;

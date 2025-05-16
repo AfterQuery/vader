@@ -1,0 +1,28 @@
+# tests/test_safe_eval.py
+
+import unittest
+import importlib
+import ast
+
+class TestSafeEval(unittest.TestCase):
+
+    def test_safe_import(self):
+        math_module = importlib.import_module("math")
+        sqrt_func = getattr(math_module, "sqrt", None)
+        self.assertIsNotNone(sqrt_func)
+        self.assertEqual(sqrt_func(9), 3.0)
+
+    def test_safe_pipeline_eval(self):
+        code_str = "'ValidPipeline'"
+        compiled_code = compile(code_str, "<string>", "eval")
+        evaluated_value = eval(compiled_code, {"__builtins__": {}}, {})
+        self.assertEqual(evaluated_value, "ValidPipeline")
+
+    def test_no_system_access(self):
+        code_str = "__import__('os').system('echo hacked')"
+        compiled_code = compile(code_str, "<string>", "eval")
+        with self.assertRaises(NameError):
+            eval(compiled_code, {"__builtins__": {}}, {})
+
+if __name__ == "__main__":
+    unittest.main()

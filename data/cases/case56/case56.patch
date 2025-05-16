@@ -1,0 +1,10 @@
+--- lib/config.js
++++ lib/config.js
+@@ function config(obj) {
+-  for (let key in obj) {
+-    this[key] = obj[key]; // No protection against __proto__
++  for (let key in obj) {
++    if (['__proto__', 'constructor', 'prototype'].includes(key)) continue;
++    this[key] = obj[key];
+   }
+}

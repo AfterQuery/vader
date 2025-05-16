@@ -1,0 +1,59 @@
+import unittest
+from django.db import connection
+from django.test import TestCase
+from django.db import models
+from django.db.models import F
+from django.db.models.expressions import Func, Value
+
+class TestSQLInjectionVulnerability(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # Dynamically define a model with a JSONField for testing
+        class VulnerableModel(models.Model):
+            json_data = models.JSONField(default=dict)
+            class Meta:
+                app_label = 'vulnerability_tests'
+        
+        cls.VulnerableModel = VulnerableModel
+        # Create an instance without any data to test unexpected returns
+        cls.VulnerableModel.objects.create(json_data={})
+
+    def test_oracle_has_key_sql_injection(self):
+        """
+        Test if untrusted data in JSON HasKey lookup leads to SQL Injection on Oracle.
+        """
+        # Skip test if the database is not Oracle
+        if connection.vendor != 'oracle':
+            raise unittest.SkipTest("Test specific to Oracle database")
+
+        # Simulate untrusted user input attempting SQL Injection
+        malicious_key = "malicious') OR 1=1 --"
+        
+        # Construct query using Func to mimic dynamic key access (vulnerable scenario)
+        # For Oracle, the JSON path is generated with the key, which may be vulnerable
+        queryset = self.VulnerableModel.objects.annotate(
+            injected_key=Func(
+                F('json_data'),
+                Value(malicious_key),
+                function='JSON_QUERY',  # Oracle-specific function for JSON access
+                template='%(expressions)s'
+            )
+        ).filter(injected_key__has_key='any_key')
+
+        # If vulnerable, this query would return all records (due to 'OR 1=1')
+        count = queryset.count()
+        self.assertEqual(count, 0, 
+            f"Vulnerability detected: SQL Injection succeeded. Returned {count} records, expected 0.")
+
+    def test_safe_has_key_usage(self):
+        """
+        Ensure safe usage of HasKey lookup with trusted data works correctly.
+        """
+        safe_key = 'valid_key'
+        # Create an instance with the safe key
+        self.VulnerableModel.objects.create(json_data={safe_key: 'value'})
+        
+        # Normal query with safe key
+        queryset = self.VulnerableModel.objects.filter(json_data__has_key=safe_key)
+        self.assertEqual(queryset.count(), 1, 
+            "Safe query failed. Expected 1 record, got %d" % queryset.count())

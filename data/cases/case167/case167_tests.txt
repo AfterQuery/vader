@@ -1,0 +1,93 @@
+Test Case 1: Detect Hardcoded API Key in Source Code
+Objective: Ensure the API key is not exposed in the bundled JavaScript files.
+
+Test Type: Static analysis / Manual inspection
+
+Steps:
+
+Build the React app using npm run build
+
+Open build/static/js/main.*.js in a text editor or browser dev tools
+
+Search for 407327cef93c632e2549e6440178f6a7
+
+Expected Result:
+FAIL if the API key is visible
+PASS if the key is not exposed (or only appears server-side)
+
+ Test Case 2: Input Validation for Malicious City Names
+Objective: Ensure unsafe characters in city input are rejected.
+
+Test Type: Unit / Integration
+
+Input: "<script>alert(1)</script>" or "../../etc/passwd"
+
+Steps:
+
+Type malicious input in the city field
+
+Click "Search"
+
+Expected Result:
+
+The form should show an error message like "Invalid city"
+
+No API call should be made
+
+ Test Case 3: Prevent Empty or Whitespace Input
+Objective: Ensure blank or whitespace-only input is rejected.
+
+Input: " "
+
+Steps:
+
+Enter spaces only and submit the form
+
+Expected Result:
+
+An error is shown
+
+No API request is made
+
+Test Case 4: API Abuse via Rapid Submissions
+Objective: Test if API can be spammed rapidly
+
+Test Type: Manual or automated script
+
+Steps:
+
+Create a script that submits the form 10+ times in 1 second
+
+Monitor if API key is rate-limited or rejected
+
+Expected Result:
+
+API starts rejecting requests (rate limit or HTTP 429)
+
+Ideally, the frontend should debounce requests
+
+ Test Case 5: API Response Validation
+Objective: Ensure that error responses from API do not break the UI
+
+Steps:
+
+Enter a clearly invalid city like "xyzxyz123"
+
+Observe response handling
+
+Expected Result:
+
+User sees No such place found message
+
+No unhandled exceptions in console
+
+Optional (Unit Test Example with Jest)
+
+test("shows error on invalid city input", async () => {
+  const mockUpdate = jest.fn();
+  render(<WeatherSearch updateInfo={mockUpdate} />);
+  const input = screen.getByLabelText(/city name/i);
+  fireEvent.change(input, { target: { value: "<script>" } });
+  fireEvent.click(screen.getByRole("button", { name: /search/i }));
+  expect(await screen.findByText(/no such place/i)).toBeInTheDocument();
+});

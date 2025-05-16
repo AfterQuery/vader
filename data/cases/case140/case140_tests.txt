@@ -1,0 +1,20 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import DOMPurify from 'dompurify';
+
+const TestComponent = ({ html }) => (
+  <div data-testid="content" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
+);
+
+describe('Sanitized HTML Rendering', () => {
+  it('renders only sanitized HTML content', () => {
+    const maliciousHtml = '<img src=x onerror=alert(1) /><p>Hello</p>';
+    render(<TestComponent html={maliciousHtml} />);
+    const content = screen.getByTestId('content');
+
+    // The malicious <img> tag should be removed
+    expect(content.innerHTML).not.toContain('<img');
+    // The safe <p> tag should remain
+    expect(content.innerHTML).toContain('<p>Hello</p>');
+  });
+});

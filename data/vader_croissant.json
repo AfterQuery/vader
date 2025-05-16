@@ -1,0 +1,643 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "rai": "http://mlcommons.org/croissant/RAI/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "examples": {
+      "@id": "cr:examples",
+      "@type": "@json"
+    },
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileProperty": "cr:fileProperty",
+    "fileObject": "cr:fileObject",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform"
+  },
+  "@type": "sc:Dataset",
+  "name": "VADER Vulnerability Dataset",
+  "description": "A dataset of vulnerability remediation metrics across programming languages, including model performance ratings for vulnerability analysis.",
+  "conformsTo": "http://mlcommons.org/croissant/1.0",
+  "citeAs": "Liu E., Wang A., Georgescu C., Mateega S. (2025). https://huggingface.co/datasets/AfterQuery/vader",
+  "datePublished": "2025-05-16 00:00:00",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "url": "https://github.com/AfterQuery/vader",
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "vader_csv",
+      "name": "vader.csv",
+      "description": "CSV file containing columns Case, ID, Repository, CWE, Severity, Submitted At, Approved At, Description. Raw annotations from reviewers.",
+      "contentUrl": "data/vader.csv",
+      "encodingFormat": "text/csv",
+      "md5": "1505f4938525173013651d2e7842b5c9"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "graded_csv",
+      "name": "graded.csv",
+      "description": "LLM outputs for each model. Columns: Case, ID, Repository, CWE, ... , grok-3-beta-rating.",
+      "contentUrl": "data/graded.csv",
+      "encodingFormat": "text/csv",
+      "md5": "342a63d1f0183480e46f704c3a27654f"
+    }
+  ],
+  "recordSet": [
+    {
+      "@type": "cr:RecordSet",
+      "@id": "vader_metrics",
+      "name": "vader_metrics",
+      "description": "Vulnerability metrics in the VADER dataset.",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "name": "Case",
+          "description": "Case identifier.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "ID",
+          "description": "Unique identifier for submissions.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Repository",
+          "description": "URL of the repository containing the vulnerability.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "CWE",
+          "description": "Common Weakness Enumeration identifier (e.g., CWE-674).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Severity",
+          "description": "Severity level of the vulnerability (e.g., Medium).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Submitted At",
+          "description": "Date the vulnerability was submitted (ISO 8601 format).",
+          "dataType": "sc:Date",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Approved At",
+          "description": "Date the vulnerability was approved (ISO 8601 format) by reviewer.",
+          "dataType": "sc:Date",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Description",
+          "description": "Description of the vulnerability.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "vader_csv"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "@type": "cr:RecordSet",
+      "@id": "graded_metrics",
+      "name": "graded_metrics",
+      "description": "Model performance ratings for VADER vulnerabilities.",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "name": "Case",
+          "description": "Case identifier.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "ID",
+          "description": "Unique identifier for the submission.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Repository",
+          "description": "URL of the repository containing the vulnerability.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "CWE",
+          "description": "Common Weakness Enumeration identifier (e.g., CWE-547).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Severity",
+          "description": "Severity level of the vulnerability (1-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "Description",
+          "description": "Description of the vulnerability.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "claude-3.7-sonnet",
+          "description": "Performance evaluation for the Claude 3.7 Sonnet model.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "claude-3.7-sonnet-explanation",
+          "description": "Explanation score for Claude 3.7 Sonnet (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "claude-3.7-sonnet-remediation",
+          "description": "Remediation score for Claude 3.7 Sonnet (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "claude-3.7-sonnet-other",
+          "description": "Other evaluation score for Claude 3.7 Sonnet (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "claude-3.7-sonnet-comment",
+          "description": "Comments on Claude 3.7 Sonnet's performance.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gemini-2.5-pro",
+          "description": "Performance evaluation for the Gemini 2.5 Pro model.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gemini-2.5-pro-explanation",
+          "description": "Explanation score for Gemini 2.5 Pro (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gemini-2.5-pro-remediation",
+          "description": "Remediation score for Gemini 2.5 Pro (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gemini-2.5-pro-other",
+          "description": "Other evaluation score for Gemini 2.5 Pro (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gemini-2.5-pro-comment",
+          "description": "Comments on Gemini 2.5 Pro's performance.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.1",
+          "description": "Performance evaluation for the GPT-4.1 model.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.1-explanation",
+          "description": "Explanation score for GPT-4.1 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.1-remediation",
+          "description": "Remediation score for GPT-4.1 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.1-other",
+          "description": "Other evaluation score for GPT-4.1 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.1-comment",
+          "description": "Comments on GPT-4.1's performance.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.5",
+          "description": "Performance evaluation for the GPT-4.5 model.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.5-explanation",
+          "description": "Explanation score for GPT-4.5 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.5-remediation",
+          "description": "Remediation score for GPT-4.5 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.5-other",
+          "description": "Other evaluation score for GPT-4.5 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.5-comment",
+          "description": "Comments on GPT-4.5's performance.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "o3",
+          "description": "Performance evaluation for the o3 model.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "o3-explanation",
+          "description": "Explanation score for o3 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "o3-remediation",
+          "description": "Remediation score for o3 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "o3-other",
+          "description": "Other evaluation score for o3 (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "o3-comment",
+          "description": "Comments on o3's performance.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "grok-3-beta",
+          "description": "Performance evaluation for the Grok 3 Beta model.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "grok-3-beta-explanation",
+          "description": "Explanation score for Grok 3 Beta (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "grok-3-beta-remediation",
+          "description": "Remediation score for Grok 3 Beta (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "grok-3-beta-other",
+          "description": "Other evaluation score for Grok 3 Beta (0-5).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "grok-3-beta-comment",
+          "description": "Comments on Grok 3 Beta's performance.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "claude-3.7-sonnet-rating",
+          "description": "Overall rating for Claude 3.7 Sonnet (0-10).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gemini-2.5-pro-rating",
+          "description": "Overall rating for Gemini 2.5 Pro (0-10).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.1-rating",
+          "description": "Overall rating for GPT-4.1 (0-10).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "gpt-4.5-rating",
+          "description": "Overall rating for GPT-4.5 (0-10).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "o3-rating",
+          "description": "Overall rating for o3 (0-10).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "grok-3-beta-rating",
+          "description": "Overall rating for Grok 3 Beta (0-10).",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "graded_csv"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

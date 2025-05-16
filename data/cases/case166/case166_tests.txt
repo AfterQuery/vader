@@ -1,0 +1,34 @@
+# tests/test_sql_injection.py
+
+import pytest
+import sqlite3
+import os
+from lambda_handler import load_data, return_customer_info
+
+def setup_module(module):
+    # Setup local sqlite db
+    conn = sqlite3.connect('/tmp/csbot.db')
+    cursor = conn.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS CustomerInfo (customerId INTEGER, customerName TEXT, Addr1 TEXT, Addr2 TEXT, City TEXT, State TEXT, Zipcode TEXT, PreferredActivity TEXT, ShoeSize TEXT, OtherInfo TEXT)')
+    cursor.execute('INSERT INTO CustomerInfo VALUES (1, "Alice", "Addr1", "Addr2", "City", "State", "Zipcode", "Activity", "7", "Info")')
+    conn.commit()
+    conn.close()
+
+def test_sql_injection_attempt():
+    cursor = load_data()
+    malicious_input = 'Alice"; DROP TABLE CustomerInfo; --'
+    try:
+        return_customer_info(malicious_input)
+    except sqlite3.OperationalError:
+        pytest.fail("SQL Injection caused a query failure")
+
+def test_normal_lookup():
+    cursor = load_data()
+    result = return_customer_info("Alice")
+    assert result["customerName"] == "Alice"
+
+if __name__ == "__main__":
+    setup_module(None)
+    test_sql_injection_attempt()
+    test_normal_lookup()
+    print("All SQL Injection tests passed!")

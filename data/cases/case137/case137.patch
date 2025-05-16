@@ -1,0 +1,127 @@
+--- a/src/components/Sidebar.js
++++ b/src/components/Sidebar.js
+@@
+ import React from "react";
+ import { ImHome } from "react-icons/im";
+ import { FaSearch } from "react-icons/fa";
+ import { FaMusic } from "react-icons/fa6";
+ import { BiSolidNotification } from "react-icons/bi";
+ import { MdExplore } from "react-icons/md";
+ import { BsChatHeartFill } from "react-icons/bs";
+ import { CgProfile } from "react-icons/cg";
+ import { IoReorderThree } from "react-icons/io5";
+ import "./css/sidebar.css";
++import { Link } from "react-router-dom";
+ import { useAuth } from "../context/auth";
+
+ const Sidebar = () => {
+   const [auth, setAuth] = useAuth();
++
++  const isValidUserId = (id) => {
++    const pattern = /^[a-zA-Z0-9_-]+$/; // allow safe slugs
++    return typeof id === 'string' && pattern.test(id);
++  };
++
++  const profileUrl = isValidUserId(auth?.user?.userId)
++    ? `/profile/${auth.user.userId}`
++    : "/profile";
++
+   return (
+     <>
+       <div className="sidebar-container">
+         <p className="logo-heading">Hipogram</p>
+         <div className="side-list-icon-container">
+           <ul className="list-container">
+             <li className="list-icon">
+-              <a href="/" className="side-nav-link">
++              <Link to="/" className="side-nav-link">
+                 <ImHome />
+                 <p className="list-text">Home</p>
+-              </a>
++              </Link>
+             </li>
+             <li className="list-icon">
+-              <a href="/search" className="side-nav-link">
++              <Link to="/search" className="side-nav-link">
+                 <FaSearch />
+                 <p className="list-text">Search</p>
+-              </a>
++              </Link>
+             </li>
+             <li className="list-icon">
+-              <a href="/music" className="side-nav-link">
++              <Link to="/music" className="side-nav-link">
+                 <FaMusic />
+                 <p className="list-text">Music</p>
+-              </a>
++              </Link>
+             </li>
+             <li className="list-icon">
+-              <a href="/notifications" className="side-nav-link">
++              <Link to="/notifications" className="side-nav-link">
+                 <BiSolidNotification />
+                 <p className="list-text">Notification</p>
+-              </a>
++              </Link>
+             </li>
+             <li className="list-icon">
+-              <a href="/explore" className="side-nav-link">
++              <Link to="/explore" className="side-nav-link">
+                 <MdExplore />
+                 <p className="list-text">Explore</p>
+-              </a>
++              </Link>
+             </li>
+             <li className="list-icon">
+-              <a href="/messages" className="side-nav-link">
++              <Link to="/messages" className="side-nav-link">
+                 <BsChatHeartFill />
+                 <p className="list-text">Messages</p>
+-              </a>
++              </Link>
+             </li>
+             <li className="list-icon">
+-              <a href={`${auth?.user?.userId}`} className="side-nav-link">
+-                {auth && auth?.user?.profile?.data ? (
+-                  <img
+-                    className="sidebar-dp"
+-                    src={`https://music-api-2rhl.onrender.com/api/v1/auth/user-logo/${auth?.user?._id}`}
+-                    alt=""
+-                    srcset=""
+-                  />
+-                ) : (
+-                  <CgProfile />
+-                )}
+-
+-                <p className="list-text">Profile</p>
+-              </a>
++              <Link to={profileUrl} className="side-nav-link">
++                {auth?.user?.profile?.data ? (
++                  <img
++                    className="sidebar-dp"
++                    src={`https://music-api-2rhl.onrender.com/api/v1/auth/user-logo/${auth?.user?._id}`}
++                    alt="User Profile"
++                    loading="lazy"
++                  />
++                ) : (
++                  <CgProfile />
++                )}
++                <p className="list-text">Profile</p>
++              </Link>
+             </li>
+           </ul>
+         </div>
+         <div className="sidebar-bottom-setting">
+-          <a href="/more" className="side-nav-link">
++          <Link to="/more" className="side-nav-link">
+             <IoReorderThree />
+             <p className="list-text">More</p>
+-          </a>
++          </Link>
+         </div>
+       </div>
+     </>
+   );
+ };
+
+ export default Sidebar;

@@ -1,0 +1,5 @@
+../../../../etc/passwd
+..\..\..\C:\Windows\System32
+../../../tmp/../home/user
+folder/..\\..\\file.txt
+folder/..%5c..%5cfile.txt

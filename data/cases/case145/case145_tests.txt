@@ -1,0 +1,38 @@
+const request = require("supertest");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const csrf = require("csurf");
+
+const app = express();
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: false }));
+const csrfProtection = csrf({ cookie: true });
+
+app.get("/form", csrfProtection, (req, res) => {
+  res.status(200).send(`<form><input type="hidden" name="_csrf" value="${req.csrfToken()}"/></form>`);
+});
+
+app.post("/convert", csrfProtection, (req, res) => {
+  res.status(200).send("Processed");
+});
+
+describe("CSRF Protection", () => {
+  it("should reject POST without CSRF token", async () => {
+    const res = await request(app).post("/convert");
+    expect(res.status).toBe(403); // Forbidden
+  });
+
+  it("should accept POST with valid CSRF token", async () => {
+    const agent = request.agent(app);
+    const formRes = await agent.get("/form");
+    const match = formRes.text.match(/name="_csrf" value="(.+?)"/);
+    const csrfToken = match ? match[1] : "";
+
+    const postRes = await agent
+      .post("/convert")
+      .send(`_csrf=${csrfToken}`)
+      .set("Content-Type", "application/x-www-form-urlencoded");
+
+    expect(postRes.status).toBe(200);
+  });
+});

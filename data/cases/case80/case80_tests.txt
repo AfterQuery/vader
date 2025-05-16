@@ -1,0 +1,20 @@
+Test Case 1 
+•	Input: data = "<div>Welcome</div>"
+•	Expected: Correctly displayed as safe HTML after sanitization.
+
+Test Case 2 
+•	Input: data = "<script>alert('XSS')</script>"
+•	Expected: Script is neutralized, not executed.
+
+Test Case 3 
+•	Input: res = "<option>Admin</option>"
+•	Expected: Option appears safely inside select without error.
+
+Test Case 4 
+•	Input: fieldsHTML = "<img src=x onerror=alert(1)>"
+•	Expected: Image is sanitized, onerror attribute removed.
+
+Test Case 5
+•	Input: Inject <a href="javascript:alert('XSS')">Click me</a> in widget name
+•	Expected: Dangerous javascript: is sanitized or removed.
+
