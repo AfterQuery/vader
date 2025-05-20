@@ -61241,7 +61241,7 @@ index 6bb8bda..af2aff0 100644
      let[error,setError]=useState(false);
      
 -    const API_URL=\""https://api.openweathermap.org/data/2.5/weather\"";
--    const API_KEY=\""407327cef93c632e2549e6440178f6a7\"";
+-    const API_KEY=\""REDACTED_FOR_SECURITY"";
 +    // URL of our backend proxy that will make the actual API call
 +    const WEATHER_API_ENDPOINT=\""/api/weather\"";
  
@@ -61278,7 +61278,7 @@ index 6bb8bda..af2aff0 100644
      let[error,setError]=useState(false);
      
      const API_URL=\""https://api.openweathermap.org/data/2.5/weather\"";
--    const API_KEY=\""407327cef93c632e2549e6440178f6a7\"";
+-    const API_KEY=\""REDACTED_FOR_SECURITY"";
 +    const API_KEY=import.meta.env.VITE_OPENWEATHERMAP_API_KEY;
  
      let getWeatherInfo = async()=>{
@@ -61301,7 +61301,7 @@ index 6bb8bda..af2aff0 100644
 ```"",
   ""test_plan"": [
     ""Create a `.env` file in the project root."",
-    ""Add the line `VITE_OPENWEATHERMAP_API_KEY=407327cef93c632e2549e6440178f6a7` (or a valid OpenWeatherMap key) to the `.env` file."",
+    ""Add the line `VITE_OPENWEATHERMAP_API_KEY=REDACTED` (or a valid OpenWeatherMap key) to the `.env` file."",
     ""Add `.env` to your `.gitignore` file to prevent committing the key."",
     ""Apply the patch to `src/WeatherSearch.jsx`."",
     ""Stop any running Vite development server."",
@@ -61336,7 +61336,7 @@ index 4115c5b..1234567 100644
 -    let[error,setError]=useState(false);
 -    
 -    const API_URL=\""https://api.openweathermap.org/data/2.5/weather\"";
--    const API_KEY=\""407327cef93c632e2549e6440178f6a7\"";
+-    const API_KEY=\""REDACTED_FOR_SECURITY"";
 -
 -    let getWeatherInfo = async()=>{
 -        try{
@@ -61495,7 +61495,7 @@ index 43b85dc..70734f7 100644
      let[error,setError]=useState(false);
      
 -    const API_URL=\""https://api.openweathermap.org/data/2.5/weather\"";
--    const API_KEY=\""407327cef93c632e2549e6440178f6a7\"";
+-    const API_KEY=\""REDACTED_FOR_SECURITY"";
 +    const API_URL = import.meta.env.VITE_WEATHER_API_URL;
 +    const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
  
@@ -61517,7 +61517,7 @@ index 4d9f8c3..5ac2b72 100644
 +++ b/WeatherSearch.jsx
 @@
 -    const API_URL=\""https://api.openweathermap.org/data/2.5/weather\"";
--    const API_KEY=\""407327cef93c632e2549e6440178f6a7\"";
+-    const API_KEY=\""REDACTED_FOR_SECURITY"";
 +    const API_URL = \""https://api.openweathermap.org/data/2.5/weather\"";
 +
 +    /*
@@ -61558,7 +61558,7 @@ index 7b7b7c3..8d9d9e4 100644
      
 -    const API_URL=\""https://api.openweathermap.org/data/2.5/weather\"";
 +    const API_URL = \""https://api.openweathermap.org/data/2.5/weather\"";
-     const API_KEY=\""407327cef93c632e2549e6440178f6a7\"";
+     const API_KEY=\""REDACTED_FOR_SECURITY""";
  
      let getWeatherInfo = async()=>{
 @@ -29,6 +29,10 @@ export default function WeatherSearch({updateInfo}){
@@ -61608,7 +61608,7 @@ index 8d9d9e4..9e9f0f5 100644
      let[error,setError]=useState(false);
      
 -    const API_URL = \""https://api.openweathermap.org/data/2.5/weather\"";
--    const API_KEY=\""407327cef93c632e2549e6440178f6a7\"";
+-    const API_KEY=\""REDACTED_FOR_SECURITY"";
 +    const API_URL = \""https://api.openweathermap.org/data/2.5/weather\"";
 +    const API_KEY = import.meta.env.VITE_API_KEY || 'fallback_api_key';
  

