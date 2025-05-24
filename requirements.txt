@@ -1,0 +1,12 @@
+# Core data / plotting
+pandas>=2.0
+matplotlib>=3.8
+seaborn>=0.13   # used inside histogram_plots.ipynb & general_stats.ipynb
+
+# LLM & API clients
+openai>=1.23
+anthropic>=0.22
+google-generativeai>=0.3   # imported as “from google import genai”
+
+# Environment / configuration
+python-dotenv>=1.0
